@@ -1,9 +1,9 @@
-# VAPT Report — Acme Corp — External Web & Infra Assessment
-*Prepared by Acme Security Consulting · 2026-08-31 09:56 UTC*
+# VAPT Report — Example Corp — External Web & Infra Assessment
+*Prepared by PentestIQ · 2026-08-31 09:59 UTC*
 
 ## Executive Summary
 
-PentestIQ assessed 2 assets for engagement "Acme Corp — External Web & Infra Assessment" and identified 8 findings (overall risk rating: Critical). By severity: 1 critical, 1 high, 1 medium, 2 low. 1 finding was safely validated as exploitable through non-destructive checks (including: SQL Injection), removing false-positive doubt. The highest-priority item is "SQL Injection" (high, risk 95) on web:http://10.0.0.5:80.
+PentestIQ assessed 2 assets for engagement "Example Corp — External Web & Infra Assessment" and identified 8 findings (overall risk rating: Critical). By severity: 1 critical, 1 high, 1 medium, 2 low. 1 finding was safely validated as exploitable through non-destructive checks (including: SQL Injection), removing false-positive doubt. The highest-priority item is "SQL Injection" (high, risk 95) on web:http://10.0.0.5:80.
 
 **Overall risk rating: Critical**
 
@@ -19,7 +19,7 @@ Assets: 2 · Findings: 8 · Validated: 1 · False positives dismissed: 0 · Atta
 
 ## Scope
 
-- Authorized by: Acme Corp CISO (demonstration data)
+- Authorized by: Example Corp CISO (demonstration data)
 - 10.0.0.5
 - http://10.0.0.5:80
 
@@ -104,5 +104,3 @@ PentestIQ performed automated vulnerability assessment by orchestrating industry
 
 ---
 *Authorized use only. This report documents testing performed under an agreed engagement scope. Findings are confidential.*
-
-Confidential — prepared for Acme Corp.
