@@ -57,11 +57,11 @@ Plus: **lab setup automation** (Docker/Vagrant/Terraform-based intentionally-vul
 
 ## Project Status
 
-🚧 **Early development — Week 1 (engine skeleton) complete.** Working now: the
+🚧 **Early development — Weeks 1–2 complete.** Working now: the
 orchestration engine boots, loads an engagement scope, runs the
 discover→assess→validate workflow across in-scope assets, and reports via a CLI.
 The normalized findings model (with cross-tool dedup) and scope/safe-mode
-scaffolding are in place. Asset modules and tool integrations land from Week 3.
+scaffolding are in place. Week 2 added the safety/ops core: a **ScopeManager** and **SafeModeGovernor** (permissive `warn` default, strict `block` ready), an append-only **audit trail** (JSONL), and a dependency-free **concurrent job queue** with per-host **rate limiting**. Asset modules and tool integrations land from Week 3.
 See the [Roadmap](docs/ROADMAP.md) and [Architecture](docs/ARCHITECTURE.md).
 
 ## Quickstart (dev)
