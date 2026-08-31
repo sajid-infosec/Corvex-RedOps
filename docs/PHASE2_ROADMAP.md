@@ -36,11 +36,11 @@ engine stays the core; SaaS adds convenience, collaboration, scale, and complian
   notifications (email/Slack/webhook). Distributed job backend (Redis/Celery)
   swapped in behind the existing JobQueue interface.
 
-### Increment 5 — Reporting at scale & compliance  ← current
+### Increment 5 — Reporting at scale & compliance  ✅
 - Managed report storage/history; white-label/branded reports; PDF/DOCX export;
   compliance views (OWASP/PCI/ISO/SOC 2 mappings); trends over time.
 
-### Increment 6 — Billing & tiers
+### Increment 6 — Billing & tiers  ← current
 - Plan enforcement (Community/Pro/Team/Enterprise), usage metering, billing
   integration. Gate the first paid feature (TBD — see business plan open questions).
 

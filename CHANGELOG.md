@@ -6,6 +6,11 @@ All notable changes to PentestIQ are documented here. This project adheres to
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
+- **Reporting at scale** — **PDF and DOCX** report export (reportlab / python-docx),
+  a **compliance mapping** view (OWASP Top 10 / PCI-DSS / ISO 27001 / MITRE ATT&CK)
+  in every report and via `GET /engagements/{id}/compliance`, and **per-tenant
+  white-label branding** (company name, accent color, footer) via `GET/PUT /settings`.
+  `GET /engagements/{id}/report?format=html|md|pdf|docx`.
 - **Scheduling & continuous scanning** — recurring engagements on an interval, with
   finding **diffing between runs** (new / fixed / persisting) and **notifications**
   (Slack-compatible / generic webhooks). In-process scheduler (no external broker);
