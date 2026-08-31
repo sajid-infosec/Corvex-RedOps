@@ -1,0 +1,14 @@
+# Example engagement scope file (template)
+# Copy, fill in, and pass with: pentestiq run --scope scope.yaml
+engagement:
+  name: "Example Engagement"
+  authorized_by: "REQUIRED - name/email of authorizing party"
+  window: { start: "2026-01-01T00:00:00Z", end: "2026-01-07T00:00:00Z" }
+scope:
+  in_scope:
+    - "example.com"
+    - "10.0.0.0/24"
+  exclusions:
+    - "admin.example.com"
+  allowed_actions: [discover, assess, validate_safe]   # intrusive requires explicit opt-in
+safe_mode: true

@@ -1,0 +1,12 @@
+PentestIQ — Open-Core License (placeholder)
+
+The core engine, modules, and CLI are intended to be released under a
+permissive open-source license (e.g., Apache-2.0). Hosted SaaS features
+(multi-tenant console, managed scheduling, team management) are intended to
+be offered under a separate commercial license.
+
+FINAL LICENSE CHOICE PENDING. Do not assume terms until this file is
+replaced with the actual license text. See docs/BUSINESS_PLAN.md
+("Licensing & Open-Core Strategy") for the rationale and options.
+
+Copyright (c) 2026 Sajid. All rights reserved until license is finalized.

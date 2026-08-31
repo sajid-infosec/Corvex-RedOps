@@ -1,0 +1,29 @@
+# Environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+node_modules/
+.env
+.env.*
+
+# Engagement data — NEVER commit real client/scan data
+/data/
+/engagements/
+/scans/
+*.scan
+*.sqlite
+*.db
+reports/output/
+
+# Secrets & credentials
+*.pem
+*.key
+credentials.*
+config/local.*
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.log
