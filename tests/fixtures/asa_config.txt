@@ -1,0 +1,4 @@
+access-list OUTSIDE_IN extended permit tcp any any eq telnet
+access-list OUTSIDE_IN extended permit ip any any
+access-list OUTSIDE_IN extended permit tcp any host 10.0.0.5 eq 3389
+access-list OUTSIDE_IN extended permit tcp any host 10.0.0.6 eq https

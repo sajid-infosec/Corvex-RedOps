@@ -6,6 +6,11 @@ All notable changes to PentestIQ are documented here. This project adheres to
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
+- **Firewall module (nipper-class)** — audits firewall rulesets (**iptables-save** and
+  **Cisco ASA** access-lists): flags default-allow policies, **any-to-any permits**,
+  dangerous services (Telnet/RDP/SMB/DB/…) exposed to any source, all-ports-from-any,
+  rules **shadowed** by an earlier any-any permit, and missing explicit deny. Native.
+  Eight asset modules now.
 - **Network device module** — Cisco IOS-style **config audit**: flags Telnet, default/RW
   SNMP communities, `enable password` vs `secret`, type-7 passwords, missing
   `service password-encryption`, cleartext HTTP management, small-servers/finger, and
