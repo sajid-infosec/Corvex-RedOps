@@ -57,7 +57,35 @@ Plus: **lab setup automation** (Docker/Vagrant/Terraform-based intentionally-vul
 
 ## Project Status
 
-🚧 **Early development.** This repository currently contains the foundational planning and design docs. See the [Roadmap](docs/ROADMAP.md) for the 2-month build plan and [Architecture](docs/ARCHITECTURE.md) for the system design.
+🚧 **Early development — Week 1 (engine skeleton) complete.** Working now: the
+orchestration engine boots, loads an engagement scope, runs the
+discover→assess→validate workflow across in-scope assets, and reports via a CLI.
+The normalized findings model (with cross-tool dedup) and scope/safe-mode
+scaffolding are in place. Asset modules and tool integrations land from Week 3.
+See the [Roadmap](docs/ROADMAP.md) and [Architecture](docs/ARCHITECTURE.md).
+
+## Quickstart (dev)
+
+```bash
+# 1. install (Python 3.10+)
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+
+# 2. run the tests
+pytest -q
+
+# 3. (optional) spin up the local vulnerable lab — requires Docker
+cd lab && docker compose up -d && cd ..
+
+# 4. run an engagement against the lab scope
+pentestiq run -s config/scope.lab.yaml
+pentestiq modules      # list registered modules
+pentestiq version
+```
+
+> The engine currently runs an *empty* workflow (no modules registered yet), so it
+> visits and logs assets and produces zero findings — that’s the Week 1 skeleton.
+> Real scanning arrives with the web + infra modules.
 
 ## Documentation
 

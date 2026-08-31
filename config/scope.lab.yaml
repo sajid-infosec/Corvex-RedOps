@@ -1,0 +1,12 @@
+# Example scope pointing at the local lab (see lab/docker-compose.yml).
+engagement:
+  name: "Local Lab Engagement"
+  authorized_by: "self (isolated lab)"
+scope:
+  in_scope:
+    - "http://localhost:3000"   # Juice Shop
+    - "http://localhost:8080"   # DVWA
+  exclusions: []
+  allowed_actions: [discover, assess, validate_safe]
+safe_mode: true
+enforcement: warn              # permissive default; set to "block" to hard-enforce scope

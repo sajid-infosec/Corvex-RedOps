@@ -1,0 +1,23 @@
+# PentestIQ lab — intentionally-vulnerable targets for testing the platform.
+# RUN ON AN ISOLATED NETWORK ONLY. Never expose these to the internet.
+#
+#   cd lab && docker compose up -d
+#   Juice Shop -> http://localhost:3000
+#   DVWA       -> http://localhost:8080   (admin / password; first run: "Create/Reset Database")
+#
+services:
+  juice-shop:
+    image: bkimminich/juice-shop:latest
+    container_name: ptiq-juice-shop
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  dvwa:
+    image: vulnerables/web-dvwa:latest
+    container_name: ptiq-dvwa
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+# Add more targets here as modules grow (vulnerable WordPress, vuln API, etc.)
