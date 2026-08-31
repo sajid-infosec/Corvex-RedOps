@@ -57,11 +57,11 @@ Plus: **lab setup automation** (Docker/Vagrant/Terraform-based intentionally-vul
 
 ## Project Status
 
-🚧 **Early development — Weeks 1–3 complete.** Working now: the
+🚧 **Early development — Weeks 1–4 complete.** Working now: the
 orchestration engine boots, loads an engagement scope, runs the
 discover→assess→validate workflow across in-scope assets, and reports via a CLI.
 The normalized findings model (with cross-tool dedup) and scope/safe-mode
-scaffolding are in place. Week 2 added the safety/ops core: a **ScopeManager** and **SafeModeGovernor** (permissive `warn` default, strict `block` ready), an append-only **audit trail** (JSONL), and a dependency-free **concurrent job queue** with per-host **rate limiting**. Week 3 shipped the first real scanning: a tool-integration contract with **Nmap** (service discovery) and **Nuclei** (templated vuln scanning) adapters and an **infra module** that orchestrates them into normalized, deduplicated findings. Web, WordPress, and API modules come next.
+scaffolding are in place. Week 2 added the safety/ops core: a **ScopeManager** and **SafeModeGovernor** (permissive `warn` default, strict `block` ready), an append-only **audit trail** (JSONL), and a dependency-free **concurrent job queue** with per-host **rate limiting**. Week 3 shipped the first real scanning: a tool-integration contract with **Nmap** (service discovery) and **Nuclei** (templated vuln scanning) adapters and an **infra module** that orchestrates them into normalized, deduplicated findings. Week 4 added the **web module** (OWASP ZAP + Nuclei) and the analysis brain: a **risk scorer** (severity+CVSS+confidence+validation → 0–100) and a **correlator** that links findings sharing a host+service into attack chains — so a scan yields one prioritized, correlated list. WordPress, API, mobile, and the safe exploit-validation layer come next.
 See the [Roadmap](docs/ROADMAP.md) and [Architecture](docs/ARCHITECTURE.md).
 
 ## Quickstart (dev)

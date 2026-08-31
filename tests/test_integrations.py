@@ -43,3 +43,12 @@ def test_missing_tool_scans_gracefully():
     nmap = NmapIntegration()
     if not nmap.is_available():
         assert nmap.scan(_infra_asset()) == []
+
+
+def test_open_ports_do_not_collapse_in_engagement():
+    from pentestiq.models import Engagement
+    raw = (FIX / "nmap_sample.xml").read_text()
+    findings = NmapIntegration().parse(raw, _infra_asset())
+    eng = Engagement()
+    eng.add_findings(findings)
+    assert len(eng.findings) == 3        # 3 distinct open ports, not merged into 1

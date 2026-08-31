@@ -1,0 +1,31 @@
+{
+  "site": [
+    {
+      "@name": "http://10.0.0.5",
+      "alerts": [
+        {
+          "alert": "SQL Injection",
+          "riskcode": "3",
+          "confidence": "3",
+          "cweid": "89",
+          "solution": "<p>Use <b>parameterized</b> queries.</p>",
+          "reference": "https://owasp.org/sqli\nhttps://cwe.mitre.org/data/definitions/89.html",
+          "instances": [
+            {"uri": "http://10.0.0.5:80/login", "method": "POST", "evidence": "SQL error"}
+          ]
+        },
+        {
+          "alert": "X-Content-Type-Options Header Missing",
+          "riskcode": "1",
+          "confidence": "2",
+          "cweid": "16",
+          "solution": "Set the header.",
+          "reference": "",
+          "instances": [
+            {"uri": "http://10.0.0.5:80/", "method": "GET", "evidence": ""}
+          ]
+        }
+      ]
+    }
+  ]
+}
