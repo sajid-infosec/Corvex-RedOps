@@ -84,3 +84,13 @@ def test_report_reflects_seeded_findings(tmp_path):
     assert "SQL Injection" in rep.text
     findings = c.get(f"/engagements/{eng.id}/findings", headers=H).json()
     assert findings[0]["title"] == "SQL Injection"
+
+
+def test_console_served_at_root():
+    from pentestiq.api.app import create_app
+    from pentestiq.storage import SqliteEngagementStore
+    c = TestClient(create_app(store=SqliteEngagementStore(":memory:")))
+    r = c.get("/")
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("text/html")
+    assert "PentestIQ Console" in r.text

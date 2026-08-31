@@ -91,12 +91,14 @@ pentestiq version
 
 ## REST API (Phase 2 · in progress)
 
-PentestIQ is growing a hosted SaaS layer on top of the open-source engine. The
-first piece — the REST API backbone — is in the repo:
+PentestIQ is growing a hosted SaaS layer on top of the open-source engine. A
+**web console** and the **REST API** backbone are in the repo — `pentestiq serve`
+opens a dashboard (create engagements, run scans, view findings + charts + chains,
+open reports) backed by the API:
 
 ```bash
 pip install -e ".[api]"
-pentestiq serve                 # http://127.0.0.1:8000  (OpenAPI docs at /docs)
+pentestiq serve                 # web console at http://127.0.0.1:8000  (API docs at /docs)
 ```
 
 ```bash

@@ -6,6 +6,9 @@ All notable changes to PentestIQ are documented here. This project adheres to
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
+- **Web console** — a self-contained dashboard served at `/` by `pentestiq serve`:
+  create engagements, run scans (live status polling), view findings with a severity
+  chart and attack chains, and open reports. Vanilla JS, no build step.
 - **REST API** (FastAPI) over the engine — `pentestiq serve`, or
   `uvicorn pentestiq.api.app:app`. Endpoints: create/list/get engagement, run
   (background with status), findings, report (HTML/Markdown), health. Auto docs at `/docs`.
