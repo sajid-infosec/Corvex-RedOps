@@ -6,6 +6,10 @@ All notable changes to PentestIQ are documented here. This project adheres to
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
+- **Scheduling & continuous scanning** — recurring engagements on an interval, with
+  finding **diffing between runs** (new / fixed / persisting) and **notifications**
+  (Slack-compatible / generic webhooks). In-process scheduler (no external broker);
+  `POST /schedules`, `/schedules/{id}/run-now`, `/schedules/{id}/diff`, `/schedules/{id}/runs`.
 - **Auth, multi-tenancy & RBAC** — user register/login (PBKDF2-hashed passwords),
   HMAC-signed session tokens, per-tenant **API keys** (hashed, shown once), and
   roles (viewer/member/admin/owner) enforced on every endpoint. `pentestiq init-tenant`

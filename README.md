@@ -112,6 +112,11 @@ curl -XPOST localhost:8000/engagements/<id>/run -H "Authorization: Bearer $TOK"
 curl localhost:8000/engagements/<id>/report -H "Authorization: Bearer $TOK"   # HTML report
 ```
 
+**Continuous scanning:** create a schedule (`POST /schedules` with an `interval_seconds`)
+and PentestIQ re-runs it automatically, **diffing new vs fixed vs persisting** findings
+between runs and posting a summary to a Slack/webhook URL. `GET /schedules/{id}/diff`
+shows the latest change set.
+
 **Auth & multi-tenancy:** register/login for session tokens, or mint per-tenant
 **API keys** (`POST /apikeys`) for automation. Roles (viewer/member/admin/owner)
 are enforced per endpoint; every record is tenant-scoped. Bootstrap without HTTP:
