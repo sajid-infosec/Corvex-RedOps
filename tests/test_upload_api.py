@@ -53,3 +53,25 @@ def test_upload_requires_member_role(client):
     files = {"file": ("app.ipa", b"PKfake", "application/octet-stream")}
     r = c.post("/engagements/upload", headers={"X-API-Key": vk}, files=files)
     assert r.status_code == 403
+
+
+def test_upload_config_as_network_device(client):
+    c = client
+    tok = _tok(c)
+    files = {"file": ("router.cfg", b"hostname r1\ntransport input telnet\n", "text/plain")}
+    r = c.post("/engagements/upload", headers=_H(tok), files=files,
+               data={"asset_type": "network_device", "name": "edge-router"})
+    assert r.status_code == 201, r.text
+    asset = r.json()["engagement"]["assets"][0]
+    assert asset["type"] == "network_device"
+    import os
+    os.remove(asset["identifier"])
+
+
+def test_upload_invalid_asset_type(client):
+    c = client
+    tok = _tok(c)
+    files = {"file": ("x.cfg", b"data", "text/plain")}
+    r = c.post("/engagements/upload", headers=_H(tok), files=files,
+               data={"asset_type": "bogus"})
+    assert r.status_code == 422

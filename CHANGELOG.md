@@ -6,6 +6,11 @@ All notable changes to PentestIQ are documented here. This project adheres to
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
+- **Network device module** — Cisco IOS-style **config audit**: flags Telnet, default/RW
+  SNMP communities, `enable password` vs `secret`, type-7 passwords, missing
+  `service password-encryption`, cleartext HTTP management, small-servers/finger, and
+  missing AAA/logging/NTP. Native (no device access). Configs upload through the console
+  (type selector); `POST /engagements/upload` now takes an `asset_type`. Seven modules now.
 - **Desktop module** — static analysis of uploaded binaries (PE/ELF/Mach-O): a
   **secrets scanner** (AWS/Google/Slack keys, private keys, JWTs, hardcoded
   credentials, cleartext http:// URLs) and a **binary-hardening** check (NX, PIE/ASLR,
