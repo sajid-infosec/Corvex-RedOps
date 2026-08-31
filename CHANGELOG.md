@@ -6,6 +6,10 @@ All notable changes to PentestIQ are documented here. This project adheres to
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
+- **Auth, multi-tenancy & RBAC** — user register/login (PBKDF2-hashed passwords),
+  HMAC-signed session tokens, per-tenant **API keys** (hashed, shown once), and
+  roles (viewer/member/admin/owner) enforced on every endpoint. `pentestiq init-tenant`
+  bootstraps a tenant + owner. Auth via `Authorization: Bearer` or `X-API-Key`.
 - **Web console** — a self-contained dashboard served at `/` by `pentestiq serve`:
   create engagements, run scans (live status polling), view findings with a severity
   chart and attack chains, and open reports. Vanilla JS, no build step.

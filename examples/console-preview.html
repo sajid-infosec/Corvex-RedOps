@@ -45,8 +45,11 @@
   <h1>Pentest<span class="iq">IQ</span> Console</h1>
   <span class="status" id="apistatus">not connected</span>
   <span class="spacer"></span>
-  <input id="apiKey" placeholder="X-API-Key (tenant)" style="width:200px">
-  <button class="ghost" onclick="saveKey()">Connect</button>
+  <input id="user" placeholder="username" style="width:120px">
+  <input id="pass" type="password" placeholder="password" style="width:120px">
+  <button class="ghost" onclick="login()">Login</button>
+  <button class="ghost" onclick="register()">Register</button>
+  <button class="ghost" onclick="logout()">Logout</button>
   <a href="/docs" target="_blank" class="ghost" style="text-decoration:none;padding:8px 14px;border:1px solid var(--line);border-radius:6px">API docs</a>
 </header>
 
@@ -80,41 +83,61 @@ infra=127.0.0.1</textarea>
 <script>
 const SEV=["critical","high","medium","low","info"];
 const SEVCOL={critical:"#f87171",high:"#fb7185",medium:"#fbbf24",low:"#60a5fa",info:"#94a3b8"};
-let KEY=(function(){try{return localStorage.getItem("ptiq_key")||""}catch(e){return ""}})();
+let TOKEN=(function(){try{return localStorage.getItem("ptiq_token")||""}catch(e){return ""}})();
 let CUR=null, POLL=null;
 
 function toast(m){const t=document.getElementById("toast");t.textContent=m;t.style.display="block";setTimeout(()=>t.style.display="none",2600);}
-function saveKey(){KEY=document.getElementById("apiKey").value.trim();localStorage.setItem("ptiq_key",KEY);setStatus();loadList();}
-function setStatus(){const s=document.getElementById("apistatus");s.textContent=KEY?("tenant: "+KEY):"not connected";s.style.color=KEY?"#34d399":"#94a3b8";}
 async function api(path,opts={}){
-  opts.headers=Object.assign({"X-API-Key":KEY,"Content-Type":"application/json"},opts.headers||{});
+  opts.headers=Object.assign({"Content-Type":"application/json"},opts.headers||{});
+  if(TOKEN)opts.headers["Authorization"]="Bearer "+TOKEN;
   const r=await fetch(path,opts);
-  if(r.status===401){toast("Set your X-API-Key first");throw new Error("401");}
+  if(r.status===401){toast("Please log in");throw new Error("401");}
   return r;
 }
+async function setStatus(){const s=document.getElementById("apistatus");
+  if(!TOKEN){s.textContent="not connected";s.style.color="#94a3b8";return;}
+  try{const me=await(await api("/me")).json();s.textContent="tenant "+String(me.tenant_id).slice(0,8)+" · "+me.role;s.style.color="#34d399";}
+  catch(e){s.textContent="not connected";}
+}
+function setToken(t){TOKEN=t;try{localStorage.setItem("ptiq_token",t)}catch(e){}setStatus();loadList();}
+async function register(){
+  const tn=prompt("Organization / tenant name:");if(!tn)return;
+  const u=document.getElementById("user").value.trim(),p=document.getElementById("pass").value;
+  if(!u||p.length<8){toast("username + password (8+ chars) required");return;}
+  const r=await fetch("/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tenant_name:tn,username:u,password:p})});
+  if(!r.ok){toast("Register failed ("+r.status+")");return;}
+  setToken((await r.json()).token);toast("Registered — you are the owner");
+}
+async function login(){
+  const u=document.getElementById("user").value.trim(),p=document.getElementById("pass").value;
+  const r=await fetch("/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})});
+  if(!r.ok){toast("Login failed");return;}
+  setToken((await r.json()).token);toast("Logged in");
+}
+function logout(){TOKEN="";try{localStorage.removeItem("ptiq_token")}catch(e){}setStatus();
+  document.getElementById("list").innerHTML='<tr><td colspan="3" class="empty">Logged out.</td></tr>';
+  document.getElementById("detail").innerHTML='<div class="empty">Log in to begin.</div>';}
 async function loadList(){
-  if(!KEY){return;}
-  const r=await api("/engagements");const items=await r.json();
+  if(!TOKEN)return;
+  const items=await(await api("/engagements")).json();
   const tb=document.getElementById("list");
   if(!items.length){tb.innerHTML='<tr><td colspan="3" class="empty">No engagements yet.</td></tr>';return;}
   tb.innerHTML=items.map(e=>`<tr class="eng" onclick="openEng('${e.id}')">
     <td>${esc(e.name)}</td><td><span class="status ${e.status}">${e.status}</span></td><td>${e.findings}</td></tr>`).join("");
 }
 async function createEng(){
-  if(!KEY){toast("Set your X-API-Key first");return;}
-  const targets=document.getElementById("targets").value.split("\n").map(s=>s.trim()).filter(Boolean);
+  if(!TOKEN){toast("Please log in first");return;}
+  const targets=document.getElementById("targets").value.split("
+").map(s=>s.trim()).filter(Boolean);
   const body={engagement:{name:document.getElementById("name").value||"Engagement",
     authorized_by:document.getElementById("auth").value||null},
     scope:{in_scope:targets},enforcement:document.getElementById("enf").value};
-  const r=await api("/engagements",{method:"POST",body:JSON.stringify(body)});
-  const e=await r.json();toast("Created");await loadList();openEng(e.id);
+  const e=await(await api("/engagements",{method:"POST",body:JSON.stringify(body)})).json();
+  toast("Created");await loadList();openEng(e.id);
 }
-async function openEng(id){
-  CUR=id;const r=await api("/engagements/"+id);const rec=await r.json();
-  renderDetail(rec);
-}
-function sevCounts(findings){const c={critical:0,high:0,medium:0,low:0,info:0};
-  findings.forEach(f=>{if(f.status!=="false_positive")c[f.severity]=(c[f.severity]||0)+1;});return c;}
+async function openEng(id){CUR=id;renderDetail(await(await api("/engagements/"+id)).json());}
+function sevCounts(F){const c={critical:0,high:0,medium:0,low:0,info:0};
+  F.forEach(f=>{if(f.status!=="false_positive")c[f.severity]=(c[f.severity]||0)+1;});return c;}
 function chart(c){const max=Math.max(1,...SEV.map(s=>c[s]));
   return `<div class="bars">`+SEV.map(s=>`<div class="bar"><span class="lab">${s}</span>
     <span class="track"><span class="fill" style="width:${(c[s]/max*100)||0}%;background:${SEVCOL[s]}"></span></span>
@@ -142,34 +165,31 @@ function renderDetail(rec){
 async function runEng(id){
   await api("/engagements/"+id+"/run",{method:"POST"});toast("Scan queued");
   clearInterval(POLL);
-  POLL=setInterval(async()=>{const r=await api("/engagements/"+id);const rec=await r.json();
+  POLL=setInterval(async()=>{const rec=await(await api("/engagements/"+id)).json();
     if(id===CUR)renderDetail(rec);
     if(rec.status==="completed"||rec.status==="failed"){clearInterval(POLL);loadList();toast("Scan "+rec.status);}},1500);
 }
 async function openReport(id){
-  const r=await api("/engagements/"+id+"/report?format=html");const html=await r.text();
-  const blob=new Blob([html],{type:"text/html"});window.open(URL.createObjectURL(blob),"_blank");
+  const html=await(await api("/engagements/"+id+"/report?format=html")).text();
+  window.open(URL.createObjectURL(new Blob([html],{type:"text/html"})),"_blank");
 }
 function assetStr(a){return a?(a.type+":"+a.identifier):"-";}
 function esc(s){return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
-// init
-document.getElementById("apiKey").value=KEY;setStatus();if(KEY)loadList();
+setStatus();if(TOKEN)loadList();
 </script>
 
 <script>
-/* ---- PREVIEW MOCK (no live API; sample data) ---- */
-KEY="demo-tenant";
-const _REC={"id": "demo-1", "name": "Acme \u2014 External Web & Infra Assessment", "status": "completed", "engagement": {"name": "Acme \u2014 External Web & Infra Assessment", "assets": [{"type": "web", "identifier": "http://10.0.0.5:80"}, {"type": "infra", "identifier": "10.0.0.5"}], "findings": [{"title": "Example RCE", "severity": "critical", "risk_score": 90, "correlation_id": "10.0.0.5:80", "status": "detected", "source_tools": ["nuclei"], "asset": {"type": "web", "identifier": "http://10.0.0.5:80"}}, {"title": "SQL Injection", "severity": "high", "risk_score": 95, "correlation_id": "10.0.0.5:80", "status": "validated", "source_tools": ["zap"], "asset": {"type": "web", "identifier": "http://10.0.0.5:80"}}, {"title": "Weak TLS", "severity": "medium", "risk_score": 50, "correlation_id": "10.0.0.5:443", "status": "detected", "source_tools": ["nuclei"], "asset": {"type": "infra", "identifier": "10.0.0.5"}}, {"title": "Open port 23/tcp \u2014 telnet", "severity": "low", "risk_score": 28, "correlation_id": "10.0.0.5:23", "status": "detected", "source_tools": ["nmap"], "asset": {"type": "infra", "identifier": "10.0.0.5"}}, {"title": "X-Content-Type-Options Header Missing", "severity": "low", "risk_score": 25, "correlation_id": "10.0.0.5:80", "status": "detected", "source_tools": ["zap"], "asset": {"type": "web", "identifier": "http://10.0.0.5:80"}}, {"title": "Open port 80/tcp \u2014 http (nginx 1.18.0)", "severity": "info", "risk_score": 6, "correlation_id": "10.0.0.5:80", "status": "detected", "source_tools": ["nmap"], "asset": {"type": "infra", "identifier": "10.0.0.5"}}, {"title": "Open port 22/tcp \u2014 ssh (OpenSSH 8.2p1)", "severity": "info", "risk_score": 6, "correlation_id": "10.0.0.5:22", "status": "detected", "source_tools": ["nmap"], "asset": {"type": "infra", "identifier": "10.0.0.5"}}, {"title": "nginx detected", "severity": "info", "risk_score": 5, "correlation_id": "10.0.0.5:80", "status": "detected", "source_tools": ["nuclei"], "asset": {"type": "web", "identifier": "http://10.0.0.5:80"}}]}}, _LIST=[{"id": "demo-1", "name": "Acme \u2014 External Web & Infra Assessment", "status": "completed", "findings": 8}, {"id": "demo-2", "name": "Blog WordPress Review", "status": "completed", "findings": 3}];
-api=async function(path){
-  const wrap=o=>({json:async()=>o,text:async()=>o});
-  if(path==="/engagements")return wrap(_LIST);
-  if(path.indexOf("/report")>-1)return {text:async()=>"<h1>Report preview</h1><p>Full HTML report opens here in the real console.</p>"};
-  if(path.indexOf("/engagements/demo-1")===0)return wrap(_REC);
-  if(path.indexOf("/engagements/demo-2")===0)return wrap({id:"demo-2",name:"Blog WordPress Review",status:"completed",engagement:{name:"Blog WordPress Review",assets:[{type:"wordpress",identifier:"http://blog.example.com"}],findings:[]}});
-  return wrap({});
-};
+/* ---- PREVIEW MOCK (sample data; no live API) ---- */
+TOKEN="demo-token";
+const _REC={"id": "demo-1", "name": "Acme \u2014 External Web & Infra Assessment", "status": "completed", "engagement": {"name": "Acme \u2014 External Web & Infra Assessment", "assets": [{"type": "web", "identifier": "http://10.0.0.5:80"}, {"type": "infra", "identifier": "10.0.0.5"}], "findings": [{"title": "Example RCE", "severity": "critical", "risk_score": 90, "correlation_id": "10.0.0.5:80", "status": "detected", "source_tools": ["nuclei"], "asset": {"type": "web", "identifier": "http://10.0.0.5:80"}}, {"title": "SQL Injection", "severity": "high", "risk_score": 95, "correlation_id": "10.0.0.5:80", "status": "validated", "source_tools": ["zap"], "asset": {"type": "web", "identifier": "http://10.0.0.5:80"}}, {"title": "Weak TLS", "severity": "medium", "risk_score": 50, "correlation_id": "10.0.0.5:443", "status": "detected", "source_tools": ["nuclei"], "asset": {"type": "infra", "identifier": "10.0.0.5"}}, {"title": "Open port 23/tcp \u2014 telnet", "severity": "low", "risk_score": 28, "correlation_id": "10.0.0.5:23", "status": "detected", "source_tools": ["nmap"], "asset": {"type": "infra", "identifier": "10.0.0.5"}}, {"title": "X-Content-Type-Options Header Missing", "severity": "low", "risk_score": 25, "correlation_id": "10.0.0.5:80", "status": "detected", "source_tools": ["zap"], "asset": {"type": "web", "identifier": "http://10.0.0.5:80"}}, {"title": "Open port 80/tcp \u2014 http (nginx 1.18.0)", "severity": "info", "risk_score": 6, "correlation_id": "10.0.0.5:80", "status": "detected", "source_tools": ["nmap"], "asset": {"type": "infra", "identifier": "10.0.0.5"}}, {"title": "nginx detected", "severity": "info", "risk_score": 5, "correlation_id": "10.0.0.5:80", "status": "detected", "source_tools": ["nuclei"], "asset": {"type": "web", "identifier": "http://10.0.0.5:80"}}]}},_LIST=[{"id": "demo-1", "name": "Acme \u2014 External Web & Infra Assessment", "status": "completed", "findings": 7}, {"id": "demo-2", "name": "Blog WordPress Review", "status": "completed", "findings": 3}];
+api=async function(path){const w=o=>({json:async()=>o,text:async()=>o});
+  if(path==="/me")return w({tenant_id:"acmedemo01",role:"owner"});
+  if(path==="/engagements")return w(_LIST);
+  if(path.indexOf("/report")>-1)return {text:async()=>"<h1>Report preview</h1><p>The full HTML report opens here.</p>"};
+  if(path.indexOf("/engagements/demo-1")===0)return w(_REC);
+  if(path.indexOf("/engagements/demo-2")===0)return w({id:"demo-2",name:"Blog WordPress Review",status:"completed",engagement:{name:"Blog WordPress Review",assets:[{type:"wordpress",identifier:"http://blog.example.com"}],findings:[]}});
+  return w({});};
 setStatus();loadList();openEng("demo-1");
 document.querySelectorAll("button").forEach(b=>{if(/Run scan/.test(b.textContent))b.disabled=true;});
 </script>
-
 </body></html>

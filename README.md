@@ -102,15 +102,21 @@ pentestiq serve                 # web console at http://127.0.0.1:8000  (API doc
 ```
 
 ```bash
-# create -> run -> fetch report  (tenant via X-API-Key)
-curl -XPOST localhost:8000/engagements -H "X-API-Key: acme" -H "Content-Type: application/json" \
+# register a tenant + owner, then use the returned token (Authorization: Bearer)
+TOK=$(curl -s -XPOST localhost:8000/auth/register -H "Content-Type: application/json" \
+  -d '{"tenant_name":"Acme","username":"alice","password":"password123"}' | jq -r .token)
+
+curl -XPOST localhost:8000/engagements -H "Authorization: Bearer $TOK" -H "Content-Type: application/json" \
   -d '{"engagement":{"name":"Acme"},"scope":{"in_scope":["web=http://localhost:3000"]}}'
-curl -XPOST localhost:8000/engagements/<id>/run -H "X-API-Key: acme"
-curl localhost:8000/engagements/<id>/report -H "X-API-Key: acme"   # HTML report
+curl -XPOST localhost:8000/engagements/<id>/run -H "Authorization: Bearer $TOK"
+curl localhost:8000/engagements/<id>/report -H "Authorization: Bearer $TOK"   # HTML report
 ```
 
-Persistence is SQLite (Postgres-swappable); every record is tenant-scoped. The
-web console, multi-tenancy/RBAC, scheduling, and billing follow — see
+**Auth & multi-tenancy:** register/login for session tokens, or mint per-tenant
+**API keys** (`POST /apikeys`) for automation. Roles (viewer/member/admin/owner)
+are enforced per endpoint; every record is tenant-scoped. Bootstrap without HTTP:
+`pentestiq init-tenant --tenant Acme --username alice --password ...`. Persistence
+is SQLite (Postgres-swappable). Web console, scheduling, and billing follow — see
 [docs/PHASE2_ROADMAP.md](docs/PHASE2_ROADMAP.md).
 
 ## Documentation
