@@ -6,6 +6,11 @@ All notable changes to PentestIQ are documented here. This project adheres to
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
+- **Desktop module** — static analysis of uploaded binaries (PE/ELF/Mach-O): a
+  **secrets scanner** (AWS/Google/Slack keys, private keys, JWTs, hardcoded
+  credentials, cleartext http:// URLs) and a **binary-hardening** check (NX, PIE/ASLR,
+  stack canary, RELRO, DEP, CFG) via lief. Native — no external CLI. Six modules now.
+  Uploaded through the same console button (`.exe`/`.dmg`/`.msi`/… auto-typed).
 - **APK/IPA upload in the console** — `POST /engagements/upload` (multipart) plus an
   "Upload & scan" button; the server saves the app and runs it through MobSF.
   No file paths for the user. Deployment compose (`deploy/docker-compose.yml`) runs
