@@ -57,7 +57,7 @@ Plus: **lab setup automation** (Docker/Vagrant/Terraform-based intentionally-vul
 
 ## Project Status
 
-🚧 **Early development — Weeks 1–6 complete.** Working now: the
+🚧 **Early development — Weeks 1–7 complete.** Working now: the
 orchestration engine boots, loads an engagement scope, runs the
 discover→assess→validate workflow across in-scope assets, and reports via a CLI.
 The normalized findings model (with cross-tool dedup) and scope/safe-mode

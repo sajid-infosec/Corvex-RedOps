@@ -12,3 +12,12 @@ scope:
     - "admin.example.com"
   allowed_actions: [discover, assess, validate_safe]   # intrusive requires explicit opt-in
 safe_mode: true
+
+# --- Explicit asset typing (optional) ---
+# Prefix an entry with "<type>=" to force the module used for it. Types:
+#   infra web wordpress api mobile desktop network_device firewall
+# Examples:
+#   - wordpress=http://blog.example.com
+#   - api=https://api.example.com/openapi.json
+#   - infra=10.0.0.0/24
+# Without a prefix, the type is inferred (URLs/hosts -> web, IPs/CIDRs -> infra).

@@ -25,3 +25,10 @@ def test_web_module_orchestrates_tools():
                         config=AppConfig(), logger=get_logger("test"))
     out = module.assess(ctx)
     assert len(out) == 2
+
+
+def test_all_builtin_modules_registered():
+    from pentestiq.core.registry import registry
+    import pentestiq.modules  # noqa
+    names = {m.name for m in registry.all()}
+    assert {"infra", "web", "wordpress", "api"} <= names

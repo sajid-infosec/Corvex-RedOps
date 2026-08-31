@@ -1,0 +1,28 @@
+{
+  "target_url": "http://blog.example.com/",
+  "version": {
+    "number": "5.4.1",
+    "status": "insecure",
+    "vulnerabilities": [
+      {"title": "WordPress <5.4.2 - Cross-Site Scripting (XSS)",
+       "references": {"cve": ["2020-11111"], "url": ["https://wpscan.com/vuln/aaa"]},
+       "fixed_in": "5.4.2"}
+    ]
+  },
+  "main_theme": {"slug": "twentytwenty", "version": {"number": "1.2"}, "vulnerabilities": []},
+  "plugins": {
+    "contact-form-7": {
+      "slug": "contact-form-7",
+      "version": {"number": "5.1.0"},
+      "vulnerabilities": [
+        {"title": "Contact Form 7 <5.1.4 - Unrestricted File Upload",
+         "references": {"cve": ["2020-35489"], "url": ["https://wpscan.com/vuln/bbb"]},
+         "fixed_in": "5.1.4"}
+      ]
+    }
+  },
+  "users": {"admin": {"id": 1}, "editor": {"id": 2}},
+  "interesting_findings": [
+    {"type": "headers", "to_s": "Server: Apache/2.4", "url": "http://blog.example.com/"}
+  ]
+}
