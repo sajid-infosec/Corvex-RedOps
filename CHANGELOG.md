@@ -3,6 +3,18 @@
 All notable changes to PentestIQ are documented here. This project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased] — Phase 2 (SaaS)
+
+### Added
+- **REST API** (FastAPI) over the engine — `pentestiq serve`, or
+  `uvicorn pentestiq.api.app:app`. Endpoints: create/list/get engagement, run
+  (background with status), findings, report (HTML/Markdown), health. Auto docs at `/docs`.
+- **Persistence layer** — `EngagementStore` with a SQLite backend (Postgres-swappable);
+  engagements survive restarts.
+- **Tenancy scaffolding** — every record scoped to a tenant via the `X-API-Key` header.
+- Engine: programmatic entry points (`build_from_dict`, `run_from_dict`, `execute`).
+- See [docs/PHASE2_ROADMAP.md](docs/PHASE2_ROADMAP.md) for the SaaS plan.
+
 ## [0.1.0] — 2026-08-31
 
 First open-source release. End-to-end VAPT pipeline: **scope → scan → normalize

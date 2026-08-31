@@ -89,6 +89,28 @@ pentestiq version
 > visits and logs assets and produces zero findings — that’s the Week 1 skeleton.
 > Real scanning arrives with the web + infra modules.
 
+## REST API (Phase 2 · in progress)
+
+PentestIQ is growing a hosted SaaS layer on top of the open-source engine. The
+first piece — the REST API backbone — is in the repo:
+
+```bash
+pip install -e ".[api]"
+pentestiq serve                 # http://127.0.0.1:8000  (OpenAPI docs at /docs)
+```
+
+```bash
+# create -> run -> fetch report  (tenant via X-API-Key)
+curl -XPOST localhost:8000/engagements -H "X-API-Key: acme" -H "Content-Type: application/json" \
+  -d '{"engagement":{"name":"Acme"},"scope":{"in_scope":["web=http://localhost:3000"]}}'
+curl -XPOST localhost:8000/engagements/<id>/run -H "X-API-Key: acme"
+curl localhost:8000/engagements/<id>/report -H "X-API-Key: acme"   # HTML report
+```
+
+Persistence is SQLite (Postgres-swappable); every record is tenant-scoped. The
+web console, multi-tenancy/RBAC, scheduling, and billing follow — see
+[docs/PHASE2_ROADMAP.md](docs/PHASE2_ROADMAP.md).
+
 ## Documentation
 
 - **[Architecture](docs/ARCHITECTURE.md)** — system design, engine, modules, data model, tech stack.
