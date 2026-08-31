@@ -1,0 +1,5 @@
+lynis_version=3.0.9
+hardening_index=56
+warning[]=SSH-7408|SSH root login is allowed|-|-|
+suggestion[]=SSH-7408|Consider disabling root login over SSH|-|-|
+suggestion[]=AUTH-9328|Configure password aging (PASS_MAX_DAYS)|-|-|

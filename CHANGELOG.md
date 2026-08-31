@@ -6,6 +6,11 @@ All notable changes to PentestIQ are documented here. This project adheres to
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
+- **Hardening module** — CIS-style gap analysis: audits **sshd_config** (root login,
+  password auth, empty passwords, SSHv1, weak ciphers/MACs, X11, MaxAuthTries, idle
+  timeout), **sysctl** (ASLR, ip_forward, ICMP redirects, SYN cookies, rp_filter), and
+  ingests **Lynis reports** (warnings/suggestions/hardening_index). Native. **This
+  completes all nine asset modules of the original vision.**
 - **Firewall module (nipper-class)** — audits firewall rulesets (**iptables-save** and
   **Cisco ASA** access-lists): flags default-allow policies, **any-to-any permits**,
   dangerous services (Telnet/RDP/SMB/DB/…) exposed to any source, all-ports-from-any,
