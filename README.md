@@ -117,6 +117,8 @@ curl localhost:8000/engagements/<id>/report -H "Authorization: Bearer $TOK"   # 
 **white-labelled** per tenant via `PUT /settings` (company name, accent color, footer).
 A branded sample lives in [`examples/sample-report/`](examples/sample-report/).
 
+**Mobile testing:** upload an APK/IPA through the console's **Upload & scan** button (or `POST /engagements/upload`); the co-located **MobSF** analyzes it and results flow into the same findings pipeline. One-command self-host (PentestIQ + MobSF) in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
 **Continuous scanning:** create a schedule (`POST /schedules` with an `interval_seconds`)
 and PentestIQ re-runs it automatically, **diffing new vs fixed vs persisting** findings
 between runs and posting a summary to a Slack/webhook URL. `GET /schedules/{id}/diff`

@@ -1,0 +1,37 @@
+# PentestIQ + MobSF, co-located. The PentestIQ server orchestrates MobSF, which
+# performs the actual APK/IPA analysis. Users upload apps through the console —
+# no file paths, no direct MobSF access needed.
+#
+#   1. export MOBSF_API_KEY=$(openssl rand -hex 32)
+#   2. export PENTESTIQ_SECRET_KEY=$(openssl rand -hex 32)
+#   3. docker compose -f deploy/docker-compose.yml up -d --build
+#   4. open http://localhost:8080  (console) — register, then Upload & scan an APK
+services:
+  mobsf:
+    image: opensecurity/mobile-security-framework-mobsf:latest
+    container_name: pentestiq-mobsf
+    environment:
+      - MOBSF_API_KEY=${MOBSF_API_KEY:?set MOBSF_API_KEY}
+    ports:
+      - "8000:8000"          # MobSF UI/API (optional to expose publicly)
+    restart: unless-stopped
+
+  pentestiq:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: pentestiq-api
+    depends_on:
+      - mobsf
+    environment:
+      - MOBSF_URL=http://mobsf:8000
+      - MOBSF_API_KEY=${MOBSF_API_KEY:?set MOBSF_API_KEY}
+      - PENTESTIQ_SECRET_KEY=${PENTESTIQ_SECRET_KEY:?set PENTESTIQ_SECRET_KEY}
+    ports:
+      - "8080:8080"          # PentestIQ API + console
+    volumes:
+      - pentestiq-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  pentestiq-data:

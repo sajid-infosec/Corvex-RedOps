@@ -6,6 +6,10 @@ All notable changes to PentestIQ are documented here. This project adheres to
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
+- **APK/IPA upload in the console** — `POST /engagements/upload` (multipart) plus an
+  "Upload & scan" button; the server saves the app and runs it through MobSF.
+  No file paths for the user. Deployment compose (`deploy/docker-compose.yml`) runs
+  PentestIQ + MobSF together; see docs/DEPLOYMENT.md.
 - **Mobile module** — APK/IPA static analysis via **MobSF** (code analysis, manifest
   issues, dangerous permissions, hardcoded secrets, certificate analysis) with
   CWE / OWASP-Mobile / MASVS references. Asset auto-typing for `.apk`/`.ipa`
