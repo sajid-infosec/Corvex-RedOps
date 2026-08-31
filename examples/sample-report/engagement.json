@@ -1,0 +1,362 @@
+{
+  "id": "5422ad44-198a-46eb-8b09-fa23fba8ed89",
+  "name": "Acme Corp — External Web & Infra Assessment",
+  "scope": {
+    "name": "Acme Corp — External Web & Infra Assessment",
+    "authorized_by": "Acme Corp CISO (demonstration data)",
+    "in_scope": [
+      "10.0.0.5",
+      "http://10.0.0.5:80"
+    ],
+    "exclusions": [],
+    "allowed_actions": [
+      "discover",
+      "assess",
+      "validate_safe"
+    ],
+    "window": null,
+    "safe_mode": true,
+    "enforcement": "warn"
+  },
+  "assets": [
+    {
+      "type": "infra",
+      "identifier": "10.0.0.5",
+      "label": null,
+      "metadata": {}
+    },
+    {
+      "type": "web",
+      "identifier": "http://10.0.0.5:80",
+      "label": null,
+      "metadata": {}
+    }
+  ],
+  "findings": [
+    {
+      "id": "35f25459-afa8-4103-b1bb-4efe60dc9c61",
+      "engagement_id": "5422ad44-198a-46eb-8b09-fa23fba8ed89",
+      "asset": {
+        "type": "infra",
+        "identifier": "10.0.0.5",
+        "label": null,
+        "metadata": {}
+      },
+      "title": "Open port 22/tcp — ssh (OpenSSH 8.2p1)",
+      "category": "open-port",
+      "severity": "info",
+      "cvss": null,
+      "confidence": "high",
+      "status": "detected",
+      "source_tools": [
+        "nmap"
+      ],
+      "evidence": [
+        {
+          "type": "service",
+          "ref": "10.0.0.5:22/tcp",
+          "description": "OpenSSH 8.2p1"
+        }
+      ],
+      "validation": {
+        "attempted": false,
+        "method": "safe",
+        "result": "not_attempted",
+        "notes": null
+      },
+      "remediation": null,
+      "references": [],
+      "location": "22/tcp",
+      "first_seen": "2026-08-31T05:41:27.376566Z",
+      "last_seen": "2026-08-31T05:41:27.376567Z",
+      "risk_score": 5.5,
+      "correlation_id": "10.0.0.5:22"
+    },
+    {
+      "id": "54d51648-8e83-42aa-b6e2-33a2567a86f6",
+      "engagement_id": "5422ad44-198a-46eb-8b09-fa23fba8ed89",
+      "asset": {
+        "type": "infra",
+        "identifier": "10.0.0.5",
+        "label": null,
+        "metadata": {}
+      },
+      "title": "Open port 23/tcp — telnet",
+      "category": "open-port",
+      "severity": "low",
+      "cvss": null,
+      "confidence": "high",
+      "status": "detected",
+      "source_tools": [
+        "nmap"
+      ],
+      "evidence": [
+        {
+          "type": "service",
+          "ref": "10.0.0.5:23/tcp",
+          "description": "telnet"
+        }
+      ],
+      "validation": {
+        "attempted": false,
+        "method": "safe",
+        "result": "not_attempted",
+        "notes": null
+      },
+      "remediation": null,
+      "references": [],
+      "location": "23/tcp",
+      "first_seen": "2026-08-31T05:41:27.376574Z",
+      "last_seen": "2026-08-31T05:41:27.376575Z",
+      "risk_score": 27.5,
+      "correlation_id": "10.0.0.5:23"
+    },
+    {
+      "id": "b27c848c-20a8-4b0f-8886-2e2ab8e51016",
+      "engagement_id": "5422ad44-198a-46eb-8b09-fa23fba8ed89",
+      "asset": {
+        "type": "infra",
+        "identifier": "10.0.0.5",
+        "label": null,
+        "metadata": {}
+      },
+      "title": "Open port 80/tcp — http (nginx 1.18.0)",
+      "category": "open-port",
+      "severity": "info",
+      "cvss": null,
+      "confidence": "high",
+      "status": "detected",
+      "source_tools": [
+        "nmap"
+      ],
+      "evidence": [
+        {
+          "type": "service",
+          "ref": "10.0.0.5:80/tcp",
+          "description": "nginx 1.18.0"
+        }
+      ],
+      "validation": {
+        "attempted": false,
+        "method": "safe",
+        "result": "not_attempted",
+        "notes": null
+      },
+      "remediation": null,
+      "references": [],
+      "location": "80/tcp",
+      "first_seen": "2026-08-31T05:41:27.376580Z",
+      "last_seen": "2026-08-31T05:41:27.376580Z",
+      "risk_score": 5.5,
+      "correlation_id": "10.0.0.5:80"
+    },
+    {
+      "id": "110a0a28-714c-4e35-aab7-96192a91a2a9",
+      "engagement_id": "5422ad44-198a-46eb-8b09-fa23fba8ed89",
+      "asset": {
+        "type": "web",
+        "identifier": "http://10.0.0.5:80",
+        "label": null,
+        "metadata": {}
+      },
+      "title": "SQL Injection",
+      "category": "CWE-89",
+      "severity": "high",
+      "cvss": null,
+      "confidence": "high",
+      "status": "validated",
+      "source_tools": [
+        "zap"
+      ],
+      "evidence": [
+        {
+          "type": "http",
+          "ref": "http://10.0.0.5:80/login",
+          "description": "POST SQL error"
+        },
+        {
+          "type": "validation",
+          "ref": "http://10.0.0.5:80/login",
+          "description": "Boolean-based inference: TRUE matched baseline, FALSE diverged (base=(200, 160), true=(200, 160), false=(200, 7))"
+        }
+      ],
+      "validation": {
+        "attempted": true,
+        "method": "safe",
+        "result": "confirmed",
+        "notes": null
+      },
+      "remediation": "Use parameterized queries.",
+      "references": [
+        "https://owasp.org/sqli",
+        "https://cwe.mitre.org/data/definitions/89.html"
+      ],
+      "location": null,
+      "first_seen": "2026-08-31T05:41:27.376890Z",
+      "last_seen": "2026-08-31T05:41:27.376890Z",
+      "risk_score": 94.9,
+      "correlation_id": "10.0.0.5:80"
+    },
+    {
+      "id": "fca2c74b-885d-401b-8e28-8f93af4e0693",
+      "engagement_id": "5422ad44-198a-46eb-8b09-fa23fba8ed89",
+      "asset": {
+        "type": "web",
+        "identifier": "http://10.0.0.5:80",
+        "label": null,
+        "metadata": {}
+      },
+      "title": "X-Content-Type-Options Header Missing",
+      "category": "CWE-16",
+      "severity": "low",
+      "cvss": null,
+      "confidence": "medium",
+      "status": "detected",
+      "source_tools": [
+        "zap"
+      ],
+      "evidence": [
+        {
+          "type": "http",
+          "ref": "http://10.0.0.5:80/",
+          "description": "GET"
+        }
+      ],
+      "validation": {
+        "attempted": false,
+        "method": "safe",
+        "result": "not_attempted",
+        "notes": null
+      },
+      "remediation": "Set the header.",
+      "references": [],
+      "location": null,
+      "first_seen": "2026-08-31T05:41:27.376899Z",
+      "last_seen": "2026-08-31T05:41:27.376899Z",
+      "risk_score": 25.0,
+      "correlation_id": "10.0.0.5:80"
+    },
+    {
+      "id": "a3f0917c-c924-4681-85a7-538833ae3710",
+      "engagement_id": "5422ad44-198a-46eb-8b09-fa23fba8ed89",
+      "asset": {
+        "type": "infra",
+        "identifier": "10.0.0.5",
+        "label": null,
+        "metadata": {}
+      },
+      "title": "Example RCE",
+      "category": "CVE-2021-1234",
+      "severity": "critical",
+      "cvss": null,
+      "confidence": "medium",
+      "status": "detected",
+      "source_tools": [
+        "nuclei"
+      ],
+      "evidence": [
+        {
+          "type": "match",
+          "ref": "http://10.0.0.5:80/vuln",
+          "description": "Remote code execution"
+        }
+      ],
+      "validation": {
+        "attempted": false,
+        "method": "safe",
+        "result": "not_attempted",
+        "notes": null
+      },
+      "remediation": null,
+      "references": [
+        "https://nvd.nist.gov/vuln/detail/CVE-2021-1234"
+      ],
+      "location": null,
+      "first_seen": "2026-08-31T05:41:27.377134Z",
+      "last_seen": "2026-08-31T05:41:27.377134Z",
+      "risk_score": 90.0,
+      "correlation_id": "10.0.0.5:80"
+    },
+    {
+      "id": "6bf7ac0f-b6b5-4fa7-84e4-be5f7e087789",
+      "engagement_id": "5422ad44-198a-46eb-8b09-fa23fba8ed89",
+      "asset": {
+        "type": "infra",
+        "identifier": "10.0.0.5",
+        "label": null,
+        "metadata": {}
+      },
+      "title": "nginx detected",
+      "category": "tech-detect",
+      "severity": "info",
+      "cvss": null,
+      "confidence": "medium",
+      "status": "detected",
+      "source_tools": [
+        "nuclei"
+      ],
+      "evidence": [
+        {
+          "type": "match",
+          "ref": "http://10.0.0.5:80",
+          "description": null
+        }
+      ],
+      "validation": {
+        "attempted": false,
+        "method": "safe",
+        "result": "not_attempted",
+        "notes": null
+      },
+      "remediation": null,
+      "references": [],
+      "location": null,
+      "first_seen": "2026-08-31T05:41:27.377145Z",
+      "last_seen": "2026-08-31T05:41:27.377145Z",
+      "risk_score": 5.0,
+      "correlation_id": "10.0.0.5:80"
+    },
+    {
+      "id": "7f536b20-10d2-434c-aa45-3e8ba571d22b",
+      "engagement_id": "5422ad44-198a-46eb-8b09-fa23fba8ed89",
+      "asset": {
+        "type": "infra",
+        "identifier": "10.0.0.5",
+        "label": null,
+        "metadata": {}
+      },
+      "title": "Weak TLS",
+      "category": "weak-tls",
+      "severity": "medium",
+      "cvss": null,
+      "confidence": "medium",
+      "status": "detected",
+      "source_tools": [
+        "nuclei"
+      ],
+      "evidence": [
+        {
+          "type": "match",
+          "ref": "https://10.0.0.5:443",
+          "description": null
+        }
+      ],
+      "validation": {
+        "attempted": false,
+        "method": "safe",
+        "result": "not_attempted",
+        "notes": null
+      },
+      "remediation": null,
+      "references": [
+        "https://example.com/tls"
+      ],
+      "location": null,
+      "first_seen": "2026-08-31T05:41:27.377152Z",
+      "last_seen": "2026-08-31T05:41:27.377152Z",
+      "risk_score": 50.0,
+      "correlation_id": "10.0.0.5:443"
+    }
+  ],
+  "created_at": "2026-08-31T05:41:27.376258Z"
+}

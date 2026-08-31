@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VAPT Report — Acme Corp — External Web &amp; Infra Assessment</title>
+<style>
+  :root { color-scheme: light; }
+  body { font: 15px/1.6 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    color:#1f2937; background:#f9fafb; margin:0; padding:0 0 60px; }
+  .wrap { max-width:900px; margin:0 auto; padding:0 24px; }
+  header { background:#0f172a; color:#fff; padding:32px 0; margin-bottom:24px; }
+  header .wrap { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; }
+  header h1 { margin:0; font-size:24px; } header .sub { color:#94a3b8; font-size:13px; }
+  .rating { display:inline-block; background:#7f1d1d; color:#fff; padding:6px 14px;
+    border-radius:6px; font-weight:700; }
+  h2 { border-bottom:2px solid #e5e7eb; padding-bottom:6px; margin-top:32px; }
+  .cards { display:flex; gap:12px; flex-wrap:wrap; margin:16px 0; }
+  .card { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:14px 18px;
+    text-align:center; min-width:90px; }
+  .card .num { font-size:28px; font-weight:700; } .card .lbl { font-size:12px; color:#6b7280; }
+  .kpis { color:#374151; font-size:14px; margin:8px 0 0; }
+  .finding { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:16px 18px; margin:14px 0; }
+  .finding h3 { margin:8px 0 4px; font-size:17px; }
+  .fhead { display:flex; align-items:center; gap:10px; font-size:13px; }
+  .fhead .rank { color:#9ca3af; font-weight:700; }
+  .fhead .risk { background:#111827; color:#fff; padding:2px 8px; border-radius:4px; font-weight:600; }
+  .fhead .status { color:#374151; text-transform:uppercase; font-size:11px; letter-spacing:.04em; }
+  .meta { color:#6b7280; font-size:13px; margin-bottom:8px; }
+  .val { background:#ecfdf5; border:1px solid #a7f3d0; padding:6px 10px; border-radius:6px; font-size:13px; margin:6px 0; }
+  .ev ul { margin:4px 0; padding-left:20px; } .ev code, .meta code { background:#f3f4f6; padding:1px 5px; border-radius:3px; font-size:12px; }
+  .rem { margin-top:6px; } .refs { font-size:13px; margin-top:6px; word-break:break-all; }
+  footer { color:#9ca3af; font-size:12px; text-align:center; margin-top:40px; }
+  ul { margin:6px 0; }
+</style></head><body>
+<header><div class="wrap"><h1>VAPT Report — Acme Corp — External Web &amp; Infra Assessment</h1>
+  <span class="sub">PentestIQ · 2026-08-31 05:41 UTC</span></div></header>
+<div class="wrap">
+  <h2>Executive Summary</h2>
+  <p>PentestIQ assessed 2 assets for engagement &quot;Acme Corp — External Web &amp; Infra Assessment&quot; and identified 8 findings (overall risk rating: Critical). By severity: 1 critical, 1 high, 1 medium, 2 low. 1 finding was safely validated as exploitable through non-destructive checks (including: SQL Injection), removing false-positive doubt. The highest-priority item is &quot;SQL Injection&quot; (high, risk 95) on web:http://10.0.0.5:80.</p>
+  <p><span class="rating" style="background:#7f1d1d">
+    Overall risk: Critical</span></p>
+  <div class="cards"><div class="card"><div class="num" style="color:#7f1d1d">1</div><div class="lbl">Critical</div></div><div class="card"><div class="num" style="color:#b91c1c">1</div><div class="lbl">High</div></div><div class="card"><div class="num" style="color:#c2701c">1</div><div class="lbl">Medium</div></div><div class="card"><div class="num" style="color:#2563eb">2</div><div class="lbl">Low</div></div><div class="card"><div class="num" style="color:#4b5563">3</div><div class="lbl">Info</div></div></div>
+  <div class="kpis">Assets: <b>2</b> · Findings: <b>8</b>
+    · Validated: <b>1</b> · False positives dismissed:
+    <b>0</b> · Attack chains: <b>4</b></div>
+
+  <h2>Scope</h2><p><b>Authorized by:</b> Acme Corp CISO (demonstration data)</p><ul><li>10.0.0.5</li><li>http://10.0.0.5:80</li></ul>
+
+  <h2>Methodology</h2>
+  <p>PentestIQ orchestrated industry-standard tools (Nmap, Nuclei, OWASP ZAP), normalized and
+  deduplicated results into one findings model, then applied non-destructive safe-mode
+  validation to confirm exploitability and remove false positives. Findings are prioritized by
+  a blended risk score and correlated into attack chains.</p>
+
+  <h2>Findings (8)</h2>
+  <div class="finding" style="border-left:5px solid #b91c1c">
+      <div class="fhead"><span class="rank">#1</span> <span style="background:#b91c1c;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;text-transform:uppercase">high</span>
+        <span class="risk">risk 95</span>
+        <span class="status">validated</span></div>
+      <h3>SQL Injection</h3>
+      <div class="meta">web:http://10.0.0.5:80 · CWE-89 · chain 10.0.0.5:80
+        · tools: zap</div>
+      <div class="val">Validation: safe → <b>confirmed</b></div><div class="ev"><b>Evidence</b><ul><li><code>http://10.0.0.5:80/login</code> — POST SQL error</li><li><code>http://10.0.0.5:80/login</code> — Boolean-based inference: TRUE matched baseline, FALSE diverged (base=(200, 160), true=(200, 160), false=(200, 7))</li></ul></div><div class="rem"><b>Remediation:</b> Use parameterized queries.</div><div class='refs'><b>References:</b> <a href="https://owasp.org/sqli">https://owasp.org/sqli</a>, <a href="https://cwe.mitre.org/data/definitions/89.html">https://cwe.mitre.org/data/definitions/89.html</a>, <a href="https://cwe.mitre.org/data/definitions/89.html">https://cwe.mitre.org/data/definitions/89.html</a></div>
+    </div>
+<div class="finding" style="border-left:5px solid #7f1d1d">
+      <div class="fhead"><span class="rank">#2</span> <span style="background:#7f1d1d;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;text-transform:uppercase">critical</span>
+        <span class="risk">risk 90</span>
+        <span class="status">detected</span></div>
+      <h3>Example RCE</h3>
+      <div class="meta">infra:10.0.0.5 · CVE-2021-1234 · chain 10.0.0.5:80
+        · tools: nuclei</div>
+      <div class="ev"><b>Evidence</b><ul><li><code>http://10.0.0.5:80/vuln</code> — Remote code execution</li></ul></div><div class='refs'><b>References:</b> <a href="https://nvd.nist.gov/vuln/detail/CVE-2021-1234">https://nvd.nist.gov/vuln/detail/CVE-2021-1234</a></div>
+    </div>
+<div class="finding" style="border-left:5px solid #c2701c">
+      <div class="fhead"><span class="rank">#3</span> <span style="background:#c2701c;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;text-transform:uppercase">medium</span>
+        <span class="risk">risk 50</span>
+        <span class="status">detected</span></div>
+      <h3>Weak TLS</h3>
+      <div class="meta">infra:10.0.0.5 · weak-tls · chain 10.0.0.5:443
+        · tools: nuclei</div>
+      <div class="ev"><b>Evidence</b><ul><li><code>https://10.0.0.5:443</code></li></ul></div><div class='refs'><b>References:</b> <a href="https://example.com/tls">https://example.com/tls</a></div>
+    </div>
+<div class="finding" style="border-left:5px solid #2563eb">
+      <div class="fhead"><span class="rank">#4</span> <span style="background:#2563eb;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;text-transform:uppercase">low</span>
+        <span class="risk">risk 28</span>
+        <span class="status">detected</span></div>
+      <h3>Open port 23/tcp — telnet</h3>
+      <div class="meta">infra:10.0.0.5 · open-port · chain 10.0.0.5:23
+        · tools: nmap</div>
+      <div class="ev"><b>Evidence</b><ul><li><code>10.0.0.5:23/tcp</code> — telnet</li></ul></div>
+    </div>
+<div class="finding" style="border-left:5px solid #2563eb">
+      <div class="fhead"><span class="rank">#5</span> <span style="background:#2563eb;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;text-transform:uppercase">low</span>
+        <span class="risk">risk 25</span>
+        <span class="status">detected</span></div>
+      <h3>X-Content-Type-Options Header Missing</h3>
+      <div class="meta">web:http://10.0.0.5:80 · CWE-16 · chain 10.0.0.5:80
+        · tools: zap</div>
+      <div class="ev"><b>Evidence</b><ul><li><code>http://10.0.0.5:80/</code> — GET</li></ul></div><div class="rem"><b>Remediation:</b> Set the header.</div><div class='refs'><b>References:</b> <a href="https://cwe.mitre.org/data/definitions/16.html">https://cwe.mitre.org/data/definitions/16.html</a></div>
+    </div>
+<div class="finding" style="border-left:5px solid #4b5563">
+      <div class="fhead"><span class="rank">#6</span> <span style="background:#4b5563;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;text-transform:uppercase">info</span>
+        <span class="risk">risk 6</span>
+        <span class="status">detected</span></div>
+      <h3>Open port 22/tcp — ssh (OpenSSH 8.2p1)</h3>
+      <div class="meta">infra:10.0.0.5 · open-port · chain 10.0.0.5:22
+        · tools: nmap</div>
+      <div class="ev"><b>Evidence</b><ul><li><code>10.0.0.5:22/tcp</code> — OpenSSH 8.2p1</li></ul></div>
+    </div>
+<div class="finding" style="border-left:5px solid #4b5563">
+      <div class="fhead"><span class="rank">#7</span> <span style="background:#4b5563;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;text-transform:uppercase">info</span>
+        <span class="risk">risk 6</span>
+        <span class="status">detected</span></div>
+      <h3>Open port 80/tcp — http (nginx 1.18.0)</h3>
+      <div class="meta">infra:10.0.0.5 · open-port · chain 10.0.0.5:80
+        · tools: nmap</div>
+      <div class="ev"><b>Evidence</b><ul><li><code>10.0.0.5:80/tcp</code> — nginx 1.18.0</li></ul></div>
+    </div>
+<div class="finding" style="border-left:5px solid #4b5563">
+      <div class="fhead"><span class="rank">#8</span> <span style="background:#4b5563;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;text-transform:uppercase">info</span>
+        <span class="risk">risk 5</span>
+        <span class="status">detected</span></div>
+      <h3>nginx detected</h3>
+      <div class="meta">infra:10.0.0.5 · tech-detect · chain 10.0.0.5:80
+        · tools: nuclei</div>
+      <div class="ev"><b>Evidence</b><ul><li><code>http://10.0.0.5:80</code></li></ul></div>
+    </div>
+
+  <footer>Authorized use only. Testing performed under an agreed engagement scope. Findings are confidential.<br>
+    Generated by PentestIQ.</footer>
+</div></body></html>
