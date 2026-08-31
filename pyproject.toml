@@ -1,10 +1,10 @@
 [project]
 name = "pentestiq"
-version = "0.1.0.dev0"
+version = "0.1.0"
 description = "Orchestration-driven Vulnerability Assessment & Penetration Testing platform"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "Proprietary (see LICENSE)" }
+license = { text = "Apache-2.0" }
 authors = [{ name = "Sajid" }]
 dependencies = [
     "pydantic>=2.6",

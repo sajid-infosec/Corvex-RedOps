@@ -8,6 +8,8 @@
 
 [Overview](#overview) · [What It Covers](#what-it-covers) · [Architecture](docs/ARCHITECTURE.md) · [Roadmap](docs/ROADMAP.md) · [Business Plan](docs/BUSINESS_PLAN.md) · [Legal & Ethics](docs/LEGAL_AND_ETHICS.md)
 
+![CI](https://github.com/sajid-infosec/PentestIQ/actions/workflows/ci.yml/badge.svg) ![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg) ![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg) ![Tests](https://img.shields.io/badge/tests-66%20passing-brightgreen.svg)
+
 </div>
 
 ---
@@ -57,7 +59,7 @@ Plus: **lab setup automation** (Docker/Vagrant/Terraform-based intentionally-vul
 
 ## Project Status
 
-🚧 **Early development — Weeks 1–7 complete.** Working now: the
+🚀 **v0.1.0 — first release.** The full loop works end-to-end: scope → scan → normalize → validate → prioritize → report, across four asset modules (infra, web, WordPress, API). See the [Quickstart](docs/QUICKSTART.md), [Demo](docs/DEMO.md), and [CHANGELOG](CHANGELOG.md). Earlier context: Working now: the
 orchestration engine boots, loads an engagement scope, runs the
 discover→assess→validate workflow across in-scope assets, and reports via a CLI.
 The normalized findings model (with cross-tool dedup) and scope/safe-mode
@@ -96,7 +98,7 @@ pentestiq version
 
 ## License
 
-Planned: open-core. Core engine & modules under a permissive/OSS license; hosted SaaS features under a commercial license. See [LICENSE](LICENSE).
+Core engine & modules: **Apache-2.0** (see [LICENSE](LICENSE)). Future hosted SaaS / enterprise features will ship under a separate commercial license — the open-core split described in the [business plan](docs/BUSINESS_PLAN.md).
 
 ## Author
 
