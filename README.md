@@ -59,7 +59,7 @@ Plus: **lab setup automation** (Docker/Vagrant/Terraform-based intentionally-vul
 
 ## Project Status
 
-🚀 **v0.1.0 — first release.** The full loop works end-to-end: scope → scan → normalize → validate → prioritize → report, across four asset modules (infra, web, WordPress, API). See the [Quickstart](docs/QUICKSTART.md), [Demo](docs/DEMO.md), and [CHANGELOG](CHANGELOG.md). Earlier context: Working now: the
+🚀 **v0.1.0 — first release.** The full loop works end-to-end: scope → scan → normalize → validate → prioritize → report, across five asset modules (infra, web, WordPress, API, mobile). See the [Quickstart](docs/QUICKSTART.md), [Demo](docs/DEMO.md), and [CHANGELOG](CHANGELOG.md). Earlier context: Working now: the
 orchestration engine boots, loads an engagement scope, runs the
 discover→assess→validate workflow across in-scope assets, and reports via a CLI.
 The normalized findings model (with cross-tool dedup) and scope/safe-mode

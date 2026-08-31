@@ -1,0 +1,45 @@
+{
+  "app_name": "DemoBank",
+  "package_name": "com.demo.bank",
+  "version_name": "1.4.2",
+  "app_type": "apk",
+  "security_score": 38,
+  "code_analysis": {
+    "findings": {
+      "android_webview_debug": {
+        "metadata": {"severity": "high", "description": "WebView debugging enabled in production",
+                     "cwe": "CWE-919", "owasp-mobile": "M1: Improper Platform Usage",
+                     "masvs": "MSTG-CODE-2"},
+        "files": {"com/demo/bank/WebActivity.java": "42"}
+      },
+      "android_insecure_random": {
+        "metadata": {"severity": "warning", "description": "Insecure random number generator used",
+                     "cwe": "CWE-330", "owasp-mobile": "M5: Insufficient Cryptography",
+                     "masvs": "MSTG-CRYPTO-6"},
+        "files": {"com/demo/bank/Token.java": "17"}
+      }
+    }
+  },
+  "manifest_analysis": {
+    "findings": [
+      {"title": "App is debuggable", "severity": "high",
+       "description": "android:debuggable=true exposes the app to debugging"},
+      {"title": "App data is backed up", "severity": "warning",
+       "description": "android:allowBackup=true allows backup of app data"}
+    ]
+  },
+  "permissions": {
+    "android.permission.READ_SMS": {"status": "dangerous", "info": "read SMS messages"},
+    "android.permission.ACCESS_FINE_LOCATION": {"status": "dangerous", "info": "precise location"},
+    "android.permission.INTERNET": {"status": "normal", "info": "full network access"}
+  },
+  "secrets": [
+    "api_key : \"AIzaSyDEMOxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+    "password = \"Sup3rSecret!\""
+  ],
+  "certificate_analysis": {
+    "certificate_findings": [
+      ["warning", "Application signed with SHA1", "SHA1 is considered weak"]
+    ]
+  }
+}

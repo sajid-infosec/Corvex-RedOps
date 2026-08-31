@@ -6,6 +6,13 @@ All notable changes to PentestIQ are documented here. This project adheres to
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
+- **Mobile module** — APK/IPA static analysis via **MobSF** (code analysis, manifest
+  issues, dangerous permissions, hardcoded secrets, certificate analysis) with
+  CWE / OWASP-Mobile / MASVS references. Asset auto-typing for `.apk`/`.ipa`
+  (and `.exe`/`.dmg`/… for desktop). Five asset modules now ship.
+
+
+### Added
 - **Reporting at scale** — **PDF and DOCX** report export (reportlab / python-docx),
   a **compliance mapping** view (OWASP Top 10 / PCI-DSS / ISO 27001 / MITRE ATT&CK)
   in every report and via `GET /engagements/{id}/compliance`, and **per-tenant
