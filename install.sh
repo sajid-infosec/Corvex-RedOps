@@ -12,7 +12,7 @@
 #   sudo ./install.sh --update      # rebuild & redeploy (git pull first, yourself)
 #   ./install.sh --help
 #
-set -euo pipefail
+set -Eeuo pipefail
 
 # ----------------------------------------------------------------------------- ui
 c_blue='\033[1;34m'; c_grn='\033[1;32m'; c_yel='\033[1;33m'; c_red='\033[1;31m'; c_dim='\033[2m'; c_off='\033[0m'
@@ -21,6 +21,7 @@ ok()   { printf "${c_grn}[ ok ]${c_off} %s\n" "$*"; }
 warn() { printf "${c_yel}[warn]${c_off} %s\n" "$*"; }
 err()  { printf "${c_red}[fail]${c_off} %s\n" "$*" >&2; }
 die()  { err "$*"; exit 1; }
+trap 'code=$?; err "install aborted at line ${LINENO} (exit ${code})."; exit ${code}' ERR
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_FILE="$REPO_DIR/deploy/docker-compose.yml"
@@ -80,7 +81,9 @@ detect_distro() {
          *) FAMILY="unknown";; esac;;
   esac
   log "Detected: ${DISTRO_NAME}  (package family: ${FAMILY})"
-  [ "$FAMILY" = "unknown" ] && die "unsupported distro '${DISTRO_ID}'. Install Docker + Compose manually, then run: $SUDO docker compose -f deploy/docker-compose.yml up -d --build"
+  if [ "$FAMILY" = "unknown" ]; then
+    die "unsupported distro '${DISTRO_ID}'. Install Docker + Compose manually, then run: $SUDO docker compose -f deploy/docker-compose.yml up -d --build"
+  fi
 }
 
 # ----------------------------------------------------------------------------- prerequisites
