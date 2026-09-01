@@ -6,6 +6,10 @@ All notable changes to PentestIQ are documented here. This project adheres to
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
+- **One-command installer** (`install.sh`) — detects the Linux distribution (apt/dnf/pacman/zypper), installs all prerequisites (Docker Engine, Docker Compose, git/curl/openssl), generates secrets, and deploys the full SaaS stack (PentestIQ + MobSF). Idempotent; `--port` / `--update` / `--down` options.
+
+
+### Added
 - **Hardening module** — CIS-style gap analysis: audits **sshd_config** (root login,
   password auth, empty passwords, SSHv1, weak ciphers/MACs, X11, MaxAuthTries, idle
   timeout), **sysctl** (ASLR, ip_forward, ICMP redirects, SYN cookies, rp_filter), and

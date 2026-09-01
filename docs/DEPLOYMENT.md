@@ -1,10 +1,47 @@
 # PentestIQ — Deployment
 
-## Quick self-host (PentestIQ + MobSF, one command)
+## One-command install (recommended)
 
-The mobile module needs **MobSF** running alongside PentestIQ. The provided
-compose brings up both — the PentestIQ server orchestrates MobSF, and users
-upload apps through the console (no file paths, no direct MobSF access).
+`install.sh` detects your Linux distribution, installs **all prerequisites**
+(Docker Engine, Docker Compose, git/curl/openssl), generates secrets, and deploys
+the full stack (PentestIQ API + web console + MobSF).
+
+```bash
+git clone https://github.com/sajid-infosec/PentestIQ.git
+cd PentestIQ
+sudo ./install.sh
+```
+
+Then open **http://localhost:8080**, click **Register**, and start scanning.
+
+**Supported distributions** (auto-detected):
+
+| Family | Distros |
+|---|---|
+| `apt` | Debian, Ubuntu, Kali, Parrot, Linux Mint, Pop!_OS |
+| `dnf` | Fedora, RHEL, CentOS, Rocky Linux, AlmaLinux |
+| `pacman` | Arch, Manjaro, EndeavourOS |
+| `zypper` | openSUSE, SLES |
+
+**What it does:** installs base tools → installs & starts Docker (via the official
+convenience script, falling back to distribution packages) → ensures Docker Compose
+v2 (installs the plugin if missing) → writes `deploy/.env` with generated
+`MOBSF_API_KEY` and `PENTESTIQ_SECRET_KEY` → `docker compose up -d --build` → waits
+for the API health check. It is **idempotent** — safe to re-run.
+
+**Options:**
+
+```bash
+sudo ./install.sh --port 9090   # custom console port
+sudo ./install.sh --update      # rebuild & redeploy (after a git pull)
+sudo ./install.sh --down        # stop the stack
+./install.sh --help
+```
+
+> Secrets live in `deploy/.env` (git-ignored, mode 600). Back them up — losing
+> `PENTESTIQ_SECRET_KEY` invalidates existing login sessions.
+
+## Manual deploy (if Docker is already installed)
 
 ```bash
 export MOBSF_API_KEY=$(openssl rand -hex 32)

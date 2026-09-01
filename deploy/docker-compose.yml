@@ -28,7 +28,7 @@ services:
       - MOBSF_API_KEY=${MOBSF_API_KEY:?set MOBSF_API_KEY}
       - PENTESTIQ_SECRET_KEY=${PENTESTIQ_SECRET_KEY:?set PENTESTIQ_SECRET_KEY}
     ports:
-      - "8080:8080"          # PentestIQ API + console
+      - "${PENTESTIQ_PORT:-8080}:8080"   # PentestIQ API + console
     volumes:
       - pentestiq-data:/app/data
     restart: unless-stopped

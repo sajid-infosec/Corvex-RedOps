@@ -243,20 +243,44 @@ pentestiq init-tenant --tenant "Acme" --username alice --password "s3cr3tpass"
 
 ## 🐳 Deployment
 
-The mobile module needs **MobSF** running alongside PentestIQ. The bundled compose brings up **both** — PentestIQ orchestrates MobSF, and users upload apps through the console (no file paths, no direct MobSF access).
+### One command — installs everything, deploys the full SaaS
+
+The installer **detects your Linux distribution**, installs **all prerequisites**
+(Docker Engine, Docker Compose, git/curl/openssl), generates secrets, and brings up
+the **entire stack** (PentestIQ API + web console + MobSF). No manual setup.
 
 ```bash
-export MOBSF_API_KEY=$(openssl rand -hex 32)
-export PENTESTIQ_SECRET_KEY=$(openssl rand -hex 32)
-docker compose -f deploy/docker-compose.yml up -d --build
+git clone https://github.com/sajid-infosec/PentestIQ.git
+cd PentestIQ
+sudo ./install.sh
+```
 
-# open http://localhost:8080  → register → "Upload & scan" an .apk / .ipa / config
+That's it — open **http://localhost:8080**, click **Register**, and start scanning.
+
+> Works on Debian / Ubuntu / Kali / Parrot / Mint, RHEL / CentOS / Fedora / Rocky /
+> AlmaLinux, Arch / Manjaro, and openSUSE / SLES. Idempotent — safe to re-run.
+
+**Installer options:**
+
+```bash
+sudo ./install.sh --port 9090   # custom console port
+sudo ./install.sh --update      # rebuild & redeploy after a `git pull`
+sudo ./install.sh --down        # stop the stack
+./install.sh --help
 ```
 
 | Service | Port | Purpose |
 |---|---|---|
 | `pentestiq` | 8080 | REST API + web console |
 | `mobsf` | 8000 | Mobile static analysis (orchestrated by PentestIQ) |
+
+### Manual (if you already run Docker)
+
+```bash
+export MOBSF_API_KEY=$(openssl rand -hex 32)
+export PENTESTIQ_SECRET_KEY=$(openssl rand -hex 32)
+docker compose -f deploy/docker-compose.yml up -d --build
+```
 
 Full deployment guide, environment variables, and production notes (Postgres, scale): **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**.
 
