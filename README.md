@@ -257,47 +257,84 @@ Pipeline: **scope → scan → normalize → validate → prioritize & correlate
 
 ## 📦 Installation
 
+PentestIQ runs on **Linux, macOS, and Windows**. Pick the path that fits — all
+three give you the same CLI (`pentestiq`) and the web console (`pentestiq serve`).
+
 ### Requirements
+- **Python 3.10+** (for the pip/pipx and source paths), **or** Docker (for the
+  container path), **or** just download a prebuilt binary (no Python needed).
+- Optional external scanners on PATH, detected at runtime and skipped if missing:
+  `nmap`, `nuclei`, `zap-baseline.py`, `wpscan`, and a running **MobSF** server for mobile.
 
-- **Python 3.10+**
-- For **real scanning**, the corresponding tools on the host/PATH (all optional, detected at runtime):
-  `nmap`, `nuclei`, `zap-baseline.py` (OWASP ZAP), `wpscan`, and a running **MobSF** server for mobile.
-- For **PDF/DOCX** reports: the `reports` extra (bundled below).
-- For **desktop** binary hardening checks: the `desktop` extra (`lief`).
+### Option A — prebuilt binary (no Python, no Docker)
+Download the single-file executable for your OS from the
+[**Releases**](https://github.com/sajid-infosec/PentestIQ/releases) page:
 
-### Install from source
+| OS | Asset |
+|---|---|
+| Linux (x64) | `pentestiq-linux-x64` |
+| macOS (Apple Silicon) | `pentestiq-macos-arm64` |
+| Windows (x64) | `pentestiq-windows-x64.exe` |
 
 ```bash
-git clone https://github.com/sajid-infosec/PentestIQ.git
-cd PentestIQ
-
-python3 -m venv .venv && source .venv/bin/activate
-
-# choose the extras you need:
-pip install -e .                       # core engine + CLI only
-pip install -e ".[api]"                # + REST API & web console
-pip install -e ".[api,reports,desktop]"  # + PDF/DOCX + desktop hardening (recommended)
-pip install -e ".[dev,api,reports,desktop]"  # + test/dev dependencies
+# Linux / macOS
+chmod +x pentestiq-linux-x64 && ./pentestiq-linux-x64 serve
+# Windows (PowerShell)
+.\pentestiq-windows-x64.exe serve
 ```
 
+### Option B — pipx / pip (cross-platform, recommended for CLI users)
+```bash
+# isolated global CLI (Linux/macOS/Windows)
+pipx install "git+https://github.com/sajid-infosec/PentestIQ.git#egg=pentestiq[all]"
+pentestiq --help
+```
+Or into a virtualenv:
+```bash
+git clone https://github.com/sajid-infosec/PentestIQ.git && cd PentestIQ
+python3 -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\Activate.ps1
+pip install ".[api,reports,desktop]"                    # or ".[all]" for everything incl. SPA/Playwright
+pentestiq serve                                          # open http://localhost:8080
+```
+
+### Option C — one-command installer scripts
+```bash
+# Linux (Docker SaaS stack: PentestIQ + MobSF)
+sudo ./install.sh
+
+# macOS (installs Colima+Docker via Homebrew, then deploys — no Docker Desktop GUI needed)
+./install.sh
+
+# Windows (PowerShell) — Python path (venv + serve); add -Docker for the container stack
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker
+```
+
+### Option D — Docker (any OS with Docker/Docker Desktop)
+```bash
+cd deploy
+docker compose up -d --build          # PentestIQ console on :8080 + MobSF on :8000
+```
+
+### Extras
 | Extra | Adds | Enables |
 |---|---|---|
-| *(none)* | pydantic, PyYAML, typer, rich | Engine + CLI |
+| *(none)* | pydantic, PyYAML, typer, rich | Engine + CLI + crawler + OAST + fuzzer |
 | `api` | fastapi, uvicorn, python-multipart | REST API, web console, uploads |
 | `reports` | reportlab, python-docx | PDF & DOCX report export |
 | `desktop` | lief | Desktop binary hardening analysis |
-| `dev` | pytest, httpx (+ all of the above) | Running the test suite |
+| `spa` | playwright | Headless-browser SPA crawling (`playwright install chromium`) |
+| `all` | all of the above | Everything |
+| `dev` | pytest, httpx (+ above) | Running the test suite |
 
-### Install the scanner tools (on your scanning host, e.g. Kali/Parrot)
-
+### Optional external scanners (orchestrated, never reimplemented)
 ```bash
 sudo apt install -y nmap wpscan            # Debian/Kali
-# nuclei :  https://github.com/projectdiscovery/nuclei  (Go binary)
-# OWASP ZAP: https://www.zaproxy.org/download/
-# MobSF   :  run as a service — see Deployment (docker compose bundles it)
+brew install nmap                          # macOS
+# nuclei: https://github.com/projectdiscovery/nuclei · ZAP: https://www.zaproxy.org/download/
 ```
-
-> PentestIQ **orchestrates** these tools — it does not reimplement them. Install only what you need; every module skips missing tools gracefully and logs a warning.
+> Every module skips a missing tool gracefully and logs a warning — the native
+> crawler, OWASP checks, OAST and injection fuzzer need **no external tools**.
 
 ---
 

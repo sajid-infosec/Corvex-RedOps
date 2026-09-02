@@ -39,3 +39,4 @@ deploy/.env
 
 # transient build/verification tarballs
 .ptiq-src*.tgz
+.ptiq-*.tgz

@@ -2,7 +2,7 @@
 #
 # PentestIQ — one-command installer & deployer
 # ---------------------------------------------
-# Detects your Linux distribution, installs all prerequisites (Docker Engine,
+# Detects your OS (Linux distro or macOS), installs all prerequisites (Docker,
 # Docker Compose, git/curl/openssl), generates secrets, and deploys the full
 # SaaS stack (PentestIQ API + web console + MobSF) with a single command.
 #
@@ -33,8 +33,8 @@ usage() {
   cat <<'HELP'
 PentestIQ - one-command installer & deployer
 
-Detects your Linux distribution, installs prerequisites (Docker Engine,
-Docker Compose, git/curl/openssl), generates secrets, and deploys the full
+Detects your OS (Linux distro or macOS), installs prerequisites (Docker via
+the distro / Colima, git/openssl), generates secrets, and deploys the full
 SaaS stack (PentestIQ API + web console + MobSF).
 
 Usage:
@@ -64,6 +64,14 @@ fi
 
 # ----------------------------------------------------------------------------- distro
 detect_distro() {
+  if [ "$(uname -s)" = "Darwin" ]; then
+    OSKIND="macos"; FAMILY="brew"; SUDO=""
+    DISTRO_NAME="macOS $(sw_vers -productVersion 2>/dev/null || echo '')"
+    log "Detected: ${DISTRO_NAME}  (package manager: Homebrew)"
+    command -v brew >/dev/null 2>&1 || die "Homebrew is required on macOS — install it from https://brew.sh then re-run."
+    return 0
+  fi
+  OSKIND="linux"
   [ -r /etc/os-release ] || die "cannot detect distro (/etc/os-release missing)"
   # shellcheck disable=SC1091
   . /etc/os-release
@@ -90,6 +98,8 @@ detect_distro() {
 install_base() {
   log "Installing base prerequisites (curl, git, openssl)…"
   case "$FAMILY" in
+    brew)   brew list git >/dev/null 2>&1 || brew install git;
+            brew list openssl >/dev/null 2>&1 || brew install openssl;;
     apt)    $SUDO apt-get update -y -qq
             $SUDO apt-get install -y -qq ca-certificates curl git openssl gnupg lsb-release;;
     dnf)    $SUDO dnf install -y -q ca-certificates curl git openssl;;
@@ -100,6 +110,17 @@ install_base() {
 }
 
 install_docker() {
+  if [ "${OSKIND:-linux}" = "macos" ]; then
+    if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+      ok "Docker already available ($(docker --version 2>/dev/null | cut -d, -f1))."; return
+    fi
+    # scriptable Docker on macOS without the Desktop GUI, via Colima
+    brew list colima >/dev/null 2>&1 || brew install colima
+    brew list docker  >/dev/null 2>&1 || brew install docker
+    brew list docker-compose >/dev/null 2>&1 || brew install docker-compose
+    ok "Docker (Colima) installed."
+    return
+  fi
   if command -v docker >/dev/null 2>&1; then ok "Docker already installed ($(docker --version 2>/dev/null | cut -d, -f1))."; return; fi
   log "Installing Docker Engine…"
   # Docker's official convenience script covers Ubuntu/Debian/Fedora/CentOS/RHEL/etc.
@@ -131,6 +152,13 @@ install_docker() {
 }
 
 start_docker() {
+  if [ "${OSKIND:-linux}" = "macos" ]; then
+    if docker info >/dev/null 2>&1; then ok "Docker daemon is running."; return; fi
+    log "Starting Colima (Docker runtime)…"
+    colima status >/dev/null 2>&1 || colima start >/dev/null 2>&1 || true
+    for _ in $(seq 1 20); do docker info >/dev/null 2>&1 && { ok "Docker daemon is running."; return; }; sleep 2; done
+    die "Docker daemon did not start. Try: colima start   (or open Docker Desktop)."
+  fi
   if command -v systemctl >/dev/null 2>&1; then
     $SUDO systemctl enable --now docker >/dev/null 2>&1 || $SUDO systemctl start docker >/dev/null 2>&1 || true
   else
