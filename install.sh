@@ -109,13 +109,25 @@ install_docker() {
   else
     warn "convenience script unavailable — using distribution packages."
     case "$FAMILY" in
-      apt)    $SUDO apt-get install -y -qq docker.io;;
-      dnf)    $SUDO dnf install -y -q docker || $SUDO dnf install -y -q moby-engine;;
-      pacman) $SUDO pacman -S --noconfirm --needed docker;;
-      zypper) $SUDO zypper --non-interactive install docker;;
+      apt)    $SUDO apt-get update -y -qq
+              # docker.io ships the engine; docker-compose-v2 (Kali/Debian/Ubuntu) ships the plugin
+              $SUDO apt-get install -y -qq docker.io docker-compose-v2 2>/dev/null \
+                || $SUDO apt-get install -y -qq docker.io;;
+      dnf)    $SUDO dnf install -y -q docker docker-compose-plugin 2>/dev/null \
+                || $SUDO dnf install -y -q docker \
+                || $SUDO dnf install -y -q moby-engine;;
+      pacman) $SUDO pacman -Sy --noconfirm --needed docker docker-compose;;
+      zypper) $SUDO zypper --non-interactive install docker docker-compose;;
     esac
   fi
   command -v docker >/dev/null 2>&1 || die "Docker installation failed. Install it manually and re-run."
+  ok "Docker installed ($(docker --version 2>/dev/null | cut -d, -f1))."
+  # let the invoking (non-root) user run docker without sudo after re-login
+  if [ -n "${SUDO_USER:-}" ] && [ "${SUDO_USER}" != "root" ]; then
+    $SUDO groupadd -f docker >/dev/null 2>&1 || true
+    $SUDO usermod -aG docker "${SUDO_USER}" >/dev/null 2>&1 \
+      && log "Added ${SUDO_USER} to the 'docker' group (effective after next login)."
+  fi
 }
 
 start_docker() {
