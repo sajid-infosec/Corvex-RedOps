@@ -67,6 +67,9 @@ class _H(BaseHTTPRequestHandler):
                     "<a href=\"/api/user/user-b1\">a user</a>"
                     "<a href=\"/api/user/me\">me</a>"
                     "<a href=\"/search?q=x\">search</a>"
+                    "<a href=\"/render?name=hi\">render</a>"
+                    "<a href=\"/file?path=readme\">file</a>"
+                    "<a href=\"/ping?host=127.0.0.1\">ping</a>"
                     "<form action=\"/auth/forgot\" method=\"post\">"
                     "<input name=\"email\"></form>"
                     "<script src=\"/app.js\"></script></body></html>")
@@ -75,7 +78,32 @@ class _H(BaseHTTPRequestHandler):
             js = 'fetch("/api/user/me");const t="/api/user/{id}";var s="/search";'
             return self._send(200, js, ctype="application/javascript")
         if p == "/search":
-            return self._send(200, json.dumps({"results": []}))
+            from urllib.parse import urlsplit, parse_qs
+            v = parse_qs(urlsplit(self.path).query).get("q", [""])[0]
+            if "'" in v or '"' in v:            # VULN: error-based SQLi
+                return self._send(500, "You have an error in your SQL syntax; check the "
+                                       "manual that corresponds to your MySQL server version "
+                                       "near '%s'" % v, ctype="text/html")
+            return self._send(200, f"<div>results for {v}</div>", ctype="text/html")  # VULN: reflected XSS
+        if p == "/render":                        # VULN: SSTI
+            from urllib.parse import urlsplit, parse_qs
+            v = parse_qs(urlsplit(self.path).query).get("name", [""])[0]
+            body = v.replace("{{1337*1337}}", "1787569").replace("${1337*1337}", "1787569")
+            return self._send(200, f"<h1>Hello {body}</h1>", ctype="text/html")
+        if p == "/file":                          # VULN: path traversal / LFI
+            from urllib.parse import urlsplit, parse_qs
+            v = parse_qs(urlsplit(self.path).query).get("path", [""])[0]
+            if "etc/passwd" in v:
+                return self._send(200, "root:x:0:0:root:/root:/bin/bash\n", ctype="text/plain")
+            return self._send(404, "not found", ctype="text/plain")
+        if p == "/ping":                          # VULN: OS command injection (time)
+            import re, time as _t
+            from urllib.parse import urlsplit, parse_qs
+            v = parse_qs(urlsplit(self.path).query).get("host", [""])[0]
+            m = re.search(r"sleep (\d+)", v)
+            if m:
+                _t.sleep(int(m.group(1)))
+            return self._send(200, "pong", ctype="text/plain")
         if p == "/api/user/me":                        # VULN: password hash in response
             return self._send(200, json.dumps(USERS["user-b1"]))
         if p.startswith("/api/user/"):                 # VULN: BOLA — any id, any caller

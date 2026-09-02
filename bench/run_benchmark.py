@@ -27,6 +27,11 @@ PLANTED = {
     "Excessive data exposure": "sensitive data",
     "Account enumeration": "enumeration",
     "Blind SSRF (out-of-band)": "Blind SSRF",
+    "Reflected XSS": "Reflected XSS",
+    "SQL injection": "SQL injection",
+    "Path traversal / LFI": "Path traversal",
+    "SSTI (template injection)": "template injection",
+    "OS command injection": "command injection",
 }
 
 
@@ -55,6 +60,7 @@ def main():
     }
     meta.update(crawl.to_check_metadata())     # <-- crawler feeds the check engine
     meta["oast_wait"] = 1.5                      # allow the out-of-band callback to arrive
+    meta["fuzz_time_delay"] = 1                  # keep time-based probes quick in the demo
 
     # 3) OAST — stand up a collaborator and confirm blind vulns out-of-band
     from pentestiq.oast import OastServer, OastClient

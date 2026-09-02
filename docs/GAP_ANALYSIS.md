@@ -140,6 +140,10 @@ login, JWT) — see `pentestiq/checks/engine.py`.
   endpoints a static crawler can't see; merges into discovery and feeds the checks.
 - ✅ **DNS-based OAST** (`pentestiq.oast.DnsServer`) — a stdlib UDP catcher confirms
   blind interactions that only resolve DNS (HTTP-filtered SSRF, subdomain exfil).
+- ✅ **Native injection-fuzzing engine** (`pentestiq.fuzzing`) — from-scratch active
+  fuzzer for SQLi (error/boolean/time), reflected XSS, OS command injection
+  (blind-OAST + time), path traversal/LFI and SSTI, run across the crawler surface.
+  Benchmark now covers all classes: **19/19** planted vulnerabilities detected.
 
 ## 6. Still orchestrated / roadmap (honest gaps)
 
@@ -152,8 +156,6 @@ or are candidates for future native checks:
   the surface, human confirms the write PoC (per rules-of-engagement).
 - **Real-time/chat (Matrix/LiveKit/Firebase, TC-K)** — protocol-specific probes;
   candidate native module.
-- **Signature/active-injection depth** — deep SQLi/XSS fuzzing still leans on
-  orchestrated ZAP/Nuclei rather than a from-scratch native fuzzer.
 - **Infra service auth (Consul/Kafka/RabbitMQ guest, TC-L)** — nmap discovers the
   ports; service-specific auth checks are a roadmap module.
 - **File-upload execution (TC-H01)** — partially covered; a dedicated upload

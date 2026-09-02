@@ -184,6 +184,24 @@ run in the `web` and `api` `assess()` phase, feeding the same dedup / risk-scori
 **Safe by default** — every probe is read-only (GET/OPTIONS); anything that
 generates auth traffic (login brute-force) is gated behind `allow_active`.
 
+### Native injection-fuzzing engine
+
+A from-scratch active fuzzer (`pentestiq.fuzzing`) drives payloads into every
+injection point the crawler finds (query params, form fields, headers) and
+confirms bugs by response signal — no external scanner needed:
+
+| Class | Detection | OWASP / CWE |
+|---|---|---|
+| **SQL injection** | error-signature, boolean-blind (TRUE≈baseline / FALSE differs), **time-blind** (injected sleep) | A03 / CWE-89 |
+| **Reflected XSS** | unique marker reflected unescaped in HTML context | A03 / CWE-79 |
+| **OS command injection** | **blind out-of-band** (via the OAST collaborator) and time-blind | A03 / CWE-78 |
+| **Path traversal / LFI** | reads `/etc/passwd` / `win.ini` via traversal | A01 / CWE-22 |
+| **SSTI** | template evaluates a distinctive arithmetic product | A03 / CWE-1336 |
+
+Payloads are non-destructive proofs (a syntax error, a benign reflection, a timed
+sleep, a read-only file, an arithmetic evaluation) — never `DROP`/`DELETE`/`rm`.
+Gated behind `allow_active`; blind command injection reuses the OAST collaborator.
+
 **Authenticated testing** is configured per-asset via `asset.metadata`
 (identities + object IDs, endpoints, login, JWT). Example:
 
