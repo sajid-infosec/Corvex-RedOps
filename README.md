@@ -127,8 +127,13 @@ across the whole application instead of only the endpoints you supply:
   endpoints in the real Convay assessment).
 - **Templatizes id paths** (`/user/42` → `/user/{id}`) → automatic **BOLA/IDOR**
   candidates; GET paths become **data-exposure** targets.
+- **Headless-browser SPA mode** (optional, Playwright): renders JavaScript, follows
+  client-side routes, and captures the **XHR/fetch API endpoints** a SPA only creates
+  at runtime — the surface a static crawler can't see. Enabled with `--spa` (or
+  `asset.metadata.spa_crawl = true`); falls back to the static crawl if Playwright
+  isn't installed (a missing tool never breaks a run).
 - Runs in the `web` module's discovery phase and feeds the check engine
-  automatically; also available standalone: `pentestiq crawl https://app.example.com --token <jwt>`.
+  automatically; also available standalone: `pentestiq crawl https://app.example.com --token <jwt> --spa`.
 
 ## 📡 Out-of-band detection (OAST)
 
@@ -136,10 +141,13 @@ For **blind** vulnerabilities — where the only signal is the target's own serv
 reaching back to infrastructure you control — PentestIQ ships a native,
 self-hostable **OAST collaborator** (the Burp-Collaborator / AcuMonitor model):
 
-- **`pentestiq oast-server --port 9099`** stands up a collaborator. It records any
-  inbound interaction, correlated to a token from either a Host sub-domain
-  (`<token>.oast.example.com`, needs wildcard DNS) or a path (`http://<ip>:<port>/<token>`,
-  needs only a public IP) — path mode self-hosts with nothing but an open port.
+- **`pentestiq oast-server --port 9099 [--dns-port 53 --domain oast.example.com]`**
+  stands up a collaborator. HTTP mode records interactions by token from a Host
+  sub-domain (`<token>.oast.example.com`, needs wildcard DNS) or a path
+  (`http://<ip>:<port>/<token>`, needs only a public IP). The optional **DNS catcher**
+  (`--dns-port`) answers `A` records for `<token>.<domain>` and logs the lookup — so
+  it confirms blind interactions that only do a **DNS resolution** even when outbound
+  HTTP is filtered (delegate the domain's NS to the collaborator's IP).
 - OAST-enabled checks inject a unique collaborator URL/host and confirm the bug
   **only** if the callback lands — a hit is high-confidence proof, not a guess:
   - **Blind SSRF** — injected into discovered/likely URL params and SSRF-prone
