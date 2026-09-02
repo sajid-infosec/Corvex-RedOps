@@ -102,9 +102,9 @@ Nine modules — the complete VAPT surface. Orchestrated tools are optional and 
 | # | Module | Asset type | Orchestrated tools / analyzers | What it does |
 |---|---|---|---|---|
 | 1 | `infra` | Infrastructure / network | **Nmap**, **Nuclei** | Host/service discovery, port enumeration, network vuln scanning |
-| 2 | `web` | Web applications | **OWASP ZAP**, **Nuclei** | Crawl + active/passive scan, OWASP Top 10, **safe XSS/SQLi validation** |
+| 2 | `web` | Web applications | **OWASP ZAP**, **Nuclei**, **native checks** | Crawl + active/passive scan, **native OWASP active checks** (headers/CORS/JWT/authz/errors), **safe XSS/SQLi validation** |
 | 3 | `wordpress` | WordPress sites | **WPScan**, **Nuclei** | Core/plugin/theme CVEs, user enumeration, weak-credential checks |
-| 4 | `api` | REST / OpenAPI | **OpenAPI parser**, **Nuclei** | Endpoint attack-surface enumeration + broken-auth flags (OWASP API) |
+| 4 | `api` | REST / OpenAPI | **OpenAPI parser**, **Nuclei**, **native checks** | Endpoint enumeration + **authenticated BOLA/IDOR, JWT analysis, tenant confusion, excessive-data-exposure** (OWASP API Top 10) |
 | 5 | `mobile` | Mobile apps (APK / IPA) | **MobSF** | Static analysis: code, manifest, permissions, secrets, certs (CWE/MASVS) |
 | 6 | `desktop` | Desktop binaries (PE / ELF / Mach-O) | **Secrets scanner**, **lief** | Hardcoded secrets/keys, insecure URLs, missing binary hardening (NX/PIE/RELRO/canary/DEP/CFG) |
 | 7 | `network-device` | Routers / switches | **Config analyzer** | Cisco IOS config audit: telnet, default/RW SNMP, weak passwords, cleartext mgmt |
@@ -112,6 +112,54 @@ Nine modules — the complete VAPT surface. Orchestrated tools are optional and 
 | 9 | `hardening` | System hardening | **CIS analyzer**, **Lynis** | sshd_config / sysctl CIS gaps + Lynis report ingestion |
 
 Plus **lab automation** — `lab/docker-compose.yml` stands up intentionally-vulnerable targets (OWASP Juice Shop, DVWA) for testing and demos.
+
+---
+
+## 🧪 Native OWASP active checks (VAPT depth)
+
+Generic scanners find *technical* web bugs; a real VAPT of a modern multi-tenant
+SaaS is ~70% **authorization, JWT, and business-logic** testing that needs
+authenticated, multi-identity, active probing. PentestIQ ships a native,
+dependency-free checks engine (`pentestiq.checks`) that provides exactly that —
+run in the `web` and `api` `assess()` phase, feeding the same dedup / risk-scoring
+/ reporting pipeline.
+
+| Check | Finds | OWASP |
+|---|---|---|
+| **JWT security** | `alg:none`, offline HMAC weak-secret crack, embedded secondary tokens / all-perms claims, long TTL, live none-alg accept probe | API2 / A02 |
+| **BOLA / IDOR** | cross-identity object reads (two-identity diff) | API1 |
+| **Tenant confusion** | query param overrides token tenant scope | API1 |
+| **Excessive data exposure** | password hashes / secrets / tokens in responses | API3 |
+| **Account enumeration** | valid-vs-invalid user response diff | A07 |
+| **Login rate-limit** *(gated)* | missing lockout / 429 on failed logins | A07 |
+| **Security headers / clickjacking / cookies** | HSTS, CSP, `frame-ancestors:*`, XFO, cookie flags | A05 |
+| **CORS** | origin reflection with credentials | API8 |
+| **HTTP methods / error handling** | dangerous methods; Java/Python/.NET/SQL stack-trace leakage | A05 |
+
+**Safe by default** — every probe is read-only (GET/OPTIONS); anything that
+generates auth traffic (login brute-force) is gated behind `allow_active`.
+
+**Authenticated testing** is configured per-asset via `asset.metadata`
+(identities + object IDs, endpoints, login, JWT). Example:
+
+```jsonc
+{
+  "base_url": "https://api.example.com",
+  "identities": [
+    {"name": "orgA", "headers": {"Authorization": "Bearer <jwtA>"}, "object_ids": ["uuid-a"]},
+    {"name": "orgB", "token": "<jwtB>", "object_ids": ["uuid-b"]}
+  ],
+  "idor_endpoints": ["/api/user/{id}", "/api/org/{id}"],
+  "data_endpoints": ["/api/user/me"],
+  "login": {"url": "/auth/forgot", "field": "email", "valid_user": "a@x.com", "invalid_user": "no@x.com"}
+}
+```
+
+**OWASP Top 10 coverage checklist.** Every finding is mapped to a canonical id
+(A01–A10 2021 + API1–API10 2023); `GET /engagements/{id}/compliance` now returns
+an `owasp_coverage` matrix showing which categories an engagement exercised — and
+which remain gaps. See [`docs/GAP_ANALYSIS.md`](docs/GAP_ANALYSIS.md) for the full
+benchmark against a real SaaS engagement.
 
 ---
 
