@@ -115,6 +115,21 @@ Plus **lab automation** — `lab/docker-compose.yml` stands up intentionally-vul
 
 ---
 
+## 🕷️ Attack-surface crawler
+
+PentestIQ ships a native, dependency-free **crawler** (`pentestiq.crawler`) that
+discovers the app surface — like the commercial DAST engines — so the checks run
+across the whole application instead of only the endpoints you supply:
+
+- **BFS crawl**, same-scope (optional subdomains), depth- and page-bounded, rate-limited.
+- Extracts **links, forms (action/method/inputs), query parameters**, and
+  **endpoints mined from JavaScript bundles** (the recon that surfaced internal
+  endpoints in the real Convay assessment).
+- **Templatizes id paths** (`/user/42` → `/user/{id}`) → automatic **BOLA/IDOR**
+  candidates; GET paths become **data-exposure** targets.
+- Runs in the `web` module's discovery phase and feeds the check engine
+  automatically; also available standalone: `pentestiq crawl https://app.example.com --token <jwt>`.
+
 ## 🧪 Native OWASP active checks (VAPT depth)
 
 Generic scanners find *technical* web bugs; a real VAPT of a modern multi-tenant

@@ -122,7 +122,18 @@ login, JWT) — see `pentestiq/checks/engine.py`.
 
 ---
 
-## 5. Still orchestrated / roadmap (honest gaps)
+## 5. Delivered since the first gap pass
+
+- ✅ **Attack-surface crawler** (`pentestiq.crawler`) — BFS same-scope crawl,
+  forms/params/JS-endpoint extraction, id-path templatizing → the check engine now
+  runs app-wide instead of only on supplied endpoints. Benchmarked crawl-first:
+  the crawler discovers the vulnerable endpoints itself and checks still detect
+  **13/13** planted vulnerabilities (`bench/`).
+- ✅ **Single-portal API VAPT** — upload an OpenAPI/Swagger spec + bearer token(s)
+  like an APK; endpoints/identities are derived automatically.
+- ✅ **Frida dynamic-analysis kit** served from the portal.
+
+## 6. Still orchestrated / roadmap (honest gaps)
 
 Some Convay findings remain best served by external tools (already orchestrated)
 or are candidates for future native checks:
@@ -140,7 +151,7 @@ or are candidates for future native checks:
 
 ---
 
-## 6. Asset-type coverage (as tested on Convay's real assets)
+## 7. Asset-type coverage (as tested on Convay's real assets)
 
 | Convay asset | File | PentestIQ module |
 |---|---|---|

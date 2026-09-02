@@ -30,7 +30,16 @@ PLANTED = {
 
 
 def main():
+    from pentestiq.crawler import Crawler
     vt.serve(); time.sleep(0.4)
+
+    # 1) CRAWL — discover the surface (endpoints NOT supplied by hand)
+    crawl = Crawler(max_pages=50).crawl(BASE)
+    print(f"\n crawler: {crawl.stats}")
+    print(f" crawler discovered IDOR candidates: {crawl.idor_endpoints()}")
+    print(f" crawler discovered data endpoints:  {crawl.data_endpoints()}")
+
+    # 2) tokens/login must be supplied (not discoverable); endpoints come from the crawl
     meta = {
         "base_url": BASE, "jwt": vt.TOKEN_A,
         "identities": [
@@ -39,12 +48,11 @@ def main():
             {"name": "orgB", "headers": {"Authorization": f"Bearer {vt.TOKEN_B}"},
              "token": vt.TOKEN_B, "object_ids": ["user-b1"], "org_id": "orgB"},
         ],
-        "idor_endpoints": ["/api/user/{id}"],
-        "data_endpoints": ["/api/user/me"],
         "login": {"url": "/auth/forgot", "field": "email",
                   "valid_user": "alice@x.com", "invalid_user": "nobody@x.com"},
         "allow_active": True, "rate_limit_attempts": 6,
     }
+    meta.update(crawl.to_check_metadata())     # <-- crawler feeds the check engine
     findings = CheckEngine().run_asset(Asset(type=AssetType.API, identifier=BASE, metadata=meta))
 
     print("\n" + "=" * 74)

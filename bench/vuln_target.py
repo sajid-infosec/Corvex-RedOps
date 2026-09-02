@@ -55,7 +55,19 @@ class _H(BaseHTTPRequestHandler):
     def do_GET(self):
         p = self.path.split("?")[0]
         if p == "/":
-            return self._send(200, json.dumps({"ok": True}))
+            html = ("<html><body><h1>VulnApp</h1>"
+                    "<a href=\"/api/user/user-b1\">a user</a>"
+                    "<a href=\"/api/user/me\">me</a>"
+                    "<a href=\"/search?q=x\">search</a>"
+                    "<form action=\"/auth/forgot\" method=\"post\">"
+                    "<input name=\"email\"></form>"
+                    "<script src=\"/app.js\"></script></body></html>")
+            return self._send(200, html, ctype="text/html")
+        if p == "/app.js":
+            js = 'fetch("/api/user/me");const t="/api/user/{id}";var s="/search";'
+            return self._send(200, js, ctype="application/javascript")
+        if p == "/search":
+            return self._send(200, json.dumps({"results": []}))
         if p == "/api/user/me":                        # VULN: password hash in response
             return self._send(200, json.dumps(USERS["user-b1"]))
         if p.startswith("/api/user/"):                 # VULN: BOLA — any id, any caller

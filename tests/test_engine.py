@@ -23,6 +23,8 @@ def test_load_scope_and_empty_workflow(tmp_path: Path):
 
     engine = Engine()
     eng = engine.run(scope_file)
-    # engine skeleton: no modules yet -> assets visited, zero findings, no crash
+    # engine wiring: both assets visited, run completes without crashing.
+    # (Modules are real now — the web module actively crawls/checks — so the
+    # finding count depends on what the target returns; assert the shape, not 0.)
     assert len(eng.assets) == 2
-    assert len(eng.findings) == 0
+    assert isinstance(eng.findings, list)
