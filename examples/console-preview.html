@@ -1,215 +1,475 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PentestIQ Console</title>
+<title>PentestIQ</title>
 <style>
-  :root{--bg:#0f172a;--panel:#111827;--card:#1e293b;--line:#334155;--txt:#e2e8f0;--mut:#94a3b8;--acc:#38bdf8;
-    --crit:#f87171;--high:#fb7185;--med:#fbbf24;--low:#60a5fa;--info:#94a3b8;--ok:#34d399;}
+  :root{
+    --bg:#0b0f1a; --bg2:#0d1424; --panel:#111a2e; --panel2:#0f1728; --card:#16213b;
+    --line:#25324f; --line2:#1c2942; --txt:#e6edf7; --mut:#93a3bf; --dim:#6b7a99;
+    --acc:#38bdf8; --acc2:#6366f1; --accgrad:linear-gradient(135deg,#38bdf8,#6366f1);
+    --crit:#fb5b6b; --high:#fb8c5b; --med:#f5c451; --low:#5b9dfb; --info:#8aa0bf; --ok:#37d39a;
+    --shadow:0 10px 30px rgba(0,0,0,.35); --r:14px;
+  }
   *{box-sizing:border-box}
-  body{margin:0;font:14px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--txt)}
-  header{background:#0b1220;border-bottom:1px solid var(--line);padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  header h1{font-size:18px;margin:0;color:#fff}
-  header h1 .iq{color:var(--acc)}
-  header .spacer{flex:1}
-  header input{background:#0b1220;border:1px solid var(--line);color:var(--txt);padding:6px 8px;border-radius:6px}
-  .wrap{display:grid;grid-template-columns:340px 1fr;gap:16px;padding:16px;max-width:1200px;margin:0 auto}
-  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
-  h2{font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin:0 0 12px}
-  label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px}
-  input[type=text],textarea,select{width:100%;background:var(--card);border:1px solid var(--line);color:var(--txt);padding:8px;border-radius:6px;font:inherit}
-  textarea{min-height:80px;resize:vertical;font-family:ui-monospace,Menlo,monospace;font-size:12px}
-  button{background:var(--acc);color:#062330;border:0;padding:8px 14px;border-radius:6px;font-weight:600;cursor:pointer}
-  button.ghost{background:transparent;color:var(--acc);border:1px solid var(--line)}
-  button:disabled{opacity:.5;cursor:not-allowed}
-  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  html,body{height:100%}
+  body{margin:0;font:14px/1.55 ui-sans-serif,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 800px at 80% -10%,#12203a 0%,var(--bg) 55%);color:var(--txt);}
+  a{color:var(--acc);text-decoration:none} a:hover{text-decoration:underline}
+  button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:9px 16px;font-weight:600}
+  .btn{background:var(--accgrad);color:#04121f;box-shadow:0 6px 18px rgba(56,189,248,.25)}
+  .btn:hover{filter:brightness(1.06)}
+  .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+  .btn.ghost:hover{border-color:var(--acc);color:#fff}
+  .btn.sm{padding:6px 11px;font-size:12.5px;border-radius:8px}
+  .btn:disabled{opacity:.5;cursor:not-allowed;filter:none}
+  input,select,textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+    padding:10px 12px;border-radius:10px;font:inherit;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(56,189,248,.13)}
+  textarea{min-height:78px;resize:vertical;font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
+  label{display:block;font-size:12px;color:var(--mut);margin:12px 0 5px;font-weight:600;letter-spacing:.01em}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.02em}
+  .brand .mark{width:30px;height:30px;flex:none}
+  .brand .iq{background:var(--accgrad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .muted{color:var(--mut)} .dim{color:var(--dim)}
+  .hint{font-size:12px;color:var(--dim);margin:8px 0 0}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
+    border-radius:var(--r);padding:20px;box-shadow:var(--shadow)}
+  .card h3{margin:0 0 4px;font-size:15px} .card .sub{color:var(--mut);font-size:12.5px;margin-bottom:8px}
+  h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin:0 0 12px;font-weight:700}
+
+  /* ---------- login ---------- */
+  #login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;
+    background:radial-gradient(900px 600px at 50% -10%,#16233f,#0b0f1a 60%);z-index:50}
+  #login .box{width:100%;max-width:400px}
+  #login .card{padding:28px}
+  #login .lead{margin:2px 0 18px;color:var(--mut);font-size:13px}
+  .creds{margin-top:14px;font-size:12px;color:var(--dim);background:var(--panel2);border:1px dashed var(--line);
+    border-radius:9px;padding:9px 11px}
+  .creds b{color:var(--mut)}
+
+  /* ---------- app shell ---------- */
+  #app{display:none;min-height:100vh;grid-template-columns:248px 1fr}
+  .side{background:linear-gradient(180deg,#0d1526,#0b1120);border-right:1px solid var(--line2);
+    padding:20px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
+  .side .brand{padding:6px 8px 16px}
+  .nav{display:flex;flex-direction:column;gap:3px;margin-top:4px}
+  .nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:var(--mut);
+    font-weight:600;font-size:13.5px;cursor:pointer}
+  .nav a:hover{background:#131e35;color:var(--txt);text-decoration:none}
+  .nav a.active{background:linear-gradient(90deg,rgba(56,189,248,.16),rgba(99,102,241,.10));color:#fff;
+    box-shadow:inset 2px 0 0 var(--acc)}
+  .nav a svg{width:18px;height:18px;flex:none;opacity:.9}
+  .side .foot{margin-top:auto;font-size:11px;color:var(--dim);padding:10px 8px}
+  .main{min-width:0;display:flex;flex-direction:column}
+  .top{display:flex;align-items:center;gap:14px;padding:16px 26px;border-bottom:1px solid var(--line2);
+    position:sticky;top:0;background:rgba(11,15,26,.82);backdrop-filter:blur(8px);z-index:10}
+  .top h1{font-size:17px;margin:0;font-weight:700;flex:1}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);
+    border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--mut)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+  .content{padding:24px 26px;max-width:1180px;width:100%}
+  .view{display:none} .view.on{display:block}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:900px){#app{grid-template-columns:1fr}.side{position:fixed;z-index:40;transform:translateX(-100%);transition:.2s;width:240px}
+    #app.nav-open .side{transform:none}.grid2{grid-template-columns:1fr}}
+  .burger{display:none} @media(max-width:900px){.burger{display:inline-flex}}
+
+  /* stat tiles */
+  .tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:4px 0 18px}
+  @media(max-width:700px){.tiles{grid-template-columns:repeat(2,1fr)}}
+  .tile{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .tile .n{font-size:24px;font-weight:800;line-height:1} .tile .l{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-top:6px}
+  .tile.c-crit{border-color:rgba(251,91,107,.4)} .tile.c-crit .n{color:var(--crit)}
+  .tile.c-high .n{color:var(--high)} .tile.c-med .n{color:var(--med)} .tile.c-low .n{color:var(--low)} .tile.c-total .n{color:var(--acc)}
+
   table{width:100%;border-collapse:collapse;font-size:13px}
-  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
-  th{color:var(--mut);font-weight:600;font-size:11px;text-transform:uppercase}
-  tr.eng{cursor:pointer} tr.eng:hover{background:#0b1220}
-  .badge{padding:1px 7px;border-radius:4px;font-size:11px;font-weight:700;text-transform:uppercase;color:#08131f}
+  th,td{text-align:left;padding:10px 10px;border-bottom:1px solid var(--line2)}
+  th{color:var(--mut);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+  tr.eng{cursor:pointer} tr.eng:hover{background:#131e35}
+  .badge{padding:2px 9px;border-radius:6px;font-size:11px;font-weight:800;text-transform:uppercase;color:#0a0f1a}
   .b-critical{background:var(--crit)}.b-high{background:var(--high)}.b-medium{background:var(--med)}.b-low{background:var(--low)}.b-info{background:var(--info)}
-  .status{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+  .status{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);font-weight:700}
   .status.completed{color:var(--ok)} .status.running,.status.queued{color:var(--med)} .status.failed{color:var(--crit)}
-  .risk{font-weight:700;background:#0b1220;padding:1px 7px;border-radius:4px;display:inline-block;min-width:26px;text-align:center}
-  .bars{display:flex;flex-direction:column;gap:4px;margin:8px 0 14px}
-  .bar{display:flex;align-items:center;gap:8px;font-size:12px}
-  .bar .lab{width:64px;color:var(--mut)} .bar .track{flex:1;background:#0b1220;border-radius:4px;height:14px;overflow:hidden}
-  .bar .fill{height:100%;border-radius:4px} .bar .n{width:24px;text-align:right}
-  .muted{color:var(--mut)} .empty{color:var(--mut);padding:20px;text-align:center}
-  a{color:var(--acc)}
-  .toast{position:fixed;bottom:16px;right:16px;background:var(--card);border:1px solid var(--line);padding:10px 14px;border-radius:8px;display:none}
-  @media(max-width:820px){.wrap{grid-template-columns:1fr}}
+  .risk{font-weight:800;background:#0b1220;border:1px solid var(--line);padding:2px 9px;border-radius:6px;display:inline-block;min-width:30px;text-align:center}
+  .bars{display:flex;flex-direction:column;gap:6px;margin:6px 0 8px}
+  .bar{display:flex;align-items:center;gap:10px;font-size:12px}
+  .bar .lab{width:70px;color:var(--mut);text-transform:capitalize} .bar .track{flex:1;background:#0b1220;border-radius:6px;height:10px;overflow:hidden}
+  .bar .fill{height:100%;border-radius:6px} .bar .n{width:26px;text-align:right;color:var(--mut)}
+  .cov{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:7px}
+  .cov .c{background:#0b1220;border:1px solid var(--line);border-radius:8px;padding:7px 4px;text-align:center;font-size:11px}
+  .cov .c .id{font-weight:800;color:var(--txt)} .cov .c .n{color:var(--dim)}
+  .cov .c.hit{border-color:var(--acc)} .cov .c.crit{border-color:var(--crit);background:rgba(251,91,107,.08)} .cov .c.high{border-color:var(--high)}
+  .empty{color:var(--dim);padding:34px;text-align:center}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#0b1220;border:1px solid var(--line);font-size:11px;color:var(--mut)}
+  .toast{position:fixed;bottom:20px;right:20px;background:var(--card);border:1px solid var(--line);
+    padding:12px 16px;border-radius:12px;display:none;box-shadow:var(--shadow);max-width:340px;z-index:60}
+  hr.sep{border:0;border-top:1px solid var(--line2);margin:18px 0}
+  .manual h3{margin:18px 0 6px;font-size:15px} .manual p{color:var(--mut);margin:6px 0}
+  .manual ol,.manual ul{color:var(--mut);padding-left:20px} .manual li{margin:5px 0}
+  .kbd{font-family:ui-monospace,Menlo,monospace;background:#0b1220;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:12px;color:var(--txt)}
 </style></head>
 <body>
-<header>
-  <h1>Pentest<span class="iq">IQ</span> Console</h1>
-  <span class="status" id="apistatus">not connected</span>
-  <span class="spacer"></span>
-  <input id="user" placeholder="username" style="width:120px">
-  <input id="pass" type="password" placeholder="password" style="width:120px">
-  <button class="ghost" onclick="login()">Login</button>
-  <button class="ghost" onclick="register()">Register</button>
-  <button class="ghost" onclick="logout()">Logout</button>
-  <a href="/docs" target="_blank" class="ghost" style="text-decoration:none;padding:8px 14px;border:1px solid var(--line);border-radius:6px">API docs</a>
-</header>
 
-<div class="wrap">
-  <div>
-    <div class="panel">
-      <h2>New engagement</h2>
-      <label>Name</label><input id="name" type="text" value="New Engagement">
-      <label>Authorized by</label><input id="auth" type="text" placeholder="e.g. Client CISO">
-      <label>Targets (one per line — optional type= prefix)</label>
-      <textarea id="targets">web=http://localhost:3000
-infra=127.0.0.1</textarea>
-      <label>Enforcement</label>
-      <select id="enf"><option value="warn">warn (permissive)</option>
-        <option value="block">block (strict scope)</option><option value="off">off</option></select>
-      <div class="row" style="margin-top:12px"><button onclick="createEng()">Create</button></div>
-      <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
-      <h2 style="margin-top:0">Upload mobile app</h2>
-      <label>APK / IPA file (analyzed by MobSF on the server)</label>
-      <input id="appfile" type="file" accept=".apk,.ipa,.xapk">
-      <div class="row" style="margin-top:10px"><button onclick="uploadApp()">Upload &amp; scan</button></div>
-    </div>
-    <div class="panel" style="margin-top:16px">
-      <div class="row"><h2 style="margin:0;flex:1">Engagements</h2><button class="ghost" onclick="loadList()">Refresh</button></div>
-      <table style="margin-top:10px"><thead><tr><th>Name</th><th>Status</th><th>Findings</th></tr></thead>
-      <tbody id="list"><tr><td colspan="3" class="empty">Connect with an API key to begin.</td></tr></tbody></table>
-    </div>
+<!-- ================= LOGIN ================= -->
+<div id="login"><div class="box"><div class="card">
+  <div class="brand" style="font-size:22px"><svg class="mark" viewBox="0 0 32 32" fill="none"><path d="M16 2l11 4v8c0 7-4.6 12.3-11 16C9.6 26.3 5 21 5 14V6l11-4z" fill="url(#g)"/><path d="M11 15.5l3.4 3.4L21 12" stroke="#04121f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="g" x1="5" y1="2" x2="27" y2="30"><stop stop-color="#38bdf8"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs></svg>
+    <span>Pentest<span class="iq">IQ</span></span></div>
+  <div class="lead">Orchestration-driven VAPT platform. Sign in to your workspace.</div>
+  <label>Username</label><input id="user" value="pentestiq" autocomplete="username">
+  <label>Password</label><input id="pass" type="password" value="p3nt3st!q" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
+  <div class="row" style="margin-top:18px">
+    <button class="btn" style="flex:1" onclick="login()">Sign in</button>
+    <button class="btn ghost" onclick="register()">Create workspace</button>
   </div>
+  <div class="creds">Default sign-in — <b>pentestiq</b> / <b>p3nt3st!q</b>. Change the password after first login.</div>
+</div></div></div>
 
-  <div class="panel" id="detail">
-    <div class="empty">Select or create an engagement to see its dashboard.</div>
+<!-- ================= APP ================= -->
+<div id="app">
+  <aside class="side">
+    <div class="brand"><svg class="mark" viewBox="0 0 32 32" fill="none"><path d="M16 2l11 4v8c0 7-4.6 12.3-11 16C9.6 26.3 5 21 5 14V6l11-4z" fill="url(#g2)"/><path d="M11 15.5l3.4 3.4L21 12" stroke="#04121f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="g2" x1="5" y1="2" x2="27" y2="30"><stop stop-color="#38bdf8"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs></svg>
+      <span>Pentest<span class="iq">IQ</span></span></div>
+    <nav class="nav" id="nav">
+      <a data-view="scan" onclick="showView('scan')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>New scan</a>
+      <a data-view="engagements" onclick="showView('engagements')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg>Engagements</a>
+      <a data-view="dashboard" onclick="showView('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0zM12 3v9l6 3" stroke-linecap="round"/></svg>Dashboard</a>
+      <a data-view="kit" onclick="showView('kit')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 7l3 3-7 7-3 1 1-3 6-8zM4 20h16" stroke-linecap="round" stroke-linejoin="round"/></svg>Dynamic kit</a>
+      <a data-view="help" onclick="showView('help')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 013.9-2c1.3.9 1.1 2.4 0 3.2-.7.5-1.4.9-1.4 1.8M12 17h.01" stroke-linecap="round"/></svg>User manual</a>
+    </nav>
+    <div class="foot">© PentestIQ · <a href="/docs" target="_blank">API</a></div>
+  </aside>
+
+  <div class="main">
+    <div class="top">
+      <button class="btn ghost sm burger" onclick="document.getElementById('app').classList.toggle('nav-open')">☰</button>
+      <h1 id="vtitle">New scan</h1>
+      <span class="chip"><span class="dot"></span><span id="who">workspace</span></span>
+      <button class="btn ghost sm" onclick="logout()">Sign out</button>
+    </div>
+    <div class="content">
+
+      <!-- NEW SCAN -->
+      <section class="view on" id="v-scan">
+        <div class="grid2">
+          <div class="card">
+            <h3>Scan targets</h3><div class="sub">Create an engagement for live hosts, web apps, or APIs.</div>
+            <label>Engagement name</label><input id="name" value="New Engagement">
+            <label>Authorized by</label><input id="auth" placeholder="e.g. Client CISO (authorization on file)">
+            <label>Targets — one per line (optional <span class="dim">type=</span> prefix: web= api= wordpress= infra=)</label>
+            <textarea id="targets">web=https://app.example.com
+infra=192.0.2.0/24</textarea>
+            <label>Scope enforcement</label>
+            <select id="enf"><option value="warn">Warn — permissive</option>
+              <option value="block">Block — strict scope</option><option value="off">Off</option></select>
+            <div class="row" style="margin-top:16px"><button class="btn" onclick="createEng()">Create &amp; open</button></div>
+          </div>
+
+          <div class="card">
+            <h3>Upload &amp; scan an asset</h3><div class="sub">API spec, mobile / desktop app, or a device configuration.</div>
+            <label>Asset type</label>
+            <select id="uptype" onchange="onUpType()">
+              <option value="api">API — OpenAPI / Swagger + token</option>
+              <option value="mobile">Mobile app — Android / iOS package</option>
+              <option value="desktop">Desktop application binary</option>
+              <option value="network_device">Network device configuration</option>
+              <option value="firewall">Firewall ruleset</option>
+              <option value="hardening">System hardening configuration</option>
+            </select>
+            <label id="filelabel">API specification (.json / .yaml)</label>
+            <input id="appfile" type="file">
+            <div id="apifields">
+              <label>Base URL — live API (enables active testing)</label>
+              <input id="baseurl" placeholder="https://api.example.com">
+              <label>Access token — identity A (optional)</label>
+              <input id="tokenA" placeholder="Bearer token — analysed automatically">
+              <label>Access token — identity B (optional, enables access-control testing)</label>
+              <input id="tokenB" placeholder="second user / org token">
+              <label>Object IDs owned by A / by B (comma-separated)</label>
+              <div class="row"><input id="oidsA" placeholder="A's ids" style="flex:1"><input id="oidsB" placeholder="B's ids" style="flex:1"></div>
+              <label class="row" style="gap:8px;color:var(--mut);font-weight:500;font-size:12.5px;margin-top:12px">
+                <input id="active" type="checkbox" style="width:auto"> Enable active testing (injection, brute-force) — authorized targets only</label>
+              <p class="hint">Runs endpoint mapping, access-control &amp; token analysis, misconfiguration, data-exposure and (when enabled) active injection testing.</p>
+            </div>
+            <div id="mobilenote" class="hint" hidden style="background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px;color:var(--mut)">
+              Static analysis runs automatically on upload. For live instrumentation, use the <b>Dynamic kit</b>.</div>
+            <div class="row" style="margin-top:16px"><button class="btn" onclick="uploadApp()">Upload &amp; scan</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ENGAGEMENTS -->
+      <section class="view" id="v-engagements">
+        <div class="card">
+          <div class="row"><h3 style="flex:1;margin:0">Engagements</h3><button class="btn ghost sm" onclick="loadList()">Refresh</button></div>
+          <table style="margin-top:12px"><thead><tr><th>Name</th><th>Status</th><th>Findings</th></tr></thead>
+            <tbody id="list"><tr><td colspan="3" class="empty">No engagements yet — start one from New scan.</td></tr></tbody></table>
+        </div>
+      </section>
+
+      <!-- DASHBOARD -->
+      <section class="view" id="v-dashboard">
+        <div id="detail"><div class="card"><div class="empty">Select an engagement to see its dashboard.</div></div></div>
+      </section>
+
+      <!-- KIT -->
+      <section class="view" id="v-kit">
+        <div class="card">
+          <h3>Mobile dynamic-analysis kit</h3>
+          <div class="sub">On-device instrumentation for apps you are authorized to test.</div>
+          <p class="muted">SSL-pinning bypass · root / jailbreak-detection bypass · cryptography &amp; WebView hooks. Run against your app on a test device, then feed the captured API traffic back into an <b>API</b> scan.</p>
+          <div class="row" style="margin-top:8px">
+            <button class="btn ghost sm" onclick="listFrida()">List scripts</button>
+            <button class="btn ghost sm" onclick="downloadKit()">Download kit (.zip)</button>
+            <a class="btn ghost sm" style="line-height:1.2" href="/kit/frida/README.md" target="_blank">Runner guide</a>
+          </div>
+          <div id="fridalist"></div>
+        </div>
+      </section>
+
+      <!-- HELP / MANUAL -->
+      <section class="view" id="v-help">
+        <div class="card manual">
+          <h3 style="margin-top:0">PentestIQ — user manual</h3>
+          <p>PentestIQ assesses every asset type from one place: web apps, APIs, mobile &amp; desktop apps, infrastructure, network devices, firewalls and system hardening. Sign in, point it at a target, and it discovers the surface, tests it against the OWASP Top 10, and reports prioritised findings.</p>
+
+          <h3>1 · Sign in</h3>
+          <p>Default workspace credentials are <span class="kbd">pentestiq</span> / <span class="kbd">p3nt3st!q</span>. Change the password after first login, or create a separate workspace with <b>Create workspace</b>.</p>
+
+          <h3>2 · Scan live targets (web / API / infra)</h3>
+          <ol>
+            <li>Open <b>New scan → Scan targets</b>.</li>
+            <li>Name the engagement and record who authorised it.</li>
+            <li>Enter targets, one per line. Prefix the type when helpful: <span class="kbd">web=https://app.example.com</span>, <span class="kbd">api=https://api.example.com</span>, <span class="kbd">wordpress=…</span>, <span class="kbd">infra=192.0.2.0/24</span>.</li>
+            <li>Choose scope enforcement (<b>Warn</b> to start), then <b>Create &amp; open</b> → <b>Run scan</b>.</li>
+          </ol>
+
+          <h3>3 · Test an API (upload a spec + token)</h3>
+          <ol>
+            <li><b>New scan → Upload &amp; scan</b>, asset type <b>API</b>.</li>
+            <li>Select the OpenAPI/Swagger file, set the <b>Base URL</b>, and paste an access token.</li>
+            <li>Add a <b>second token + object IDs</b> to unlock cross-tenant / access-control (BOLA) testing.</li>
+            <li>Tick <b>Enable active testing</b> for injection &amp; brute-force checks (authorized targets only), then <b>Upload &amp; scan</b>.</li>
+          </ol>
+
+          <h3>4 · Assess a mobile / desktop app or device config</h3>
+          <p>Pick the matching asset type and upload the file — Android/iOS package, desktop binary, or a network-device / firewall / hardening configuration. Analysis starts automatically. For live mobile instrumentation, grab the <b>Dynamic kit</b>.</p>
+
+          <h3>5 · Read the results</h3>
+          <ul>
+            <li><b>Severity tiles &amp; bars</b> — the risk breakdown at a glance.</li>
+            <li><b>OWASP coverage</b> — which Top-10 (web &amp; API) categories were exercised; red = a critical finding.</li>
+            <li><b>Findings table</b> — risk score, severity, title, endpoint and OWASP mapping. Chains group related findings.</li>
+            <li><b>Open report</b> — a client-ready report (executive summary, evidence, remediation, compliance mapping).</li>
+          </ul>
+
+          <h3>6 · Good practice</h3>
+          <ul>
+            <li>Only scan assets you are authorised to test; record the authorisation in the engagement.</li>
+            <li>Keep <b>active testing</b> off for production unless you have a maintenance window.</li>
+            <li>Re-run an engagement any time to track remediation over time.</li>
+          </ul>
+        </div>
+      </section>
+
+    </div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
 const SEV=["critical","high","medium","low","info"];
-const SEVCOL={critical:"#f87171",high:"#fb7185",medium:"#fbbf24",low:"#60a5fa",info:"#94a3b8"};
+const SEVCOL={critical:"#fb5b6b",high:"#fb8c5b",medium:"#f5c451",low:"#5b9dfb",info:"#8aa0bf"};
 let TOKEN=(function(){try{return localStorage.getItem("ptiq_token")||""}catch(e){return ""}})();
 let CUR=null, POLL=null;
 
-function toast(m){const t=document.getElementById("toast");t.textContent=m;t.style.display="block";setTimeout(()=>t.style.display="none",2600);}
+function toast(m){const t=document.getElementById("toast");t.textContent=m;t.style.display="block";setTimeout(()=>t.style.display="none",3200);}
+function esc(s){return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function assetStr(a){return a?(a.type+":"+a.identifier):"-";}
+function $(id){return document.getElementById(id);}
+
 async function api(path,opts={}){
   opts.headers=Object.assign({"Content-Type":"application/json"},opts.headers||{});
   if(TOKEN)opts.headers["Authorization"]="Bearer "+TOKEN;
   const r=await fetch(path,opts);
-  if(r.status===401){toast("Please log in");throw new Error("401");}
+  if(r.status===401){toast("Session expired — please sign in");showLogin();throw new Error("401");}
   return r;
 }
-async function setStatus(){const s=document.getElementById("apistatus");
-  if(!TOKEN){s.textContent="not connected";s.style.color="#94a3b8";return;}
-  try{const me=await(await api("/me")).json();s.textContent="tenant "+String(me.tenant_id).slice(0,8)+" · "+me.role;s.style.color="#34d399";}
-  catch(e){s.textContent="not connected";}
+function showLogin(){$("login").style.display="flex";$("app").style.display="none";}
+function showApp(){$("login").style.display="none";$("app").style.display="grid";}
+const VTITLE={scan:"New scan",engagements:"Engagements",dashboard:"Dashboard",kit:"Dynamic kit",help:"User manual"};
+function showView(v){
+  document.querySelectorAll(".view").forEach(e=>e.classList.remove("on"));
+  $("v-"+v).classList.add("on");
+  document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("active",a.dataset.view===v));
+  $("vtitle").textContent=VTITLE[v]||v;
+  $("app").classList.remove("nav-open");
+  if(v==="engagements")loadList();
+  if(v==="kit")listFrida();
 }
-function setToken(t){TOKEN=t;try{localStorage.setItem("ptiq_token",t)}catch(e){}setStatus();loadList();}
+async function setStatus(){
+  if(!TOKEN)return;
+  try{const me=await(await api("/me")).json();$("who").textContent="tenant "+String(me.tenant_id).slice(0,8)+" · "+me.role;}
+  catch(e){}
+}
+function setToken(t){TOKEN=t;try{localStorage.setItem("ptiq_token",t)}catch(e){}showApp();setStatus();showView("scan");loadList();}
+
 async function register(){
-  const tn=prompt("Organization / tenant name:");if(!tn)return;
-  const u=document.getElementById("user").value.trim(),p=document.getElementById("pass").value;
-  if(!u||p.length<8){toast("username + password (8+ chars) required");return;}
+  const tn=prompt("Name your workspace / organization:");if(!tn)return;
+  const u=$("user").value.trim(),p=$("pass").value;
+  if(!u||p.length<8){toast("Username + password (8+ chars) required");return;}
   const r=await fetch("/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tenant_name:tn,username:u,password:p})});
-  if(!r.ok){toast("Register failed ("+r.status+")");return;}
-  setToken((await r.json()).token);toast("Registered — you are the owner");
+  if(!r.ok){toast("Could not create workspace ("+r.status+")");return;}
+  setToken((await r.json()).token);toast("Workspace created — you are the owner");
 }
 async function login(){
-  const u=document.getElementById("user").value.trim(),p=document.getElementById("pass").value;
+  const u=$("user").value.trim(),p=$("pass").value;
   const r=await fetch("/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})});
-  if(!r.ok){toast("Login failed");return;}
-  setToken((await r.json()).token);toast("Logged in");
+  if(!r.ok){toast("Sign-in failed — check your credentials");return;}
+  setToken((await r.json()).token);toast("Signed in");
 }
-function logout(){TOKEN="";try{localStorage.removeItem("ptiq_token")}catch(e){}setStatus();
-  document.getElementById("list").innerHTML='<tr><td colspan="3" class="empty">Logged out.</td></tr>';
-  document.getElementById("detail").innerHTML='<div class="empty">Log in to begin.</div>';}
+function logout(){TOKEN="";try{localStorage.removeItem("ptiq_token")}catch(e){}clearInterval(POLL);showLogin();}
+
 async function loadList(){
   if(!TOKEN)return;
-  const items=await(await api("/engagements")).json();
-  const tb=document.getElementById("list");
-  if(!items.length){tb.innerHTML='<tr><td colspan="3" class="empty">No engagements yet.</td></tr>';return;}
+  let items;try{items=await(await api("/engagements")).json();}catch(e){return;}
+  const tb=$("list");
+  if(!items.length){tb.innerHTML='<tr><td colspan="3" class="empty">No engagements yet — start one from New scan.</td></tr>';return;}
   tb.innerHTML=items.map(e=>`<tr class="eng" onclick="openEng('${e.id}')">
-    <td>${esc(e.name)}</td><td><span class="status ${e.status}">${e.status}</span></td><td>${e.findings}</td></tr>`).join("");
+    <td><b>${esc(e.name)}</b></td><td><span class="status ${e.status}">${e.status}</span></td><td>${e.findings}</td></tr>`).join("");
 }
 async function createEng(){
-  if(!TOKEN){toast("Please log in first");return;}
-  const targets=document.getElementById("targets").value.split("
-").map(s=>s.trim()).filter(Boolean);
-  const body={engagement:{name:document.getElementById("name").value||"Engagement",
-    authorized_by:document.getElementById("auth").value||null},
-    scope:{in_scope:targets},enforcement:document.getElementById("enf").value};
+  const targets=$("targets").value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  const body={engagement:{name:$("name").value||"Engagement",authorized_by:$("auth").value||null},
+    scope:{in_scope:targets},enforcement:$("enf").value};
   const e=await(await api("/engagements",{method:"POST",body:JSON.stringify(body)})).json();
-  toast("Created");await loadList();openEng(e.id);
+  toast("Engagement created");await loadList();openEng(e.id);
 }
-async function openEng(id){CUR=id;renderDetail(await(await api("/engagements/"+id)).json());}
+
+function onUpType(){
+  const t=$("uptype").value;
+  const labels={api:"API specification (.json / .yaml)",mobile:"Mobile app package (.apk / .ipa)",
+    desktop:"Desktop application binary",network_device:"Network device configuration",
+    firewall:"Firewall ruleset",hardening:"System hardening configuration"};
+  $("filelabel").textContent=labels[t]||"File";
+  $("apifields").hidden=(t!=="api");
+  $("mobilenote").hidden=(t!=="mobile");
+}
+async function uploadApp(){
+  const fi=$("appfile");const file=fi.files&&fi.files[0];
+  if(!file){toast("Choose a file first");return;}
+  const t=$("uptype").value;
+  const fd=new FormData();fd.append("file",file);fd.append("name",file.name);fd.append("asset_type",t);
+  if(t==="api"){
+    const g=id=>$(id).value.trim();
+    if(g("baseurl"))fd.append("base_url",g("baseurl"));
+    if(g("tokenA"))fd.append("bearer_token",g("tokenA"));
+    if(g("tokenB"))fd.append("bearer_token_b",g("tokenB"));
+    if(g("oidsA"))fd.append("object_ids_a",g("oidsA"));
+    if(g("oidsB"))fd.append("object_ids_b",g("oidsB"));
+    if($("active").checked)fd.append("allow_active","true");
+  }
+  toast("Uploading "+file.name+" …");
+  const r=await fetch("/engagements/upload",{method:"POST",headers:{"Authorization":"Bearer "+TOKEN},body:fd});
+  if(!r.ok){toast("Upload failed ("+r.status+")");return;}
+  const e=await r.json();toast("Uploaded — scanning "+file.name);
+  fi.value="";await loadList();await runEng(e.id);openEng(e.id);
+}
+
+async function listFrida(){
+  try{const scripts=await(await api("/kit/frida")).json();
+    $("fridalist").innerHTML='<table style="margin-top:14px"><tbody>'+scripts.map(s=>
+      `<tr><td style="white-space:nowrap"><a href="/kit/frida/${encodeURIComponent(s.name)}" target="_blank">${esc(s.name)}</a></td>
+       <td class="muted">${esc(s.description||"")}</td></tr>`).join("")+'</tbody></table>';
+  }catch(e){}
+}
+function downloadKit(){window.open("/kit/frida.zip","_blank");}
+
+async function openEng(id){CUR=id;showView("dashboard");renderDetail(await(await api("/engagements/"+id)).json());}
 function sevCounts(F){const c={critical:0,high:0,medium:0,low:0,info:0};
   F.forEach(f=>{if(f.status!=="false_positive")c[f.severity]=(c[f.severity]||0)+1;});return c;}
+function tiles(c){const tot=SEV.reduce((a,s)=>a+c[s],0);
+  const T=(cls,n,l)=>`<div class="tile ${cls}"><div class="n">${n}</div><div class="l">${l}</div></div>`;
+  return `<div class="tiles">${T("c-crit",c.critical,"Critical")}${T("c-high",c.high,"High")}${T("c-med",c.medium,"Medium")}${T("c-low",c.low,"Low")}${T("c-total",tot,"Total")}</div>`;}
 function chart(c){const max=Math.max(1,...SEV.map(s=>c[s]));
   return `<div class="bars">`+SEV.map(s=>`<div class="bar"><span class="lab">${s}</span>
     <span class="track"><span class="fill" style="width:${(c[s]/max*100)||0}%;background:${SEVCOL[s]}"></span></span>
     <span class="n">${c[s]}</span></div>`).join("")+`</div>`;}
-function renderDetail(rec){
+async function covMatrix(id){
+  try{const comp=await(await api("/engagements/"+id+"/compliance")).json();
+    const cov=comp.owasp_coverage;if(!cov)return "";
+    const cell=c=>{const cls=c.max_severity?("hit "+(c.max_severity==="critical"?"crit":c.max_severity==="high"?"high":"")):"";
+      return `<div class="c ${cls}"><div class="id">${c.id.split(":")[0]}</div><div class="n">${c.findings}</div></div>`;};
+    return `<div class="card" style="margin-top:18px"><h3 style="margin-top:0">OWASP coverage</h3>
+      <div class="sub">Web Top 10 (2021)</div><div class="cov">${(cov["web-2021"]||[]).map(cell).join("")}</div>
+      <div class="sub" style="margin-top:12px">API Top 10 (2023)</div><div class="cov">${(cov["api-2023"]||[]).map(cell).join("")}</div></div>`;
+  }catch(e){return "";}
+}
+async function renderDetail(rec){
   const e=rec.engagement, F=(e.findings||[]).slice().sort((a,b)=>(b.risk_score||0)-(a.risk_score||0));
   const running=(rec.status==="running"||rec.status==="queued");
-  document.getElementById("detail").innerHTML=`
-    <div class="row"><h2 style="margin:0;flex:1">${esc(rec.name)}</h2>
-      <span class="status ${rec.status}">${rec.status}</span>
-      <button onclick="runEng('${rec.id}')" ${running?"disabled":""}>${running?"Running…":"Run scan"}</button>
-      <button class="ghost" onclick="openReport('${rec.id}')">Open report</button></div>
-    <div class="muted" style="margin:4px 0 10px">${(e.assets||[]).length} asset(s) · ${F.length} finding(s) · ${new Set(F.map(f=>f.correlation_id)).size} chain(s)</div>
-    ${chart(sevCounts(F))}
-    <table><thead><tr><th>Risk</th><th>Sev</th><th>Title</th><th>Asset</th><th>Chain</th><th>Status</th><th>Tools</th></tr></thead>
-    <tbody>${F.length?F.map(f=>`<tr>
-      <td><span class="risk">${Math.round(f.risk_score||0)}</span></td>
-      <td><span class="badge b-${f.severity}">${f.severity}</span></td>
-      <td>${esc(f.title)}</td><td class="muted">${esc(assetStr(f.asset))}</td>
-      <td class="muted">${esc(f.correlation_id||"-")}</td>
-      <td class="status ${f.status}">${f.status.replace("_"," ")}</td>
-      <td class="muted">${esc((f.source_tools||[]).join(", "))}</td></tr>`).join(""):
-      `<tr><td colspan="7" class="empty">No findings yet — run the scan (needs scanners installed on the host).</td></tr>`}</tbody></table>`;
+  const cov=await covMatrix(rec.id);
+  $("detail").innerHTML=`
+    <div class="card">
+      <div class="row"><h3 style="flex:1;margin:0;font-size:17px">${esc(rec.name)}</h3>
+        <span class="status ${rec.status}">${rec.status}</span>
+        <button class="btn sm" onclick="runEng('${rec.id}')" ${running?"disabled":""}>${running?"Running…":"Run scan"}</button>
+        <button class="btn ghost sm" onclick="openReport('${rec.id}')">Open report</button></div>
+      <div class="muted" style="margin:6px 0 14px">${(e.assets||[]).length} asset(s) · ${F.length} finding(s) · ${new Set(F.map(f=>f.correlation_id)).size} chain(s)</div>
+      ${tiles(sevCounts(F))}
+      ${chart(sevCounts(F))}
+      <hr class="sep">
+      <table><thead><tr><th>Risk</th><th>Severity</th><th>Finding</th><th>Location</th><th>OWASP</th><th>Status</th></tr></thead>
+      <tbody>${F.length?F.map(f=>`<tr>
+        <td><span class="risk">${Math.round(f.risk_score||0)}</span></td>
+        <td><span class="badge b-${f.severity}">${f.severity}</span></td>
+        <td>${esc(f.title)}</td><td class="muted">${esc(assetStr(f.asset))}</td>
+        <td><span class="pill">${esc(f.category||"-")}</span></td>
+        <td class="status ${f.status}">${(f.status||"").replace("_"," ")}</td></tr>`).join(""):
+        `<tr><td colspan="6" class="empty">No findings yet — run the scan.</td></tr>`}</tbody></table>
+    </div>${cov}`;
 }
 async function runEng(id){
   await api("/engagements/"+id+"/run",{method:"POST"});toast("Scan queued");
   clearInterval(POLL);
-  POLL=setInterval(async()=>{const rec=await(await api("/engagements/"+id)).json();
+  POLL=setInterval(async()=>{let rec;try{rec=await(await api("/engagements/"+id)).json();}catch(e){clearInterval(POLL);return;}
     if(id===CUR)renderDetail(rec);
-    if(rec.status==="completed"||rec.status==="failed"){clearInterval(POLL);loadList();toast("Scan "+rec.status);}},1500);
+    if(rec.status==="completed"||rec.status==="failed"){clearInterval(POLL);loadList();toast("Scan "+rec.status);}},1600);
 }
 async function openReport(id){
   const html=await(await api("/engagements/"+id+"/report?format=html")).text();
   window.open(URL.createObjectURL(new Blob([html],{type:"text/html"})),"_blank");
 }
-function assetStr(a){return a?(a.type+":"+a.identifier):"-";}
-function esc(s){return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
-async function uploadApp(){
-  if(!TOKEN){toast("Please log in first");return;}
-  const fi=document.getElementById("appfile");const file=fi.files&&fi.files[0];
-  if(!file){toast("Choose an .apk/.ipa file first");return;}
-  const fd=new FormData();fd.append("file",file);fd.append("name",file.name);
-  toast("Uploading "+file.name+" …");
-  const r=await fetch("/engagements/upload",{method:"POST",
-    headers:{"Authorization":"Bearer "+TOKEN},body:fd});
-  if(!r.ok){toast("Upload failed ("+r.status+")");return;}
-  const e=await r.json();toast("Uploaded — scanning "+file.name);
-  fi.value="";await loadList();await runEng(e.id);openEng(e.id);
-}
-setStatus();if(TOKEN)loadList();
-</script>
 
-<script>
+// boot
+onUpType();
 /* ---- PREVIEW MOCK (sample data; no live API) ---- */
 TOKEN="demo-token";
-const _REC={"id": "demo-1", "name": "Acme \u2014 External Web & Infra Assessment", "status": "completed", "engagement": {"name": "Acme \u2014 External Web & Infra Assessment", "assets": [{"type": "web", "identifier": "http://10.0.0.5:80"}, {"type": "infra", "identifier": "10.0.0.5"}], "findings": [{"title": "Example RCE", "severity": "critical", "risk_score": 90, "correlation_id": "10.0.0.5:80", "status": "detected", "source_tools": ["nuclei"], "asset": {"type": "web", "identifier": "http://10.0.0.5:80"}}, {"title": "SQL Injection", "severity": "high", "risk_score": 95, "correlation_id": "10.0.0.5:80", "status": "validated", "source_tools": ["zap"], "asset": {"type": "web", "identifier": "http://10.0.0.5:80"}}, {"title": "Weak TLS", "severity": "medium", "risk_score": 50, "correlation_id": "10.0.0.5:443", "status": "detected", "source_tools": ["nuclei"], "asset": {"type": "infra", "identifier": "10.0.0.5"}}, {"title": "Open port 23/tcp \u2014 telnet", "severity": "low", "risk_score": 28, "correlation_id": "10.0.0.5:23", "status": "detected", "source_tools": ["nmap"], "asset": {"type": "infra", "identifier": "10.0.0.5"}}]}},_LIST=[{"id": "demo-1", "name": "Acme \u2014 External Web & Infra Assessment", "status": "completed", "findings": 4}, {"id": "demo-2", "name": "DemoBank.apk (mobile)", "status": "completed", "findings": 6}];
-api=async function(path){const w=o=>({json:async()=>o,text:async()=>o});
-  if(path==="/me")return w({tenant_id:"acmedemo01",role:"owner"});
+const _LIST=[{id:"demo-1",name:"PentestIQ — External Web & API Assessment",status:"completed",findings:5},
+             {id:"demo-2",name:"Sajid — Mobile App Review",status:"completed",findings:3}];
+const _REC={id:"demo-1",name:"PentestIQ — External Web & API Assessment",status:"completed",engagement:{
+  name:"PentestIQ — External Web & API Assessment",authorized_by:"Sajid",
+  assets:[{type:"web",identifier:"https://app.example.com"},{type:"api",identifier:"https://api.example.com"}],
+  findings:[
+   {title:"Broken Object Level Authorization (cross-tenant read)",severity:"critical",risk_score:92,category:"API1:2023",correlation_id:"c1",status:"detected",asset:{type:"api",identifier:"https://api.example.com"}},
+   {title:"SQL injection (error-based) in parameter 'q'",severity:"critical",risk_score:95,category:"A03:2021",correlation_id:"c2",status:"validated",asset:{type:"web",identifier:"https://app.example.com"}},
+   {title:"Blind SSRF confirmed (out-of-band)",severity:"high",risk_score:78,category:"A10:2021",correlation_id:"c3",status:"detected",asset:{type:"web",identifier:"https://app.example.com"}},
+   {title:"Missing security header: HSTS",severity:"medium",risk_score:40,category:"A05:2021",correlation_id:"c4",status:"detected",asset:{type:"web",identifier:"https://app.example.com"}},
+   {title:"Page is framable (clickjacking)",severity:"low",risk_score:22,category:"A05:2021",correlation_id:"c5",status:"detected",asset:{type:"web",identifier:"https://app.example.com"}}]}};
+const _COV={owasp_coverage:{"web-2021":[{id:"A01:2021",findings:0,max_severity:null},{id:"A02:2021",findings:0,max_severity:null},{id:"A03:2021",findings:1,max_severity:"critical"},{id:"A04:2021",findings:0,max_severity:null},{id:"A05:2021",findings:2,max_severity:"medium"},{id:"A06:2021",findings:0,max_severity:null},{id:"A07:2021",findings:0,max_severity:null},{id:"A08:2021",findings:0,max_severity:null},{id:"A09:2021",findings:0,max_severity:null},{id:"A10:2021",findings:1,max_severity:"high"}],"api-2023":[{id:"API1:2023",findings:1,max_severity:"critical"},{id:"API2:2023",findings:0,max_severity:null},{id:"API3:2023",findings:0,max_severity:null},{id:"API4:2023",findings:0,max_severity:null},{id:"API5:2023",findings:0,max_severity:null},{id:"API6:2023",findings:0,max_severity:null},{id:"API7:2023",findings:0,max_severity:null},{id:"API8:2023",findings:0,max_severity:null},{id:"API9:2023",findings:0,max_severity:null},{id:"API10:2023",findings:0,max_severity:null}]}};
+api=async function(path){const w=o=>({json:async()=>o,text:async()=>o,status:200,ok:true});
+  if(path==="/me")return w({tenant_id:"pentestiq01",role:"owner"});
   if(path==="/engagements")return w(_LIST);
-  if(path.indexOf("/report")>-1)return {text:async()=>"<h1>Report preview</h1>"};
+  if(path==="/kit/frida")return w([]);
+  if(path.indexOf("/compliance")>-1)return w(_COV);
+  if(path.indexOf("/report")>-1)return w("<h1>Report preview</h1>");
   if(path.indexOf("/engagements/demo-1")===0)return w(_REC);
-  if(path.indexOf("/engagements/demo-2")===0)return w({id:"demo-2",name:"DemoBank.apk (mobile)",status:"completed",engagement:{name:"DemoBank.apk",assets:[{type:"mobile",identifier:"DemoBank.apk"}],findings:[
-    {title:"WebView debugging enabled in production",severity:"high",risk_score:75,correlation_id:"DemoBank.apk",status:"detected",source_tools:["mobsf"],asset:{type:"mobile",identifier:"DemoBank.apk"}},
-    {title:"App is debuggable",severity:"high",risk_score:75,correlation_id:"DemoBank.apk",status:"detected",source_tools:["mobsf"],asset:{type:"mobile",identifier:"DemoBank.apk"}},
-    {title:"Possible hardcoded secret: api_key",severity:"medium",risk_score:42,correlation_id:"DemoBank.apk",status:"detected",source_tools:["mobsf"],asset:{type:"mobile",identifier:"DemoBank.apk"}}]}});
+  if(path.indexOf("/engagements/demo-2")===0)return w({id:"demo-2",name:"Sajid — Mobile App Review",status:"completed",engagement:{name:"Sajid — Mobile App Review",assets:[{type:"mobile",identifier:"app-release.apk"}],findings:[
+    {title:"WebView debugging enabled in production",severity:"high",risk_score:75,category:"A05:2021",correlation_id:"m1",status:"detected",asset:{type:"mobile",identifier:"app-release.apk"}},
+    {title:"Application is debuggable",severity:"high",risk_score:75,category:"A05:2021",correlation_id:"m2",status:"detected",asset:{type:"mobile",identifier:"app-release.apk"}},
+    {title:"Possible hardcoded secret: api_key",severity:"medium",risk_score:42,category:"A05:2021",correlation_id:"m3",status:"detected",asset:{type:"mobile",identifier:"app-release.apk"}}]}});
   return w({});};
-setStatus();loadList();openEng("demo-2");
+showApp();setStatus();openEng("demo-1");
 document.querySelectorAll("button").forEach(b=>{if(/Run scan/.test(b.textContent))b.disabled=true;});
 </script>
 </body></html>

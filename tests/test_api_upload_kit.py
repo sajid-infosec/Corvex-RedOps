@@ -70,7 +70,7 @@ def client(tmp_path):
 
 
 def _token(c):
-    return c.post("/auth/register", json={"tenant_name": "Acme", "username": "owner",
+    return c.post("/auth/register", json={"tenant_name": "PentestIQ", "username": "owner",
                                           "password": "password123"}).json()["token"]
 
 

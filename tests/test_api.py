@@ -13,7 +13,7 @@ def ctx(tmp_path):
     return TestClient(create_app(store=estore, auth=auth)), auth, db
 
 
-def _register(c, tenant="Acme", user="owner", pw="password123"):
+def _register(c, tenant="PentestIQ", user="owner", pw="password123"):
     r = c.post("/auth/register", json={"tenant_name": tenant, "username": user, "password": pw})
     assert r.status_code == 201, r.text
     return r.json()["token"]

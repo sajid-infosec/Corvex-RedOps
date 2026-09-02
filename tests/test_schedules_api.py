@@ -12,7 +12,7 @@ def client(tmp_path):
     return TestClient(create_app(store=SqliteEngagementStore(db), auth=auth))
 
 
-def _tok(c, tenant="Acme", user="owner"):
+def _tok(c, tenant="PentestIQ", user="owner"):
     return c.post("/auth/register", json={"tenant_name": tenant, "username": user,
                                           "password": "password123"}).json()["token"]
 

@@ -16,7 +16,7 @@ def ctx(tmp_path):
 
 
 def _reg(c, user="owner"):
-    tok = c.post("/auth/register", json={"tenant_name": "Acme", "username": user,
+    tok = c.post("/auth/register", json={"tenant_name": "PentestIQ", "username": user,
                                          "password": "password123"}).json()["token"]
     tid = c.get("/me", headers={"Authorization": f"Bearer {tok}"}).json()["tenant_id"]
     return tok, tid
@@ -61,12 +61,12 @@ def test_settings_branding_rbac_and_applied(ctx):
     # default branding
     assert c.get("/settings", headers=H).json()["company_name"] == "PentestIQ"
     # owner sets white-label branding
-    r = c.put("/settings", headers=H, json={"company_name": "Acme Security",
+    r = c.put("/settings", headers=H, json={"company_name": "PentestIQ Security",
                                             "accent_color": "#6d28d9", "footer_note": "Confidential"})
-    assert r.status_code == 200 and r.json()["company_name"] == "Acme Security"
+    assert r.status_code == 200 and r.json()["company_name"] == "PentestIQ Security"
     # a member key cannot change settings
     mk = c.post("/apikeys", headers=H, json={"name": "m", "role": "member"}).json()["api_key"]
     assert c.put("/settings", headers={"X-API-Key": mk}, json={"company_name": "X"}).status_code == 403
     # branding shows up in the report
     eid = _seed(store, tid)
-    assert "Acme Security" in c.get(f"/engagements/{eid}/report", headers=H).text
+    assert "PentestIQ Security" in c.get(f"/engagements/{eid}/report", headers=H).text

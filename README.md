@@ -383,7 +383,7 @@ On first run a default workspace is created — sign in with **`pentestiq`** / *
 (change the password after first login). To bootstrap another tenant + owner from the CLI:
 
 ```bash
-pentestiq init-tenant --tenant "Acme" --username alice --password "s3cr3tpass"
+pentestiq init-tenant --tenant "PentestIQ" --username sajid --password "s3cr3tpass"
 #  -> prints an API key you can use with  -H "X-API-Key: <key>"
 ```
 
@@ -478,8 +478,8 @@ Every engagement is defined by a **scope file** (YAML). It declares what to test
 
 ```yaml
 engagement:
-  name: "Acme External Assessment"
-  authorized_by: "Acme CISO"            # who authorized this test
+  name: "PentestIQ External Assessment"
+  authorized_by: "Sajid"                # who authorized this test
   window:                               # optional testing window
     start: "2026-01-01T00:00:00Z"
     end:   "2026-01-07T00:00:00Z"
@@ -616,7 +616,7 @@ Every report includes an **executive summary**, severity breakdown, prioritized 
 ```bash
 curl -XPUT http://localhost:8080/settings -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"company_name":"Acme Security","accent_color":"#1e3a8a","footer_note":"Confidential"}'
+  -d '{"company_name":"PentestIQ","accent_color":"#1e3a8a","footer_note":"Confidential"}'
 ```
 
 ### 6. Continuous scanning & scheduling
@@ -627,7 +627,7 @@ Create a schedule and PentestIQ re-runs it automatically, **diffing** each run a
 # nightly scan with Slack notification
 curl -XPOST http://localhost:8080/schedules -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" -d '{
-    "name":"Nightly Acme",
+    "name":"Nightly PentestIQ",
     "interval_seconds": 86400,
     "webhook_url":"https://hooks.slack.com/services/XXX",
     "scope":{"in_scope":["web=https://app.example.com"]}
@@ -638,7 +638,7 @@ curl http://localhost:8080/schedules/<id>/diff          -H "Authorization: Beare
 curl http://localhost:8080/schedules/<id>/runs          -H "Authorization: Bearer $TOKEN"  # run history
 ```
 
-Notification payload is Slack-compatible: *"PentestIQ · Nightly Acme: scan complete — 1 new, 1 fixed, 2 persisting."*
+Notification payload is Slack-compatible: *"PentestIQ · Nightly PentestIQ: scan complete — 1 new, 1 fixed, 2 persisting."*
 
 ### 7. Authentication, tenants & RBAC
 
@@ -647,7 +647,7 @@ PentestIQ is multi-tenant. Authenticate with a **session token** (`Authorization
 ```bash
 # register a tenant + owner, get a token
 TOKEN=$(curl -s -XPOST http://localhost:8080/auth/register -H "Content-Type: application/json" \
-  -d '{"tenant_name":"Acme","username":"alice","password":"password123"}' | jq -r .token)
+  -d '{"tenant_name":"PentestIQ","username":"sajid","password":"password123"}' | jq -r .token)
 
 # who am I
 curl http://localhost:8080/me -H "Authorization: Bearer $TOKEN"

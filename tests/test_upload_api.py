@@ -14,7 +14,7 @@ def client(tmp_path):
 
 
 def _tok(c, user="owner"):
-    return c.post("/auth/register", json={"tenant_name": "Acme", "username": user,
+    return c.post("/auth/register", json={"tenant_name": "PentestIQ", "username": user,
                                           "password": "password123"}).json()["token"]
 
 

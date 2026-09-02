@@ -10,7 +10,7 @@ from pentestiq.models import (
 
 def _engagement():
     a = Asset(type=AssetType.WEB, identifier="http://shop")
-    eng = Engagement(name="Acme Web Test")
+    eng = Engagement(name="PentestIQ Web Test")
     eng.add_findings([
         Finding(asset=a, title="SQL Injection", category="CWE-89", severity=Severity.HIGH,
                 status=FindingStatus.VALIDATED, confidence=Confidence.HIGH, source_tools=["zap"],
@@ -39,7 +39,7 @@ def test_stats_counts():
 def test_deterministic_summary_mentions_key_facts():
     eng = _engagement()
     txt = deterministic_summary(eng, compute_stats(eng))
-    assert "Acme Web Test" in txt
+    assert "PentestIQ Web Test" in txt
     assert "validated" in txt.lower()
     assert "false positive" in txt.lower()
 
@@ -60,7 +60,7 @@ def test_markdown_report_structure():
     eng = _engagement()
     st = compute_stats(eng)
     md = render_markdown(eng, st, build_narrative(eng, st))
-    assert "# VAPT Report — Acme Web Test" in md
+    assert "# VAPT Report — PentestIQ Web Test" in md
     assert "## Executive Summary" in md
     assert "SQL Injection" in md
     assert "cwe.mitre.org/data/definitions/89.html" in md   # framework mapping
