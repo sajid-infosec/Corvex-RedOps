@@ -62,25 +62,50 @@ if ($Docker) {
 }
 
 # --------------------------------------------------------------- Python path
-$py = $null
-foreach ($cand in @("py -3", "python", "python3")) {
-  $exe = $cand.Split(" ")[0]
-  if (Get-Command $exe -ErrorAction SilentlyContinue) { $py = $cand; break }
+function Test-PythonCandidate($exe, $pre) {
+  $cmd = Get-Command $exe -ErrorAction SilentlyContinue
+  if (-not $cmd) { return $null }
+  # skip the Microsoft Store alias stub (prints "not found", isn't a real interpreter)
+  if ($cmd.Source -and $cmd.Source -like "*\WindowsApps\*") { return $null }
+  try { $out = (& $cmd.Source @pre "--version" 2>&1 | Out-String) } catch { return $null }
+  if ($out -match "Python\s+(\d+)\.(\d+)") {
+    $maj = [int]$Matches[1]; $min = [int]$Matches[2]
+    if ($maj -gt 3 -or ($maj -eq 3 -and $min -ge 10)) {
+      return [pscustomobject]@{ Exe = $cmd.Source; Pre = $pre; Ver = "$maj.$min" }
+    }
+  }
+  return $null
 }
-if (-not $py) { Die "Python 3.10+ not found. Install it from https://python.org (check 'Add to PATH'), then re-run." }
 
-# verify version >= 3.10
-$verOut = & ([scriptblock]::Create("$py -c `"import sys;print('%d.%d'%sys.version_info[:2])`""))
-$maj,$min = $verOut.Trim().Split(".")
-if ([int]$maj -lt 3 -or ([int]$maj -eq 3 -and [int]$min -lt 10)) {
-  Die "Python $verOut found, but 3.10+ is required."
+$Py = $null
+foreach ($c in @(,@("py", @("-3"))) + @(,@("python3", @())) + @(,@("python", @()))) {
+  $Py = Test-PythonCandidate $c[0] $c[1]
+  if ($Py) { break }
 }
-Ok "Python $verOut detected."
+
+if (-not $Py) {
+  Warn "Python 3.10+ was not found. (The 'python' Windows may offer is a Microsoft Store"
+  Warn "placeholder, not a real interpreter.)"
+  if (Get-Command winget -ErrorAction SilentlyContinue) {
+    Info "Installing Python 3.12 via winget..."
+    try {
+      winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements
+      Write-Host ""
+      Warn "Python installed. Close this window, open a NEW PowerShell, and run install.ps1 again"
+      Warn "(a fresh shell is required so Windows adds Python to PATH)."
+      exit 0
+    } catch {
+      Die "Automatic install failed. Get Python 3.10+ from https://python.org (tick 'Add python.exe to PATH'), then re-run."
+    }
+  }
+  Die "Install Python 3.10+ from https://python.org (tick 'Add python.exe to PATH') and re-run, or use -Docker with Docker Desktop, or download a prebuilt binary from the Releases page."
+}
+Ok "Python $($Py.Ver) detected."
 
 $venv = Join-Path $RepoDir ".venv"
 if (-not (Test-Path $venv)) {
   Info "Creating virtual environment (.venv)..."
-  & ([scriptblock]::Create("$py -m venv `"$venv`""))
+  & $Py.Exe @($Py.Pre) -m venv "$venv"
 }
 $vpy = Join-Path $venv "Scripts\python.exe"
 if (-not (Test-Path $vpy)) { Die "venv creation failed (no $vpy)." }
@@ -106,6 +131,6 @@ if (-not $env:PENTESTIQ_SECRET_KEY) {
 }
 Write-Host ""
 Ok "Starting the API + web console on http://localhost:$Port"
-Info "Open the console, click Register to create your first tenant, then upload/scan. Ctrl-C to stop."
+Info "Open the console and sign in with pentestiq / p3nt3st!q (change it after first login). Ctrl-C to stop."
 Write-Host ""
 & $pentestiq serve --host 0.0.0.0 --port $Port

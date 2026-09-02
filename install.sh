@@ -100,13 +100,32 @@ install_base() {
   case "$FAMILY" in
     brew)   brew list git >/dev/null 2>&1 || brew install git;
             brew list openssl >/dev/null 2>&1 || brew install openssl;;
-    apt)    $SUDO apt-get update -y -qq
+    apt)    apt_fix_docker_repo
+            $SUDO apt-get update -y -qq || { apt_fix_docker_repo; $SUDO apt-get update -y -qq || true; }
             $SUDO apt-get install -y -qq ca-certificates curl git openssl gnupg lsb-release;;
     dnf)    $SUDO dnf install -y -q ca-certificates curl git openssl;;
     pacman) $SUDO pacman -Sy --noconfirm --needed curl git openssl ca-certificates;;
     zypper) $SUDO zypper --non-interactive --quiet install curl git openssl ca-certificates;;
   esac
   ok "Base prerequisites installed."
+}
+
+apt_fix_docker_repo() {
+  # A prior failed get.docker.com run can leave a Docker apt source pinned to a
+  # release Docker does not publish (e.g. Kali's kali-rolling), which then breaks
+  # every apt-get update. We install distro docker.io, so drop that source.
+  local f=/etc/apt/sources.list.d/docker.list
+  if [ -f "$f" ] && grep -qi "download.docker.com" "$f" 2>/dev/null; then
+    warn "removing an unusable Docker apt source ($f)"
+    $SUDO rm -f "$f" 2>/dev/null || true
+    $SUDO apt-get update -y -qq 2>/dev/null || true
+  fi
+}
+
+docker_convenience_script() {
+  log "Falling back to Docker's official install script…"
+  curl -fsSL https://get.docker.com -o /tmp/ptiq-get-docker.sh 2>/dev/null \
+    && $SUDO sh /tmp/ptiq-get-docker.sh >/dev/null 2>&1 || true
 }
 
 install_docker() {
@@ -123,25 +142,23 @@ install_docker() {
   fi
   if command -v docker >/dev/null 2>&1; then ok "Docker already installed ($(docker --version 2>/dev/null | cut -d, -f1))."; return; fi
   log "Installing Docker Engine…"
-  # Docker's official convenience script covers Ubuntu/Debian/Fedora/CentOS/RHEL/etc.
-  if curl -fsSL https://get.docker.com -o /tmp/ptiq-get-docker.sh 2>/dev/null && \
-     $SUDO sh /tmp/ptiq-get-docker.sh >/dev/null 2>&1 && command -v docker >/dev/null 2>&1; then
-    ok "Docker installed via get.docker.com."
-  else
-    warn "convenience script unavailable — using distribution packages."
-    case "$FAMILY" in
-      apt)    $SUDO apt-get update -y -qq
-              # docker.io ships the engine; docker-compose-v2 (Kali/Debian/Ubuntu) ships the plugin
-              $SUDO apt-get install -y -qq docker.io docker-compose-v2 2>/dev/null \
-                || $SUDO apt-get install -y -qq docker.io;;
-      dnf)    $SUDO dnf install -y -q docker docker-compose-plugin 2>/dev/null \
-                || $SUDO dnf install -y -q docker \
-                || $SUDO dnf install -y -q moby-engine;;
-      pacman) $SUDO pacman -Sy --noconfirm --needed docker docker-compose;;
-      zypper) $SUDO zypper --non-interactive install docker docker-compose;;
-    esac
-  fi
-  command -v docker >/dev/null 2>&1 || die "Docker installation failed. Install it manually and re-run."
+  # Prefer the distribution's own Docker package — reliable on Debian/Ubuntu/Kali/
+  # Parrot/Mint/Fedora and free of third-party-repo breakage. Fall back to Docker's
+  # convenience script only if the distro package isn't available.
+  case "$FAMILY" in
+    apt)    apt_fix_docker_repo
+            $SUDO apt-get install -y -qq docker.io docker-compose-v2 2>/dev/null \
+              || $SUDO apt-get install -y -qq docker.io 2>/dev/null \
+              || docker_convenience_script;;
+    dnf)    $SUDO dnf install -y -q docker docker-compose-plugin 2>/dev/null \
+              || $SUDO dnf install -y -q docker 2>/dev/null \
+              || $SUDO dnf install -y -q moby-engine 2>/dev/null \
+              || docker_convenience_script;;
+    pacman) $SUDO pacman -Sy --noconfirm --needed docker docker-compose 2>/dev/null || docker_convenience_script;;
+    zypper) $SUDO zypper --non-interactive install docker docker-compose 2>/dev/null || docker_convenience_script;;
+    *)      docker_convenience_script;;
+  esac
+  command -v docker >/dev/null 2>&1 || die "Docker installation failed. Install Docker manually and re-run."
   ok "Docker installed ($(docker --version 2>/dev/null | cut -d, -f1))."
   # let the invoking (non-root) user run docker without sudo after re-login
   if [ -n "${SUDO_USER:-}" ] && [ "${SUDO_USER}" != "root" ]; then
@@ -217,7 +234,13 @@ wait_healthy() {
 }
 
 summary() {
-  local ip; ip="$(hostname -I 2>/dev/null | awk '{print $1}')"; ip="${ip:-<server-ip>}"
+  local ip="localhost"
+  if [ "${OSKIND:-linux}" = "macos" ]; then
+    ip="$(ipconfig getifaddr en0 2>/dev/null)" || ip="localhost"
+  else
+    ip="$(hostname -I 2>/dev/null | awk '{print $1}')" || ip="localhost"
+  fi
+  [ -n "$ip" ] || ip="localhost"
   printf "\n${c_grn}════════════════════════════════════════════════════════════${c_off}\n"
   printf "  ${c_grn}✔ PentestIQ is deployed.${c_off}\n"
   printf "${c_grn}════════════════════════════════════════════════════════════${c_off}\n"
@@ -225,9 +248,8 @@ summary() {
   printf "  API docs    : ${c_blue}http://localhost:%s/docs${c_off}\n" "$PORT"
   printf "  MobSF       : http://localhost:8000  ${c_dim}(mobile analysis engine)${c_off}\n"
   printf "\n  Next steps:\n"
-  printf "    1) Open the console and click ${c_blue}Register${c_off} to create your first tenant + owner.\n"
-  printf "    2) Or from the CLI (inside the container):\n"
-  printf "       ${c_dim}%s -f %s exec pentestiq pentestiq init-tenant --tenant Acme --username you --password 'ChangeMe123'${c_off}\n" "$DC" "$COMPOSE_FILE"
+  printf "    1) Open the console and sign in with ${c_blue}pentestiq${c_off} / ${c_blue}p3nt3st!q${c_off} (change the password after first login).\n"
+  printf "    2) Create a scan from ${c_blue}New scan${c_off}, or upload an app / API spec, then Run scan.\n"
   printf "\n  Manage:\n"
   printf "    logs   : ${c_dim}%s --env-file %s -f %s logs -f${c_off}\n" "$DC" "$ENV_FILE" "$COMPOSE_FILE"
   printf "    stop   : ${c_dim}sudo ./install.sh --down${c_off}\n"
@@ -259,7 +281,7 @@ BANNER
     write_env
     deploy
     wait_healthy
-    summary
+    summary || true
     exit 0
   fi
 
@@ -270,6 +292,6 @@ BANNER
   write_env
   deploy
   wait_healthy
-  summary
+  summary || true
 }
 main "$@"
