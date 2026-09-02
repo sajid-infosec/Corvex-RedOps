@@ -259,6 +259,7 @@ Pipeline: **scope → scan → normalize → validate → prioritize & correlate
 
 PentestIQ runs on **Linux, macOS, and Windows**. Pick the path that fits — all
 three give you the same CLI (`pentestiq`) and the web console (`pentestiq serve`).
+See **[INSTALL.md](INSTALL.md)** for copy-paste quick-start blocks per OS.
 
 ### Requirements
 - **Python 3.10+** (for the pip/pipx and source paths), **or** Docker (for the
