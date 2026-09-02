@@ -30,7 +30,7 @@ build-backend = "setuptools.build_meta"
 include = ["pentestiq*"]
 
 [tool.setuptools.package-data]
-"pentestiq" = ["api/static/*"]
+"pentestiq" = ["api/static/*", "kit/frida/*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

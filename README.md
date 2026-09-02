@@ -432,6 +432,36 @@ curl -XPOST http://localhost:8080/engagements/upload \
 
 Then run it: `POST /engagements/{id}/run`.
 
+**API VAPT — upload an OpenAPI/Swagger spec + bearer token** (like uploading an APK).
+Everything runs from the one portal; no separate tool UI:
+
+```bash
+# spec + live base URL + a token -> OpenAPI enumeration + native OWASP API checks
+curl -XPOST http://localhost:8080/engagements/upload \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@openapi.json" -F "asset_type=api" -F "name=Example API" \
+  -F "base_url=https://api.example.com" \
+  -F "bearer_token=<JWT>"
+
+# add a second identity + object IDs to unlock BOLA / tenant-confusion testing
+curl -XPOST http://localhost:8080/engagements/upload \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@openapi.json" -F "asset_type=api" -F "base_url=https://api.example.com" \
+  -F "bearer_token=<JWT-A>" -F "bearer_token_b=<JWT-B>" \
+  -F "object_ids_a=uuid-a1,uuid-a2" -F "object_ids_b=uuid-b1"
+```
+
+The spec's `{id}`-style paths become BOLA/IDOR candidates and its `GET` paths
+become data-exposure targets; the bearer token is auto-analysed by the JWT check.
+In the console this is the **API** asset type — the form reveals base-URL, token
+and object-ID fields dynamically.
+
+**Dynamic mobile analysis (Frida).** MobSF static analysis runs server-side; for
+live instrumentation, grab the **Frida kit** from the console (or
+`GET /kit/frida.zip`) — SSL-pinning bypass, root/jailbreak-detection bypass,
+crypto and WebView hooks, with a runner guide. Capture the app's API traffic,
+then feed those endpoints + a token back into the **API** upload above.
+
 ### 5. Reports
 
 Generate from the CLI (`-o out/`) or fetch from the API in any format:
