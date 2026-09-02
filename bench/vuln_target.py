@@ -3,7 +3,7 @@
 Serves an intentionally-broken API on 127.0.0.1:8099 with a set of *known*
 planted vulnerabilities. Used by run_benchmark.py to score detection.
 """
-import json, hmac, hashlib, base64, threading
+import json, hmac, hashlib, base64, threading, urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
@@ -53,6 +53,14 @@ class _H(BaseHTTPRequestHandler):
         self._send(204, extra={"Allow": "GET, POST, PUT, DELETE, OPTIONS"})
 
     def do_GET(self):
+        # VULN: blind SSRF — server fetches any ?url= value out-of-band
+        from urllib.parse import urlsplit, parse_qs
+        q = parse_qs(urlsplit(self.path).query)
+        if "url" in q:
+            try:
+                urllib.request.urlopen(q["url"][0], timeout=4).read()
+            except Exception:
+                pass
         p = self.path.split("?")[0]
         if p == "/":
             html = ("<html><body><h1>VulnApp</h1>"

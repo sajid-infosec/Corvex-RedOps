@@ -26,6 +26,7 @@ PLANTED = {
     "BOLA cross-identity": "BOLA",
     "Excessive data exposure": "sensitive data",
     "Account enumeration": "enumeration",
+    "Blind SSRF (out-of-band)": "Blind SSRF",
 }
 
 
@@ -53,7 +54,18 @@ def main():
         "allow_active": True, "rate_limit_attempts": 6,
     }
     meta.update(crawl.to_check_metadata())     # <-- crawler feeds the check engine
-    findings = CheckEngine().run_asset(Asset(type=AssetType.API, identifier=BASE, metadata=meta))
+    meta["oast_wait"] = 1.5                      # allow the out-of-band callback to arrive
+
+    # 3) OAST — stand up a collaborator and confirm blind vulns out-of-band
+    from pentestiq.oast import OastServer, OastClient
+    collab = OastServer().start()
+    oast = OastClient.local(collab)
+    print(f" oast collaborator: {collab.base_url}")
+    try:
+        findings = CheckEngine().run_asset(
+            Asset(type=AssetType.API, identifier=BASE, metadata=meta), oast=oast)
+    finally:
+        collab.stop()
 
     print("\n" + "=" * 74)
     print(f" PentestIQ benchmark — target {BASE} ({len(findings)} findings)")

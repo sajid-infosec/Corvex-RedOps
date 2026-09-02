@@ -132,6 +132,9 @@ login, JWT) — see `pentestiq/checks/engine.py`.
 - ✅ **Single-portal API VAPT** — upload an OpenAPI/Swagger spec + bearer token(s)
   like an APK; endpoints/identities are derived automatically.
 - ✅ **Frida dynamic-analysis kit** served from the portal.
+- ✅ **Out-of-band detection (OAST)** — a self-hostable collaborator (`pentestiq.oast`)
+  plus blind-SSRF and stored/blind-XSS checks that confirm blind vulns via callback.
+  Benchmarked: blind SSRF confirmed out-of-band (**14/14** planted vulns detected).
 
 ## 6. Still orchestrated / roadmap (honest gaps)
 

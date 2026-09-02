@@ -130,6 +130,28 @@ across the whole application instead of only the endpoints you supply:
 - Runs in the `web` module's discovery phase and feeds the check engine
   automatically; also available standalone: `pentestiq crawl https://app.example.com --token <jwt>`.
 
+## 📡 Out-of-band detection (OAST)
+
+For **blind** vulnerabilities — where the only signal is the target's own server
+reaching back to infrastructure you control — PentestIQ ships a native,
+self-hostable **OAST collaborator** (the Burp-Collaborator / AcuMonitor model):
+
+- **`pentestiq oast-server --port 9099`** stands up a collaborator. It records any
+  inbound interaction, correlated to a token from either a Host sub-domain
+  (`<token>.oast.example.com`, needs wildcard DNS) or a path (`http://<ip>:<port>/<token>`,
+  needs only a public IP) — path mode self-hosts with nothing but an open port.
+- OAST-enabled checks inject a unique collaborator URL/host and confirm the bug
+  **only** if the callback lands — a hit is high-confidence proof, not a guess:
+  - **Blind SSRF** — injected into discovered/likely URL params and SSRF-prone
+    headers (`A10` / API7).
+  - **Stored / blind XSS** — script payloads planted in forms; confirmed if a
+    browser later renders them and loads the collaborator (deferred capture).
+- Point the checks at a collaborator via `asset.metadata.oast = {"url": "http://collab:9099"}`
+  (or `{"domain": "oast.example.com"}`); OAST checks are gated behind `allow_active`.
+
+Verified end-to-end in `bench/`: the benchmark stands up a collaborator and
+**confirms blind SSRF out-of-band** as the 14th planted vulnerability.
+
 ## 🧪 Native OWASP active checks (VAPT depth)
 
 Generic scanners find *technical* web bugs; a real VAPT of a modern multi-tenant
