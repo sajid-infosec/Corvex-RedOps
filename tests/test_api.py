@@ -32,7 +32,7 @@ def test_health_no_auth():
 def test_console_served_at_root(ctx):
     c, _, _ = ctx
     r = c.get("/")
-    assert r.status_code == 200 and "PentestIQ Console" in r.text
+    assert r.status_code == 200 and "Pentest" in r.text and "Sign in" in r.text
 
 
 def test_auth_required(ctx):

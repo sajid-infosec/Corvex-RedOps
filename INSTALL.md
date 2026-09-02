@@ -88,20 +88,14 @@ docker compose up -d --build         # console :8080, MobSF :8000
 
 ## First run
 1. Open **http://localhost:8080**.
-2. Click **Register** to create your first tenant + owner.
-3. Add a target (New engagement) or upload an APK / OpenAPI spec, then **Run scan**.
+2. Sign in with the default workspace — **`pentestiq`** / **`p3nt3st!q`** (change the
+   password after first login), or **Create workspace** for a separate tenant.
+3. Add a target (New scan) or upload an app / OpenAPI spec, then **Run scan**.
 
-## Optional external scanners
-The native crawler, OWASP checks, OAST, and injection fuzzer need **no external
-tools**. For the orchestrated modules, put these on PATH (each is skipped
-gracefully if absent):
-```bash
-sudo apt install -y nmap wpscan      # Debian/Kali
-brew install nmap                    # macOS
-# nuclei: https://github.com/projectdiscovery/nuclei
-# OWASP ZAP: https://www.zaproxy.org/download/
-# MobSF: bundled in the Docker stack (option D)
-```
+## Deep-scan backend
+PentestIQ's native crawler, OWASP checks, out-of-band detection, and injection
+fuzzer need **no external components**. The **Docker deployment (option D) bundles
+the full deep-scan backend and mobile-analysis service** — nothing else to install.
 
 ## Verify
 ```bash

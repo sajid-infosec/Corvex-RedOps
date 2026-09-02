@@ -53,7 +53,7 @@
 
 ## 🔍 What is PentestIQ?
 
-Security teams run VAPT with a sprawl of disconnected tools — Nmap, Nuclei, OpenVAS, ZAP, WPScan, MobSF, and a dozen more — each with its own output format and no shared model. The result is hours of glue work, false-positive overload, inconsistent methodology, and reporting that takes as long as the testing.
+Security teams run VAPT with a sprawl of disconnected point tools — each with its own output format and no shared model. The result is hours of glue work, false-positive overload, inconsistent methodology, and reporting that takes as long as the testing.
 
 **PentestIQ unifies the entire VAPT lifecycle into one workflow-driven platform.** It orchestrates best-in-class tools behind a single engine, normalizes their output into one findings model, **safely validates** whether findings are actually exploitable, prioritizes by risk, correlates issues into attack chains, and produces **client-ready reports** — HTML, Markdown, PDF, or DOCX, with compliance mapping and white-label branding.
 
@@ -90,28 +90,28 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 - **Reporting at scale** — HTML / Markdown / PDF / DOCX, **compliance mapping** (OWASP / PCI-DSS / ISO 27001 / MITRE ATT&CK), and **per-tenant white-label branding**.
 
 ### Deployment
-- **Self-hostable** — `pip install` for the engine; **Docker Compose** for the full stack (PentestIQ + MobSF).
+- **Self-hostable** — `pip install` for the engine; **Docker Compose** for the full stack with the integrated mobile-analysis service.
 - **Postgres-ready** — SQLite by default, swappable behind clean storage interfaces.
 
 ---
 
 ## 🎯 Asset Coverage
 
-Nine modules — the complete VAPT surface. Orchestrated tools are optional and detected at runtime; **a missing tool is skipped, never fatal.**
+Nine modules — the complete VAPT surface, driven by PentestIQ's own engines with additional deep-scan backends bundled in the platform (auto-detected; anything unavailable is skipped, never fatal).
 
-| # | Module | Asset type | Orchestrated tools / analyzers | What it does |
-|---|---|---|---|---|
-| 1 | `infra` | Infrastructure / network | **Nmap**, **Nuclei** | Host/service discovery, port enumeration, network vuln scanning |
-| 2 | `web` | Web applications | **OWASP ZAP**, **Nuclei**, **native checks** | Crawl + active/passive scan, **native OWASP active checks** (headers/CORS/JWT/authz/errors), **safe XSS/SQLi validation** |
-| 3 | `wordpress` | WordPress sites | **WPScan**, **Nuclei** | Core/plugin/theme CVEs, user enumeration, weak-credential checks |
-| 4 | `api` | REST / OpenAPI | **OpenAPI parser**, **Nuclei**, **native checks** | Endpoint enumeration + **authenticated BOLA/IDOR, JWT analysis, tenant confusion, excessive-data-exposure** (OWASP API Top 10) |
-| 5 | `mobile` | Mobile apps (APK / IPA) | **MobSF** | Static analysis: code, manifest, permissions, secrets, certs (CWE/MASVS) |
-| 6 | `desktop` | Desktop binaries (PE / ELF / Mach-O) | **Secrets scanner**, **lief** | Hardcoded secrets/keys, insecure URLs, missing binary hardening (NX/PIE/RELRO/canary/DEP/CFG) |
-| 7 | `network-device` | Routers / switches | **Config analyzer** | Cisco IOS config audit: telnet, default/RW SNMP, weak passwords, cleartext mgmt |
-| 8 | `firewall` | Firewall rulesets | **Ruleset analyzer** | *nipper-class* audit of iptables & Cisco ASA: any-any permits, exposed services, shadowed rules |
-| 9 | `hardening` | System hardening | **CIS analyzer**, **Lynis** | sshd_config / sysctl CIS gaps + Lynis report ingestion |
+| # | Module | Asset type | What PentestIQ does |
+|---|---|---|---|
+| 1 | `infra` | Infrastructure / network | Host & service discovery, port enumeration, network vulnerability scanning |
+| 2 | `web` | Web applications | Crawl (static + headless SPA), OWASP Top-10 active checks (headers/CORS/JWT/authz/errors), injection fuzzing, out-of-band detection, safe exploit validation |
+| 3 | `wordpress` | WordPress sites | Core/plugin/theme CVEs, user enumeration, weak-credential checks |
+| 4 | `api` | REST / OpenAPI | Endpoint mapping + **authenticated access-control (BOLA/IDOR), token analysis, tenant confusion, excessive-data-exposure** (OWASP API Top 10) |
+| 5 | `mobile` | Mobile apps (Android / iOS) | Static analysis of code, manifest, permissions, secrets & certificates (CWE/MASVS) + on-device dynamic kit |
+| 6 | `desktop` | Desktop binaries (PE / ELF / Mach-O) | Hardcoded secrets/keys, insecure URLs, missing binary hardening (NX/PIE/RELRO/canary/DEP/CFG) |
+| 7 | `network-device` | Routers / switches | Device config audit: telnet, default/RW SNMP, weak passwords, cleartext management |
+| 8 | `firewall` | Firewall rulesets | *nipper-class* ruleset audit: any-any permits, exposed services, shadowed rules |
+| 9 | `hardening` | System hardening | Host hardening gaps (SSH/kernel/CIS) + hardening-report ingestion |
 
-Plus **lab automation** — `lab/docker-compose.yml` stands up intentionally-vulnerable targets (OWASP Juice Shop, DVWA) for testing and demos.
+Plus **lab automation** — `lab/docker-compose.yml` stands up intentionally-vulnerable targets for testing and demos.
 
 ---
 
@@ -127,11 +127,11 @@ across the whole application instead of only the endpoints you supply:
   endpoints in the real Convay assessment).
 - **Templatizes id paths** (`/user/42` → `/user/{id}`) → automatic **BOLA/IDOR**
   candidates; GET paths become **data-exposure** targets.
-- **Headless-browser SPA mode** (optional, Playwright): renders JavaScript, follows
+- **Headless-browser SPA mode** (optional): renders JavaScript, follows
   client-side routes, and captures the **XHR/fetch API endpoints** a SPA only creates
   at runtime — the surface a static crawler can't see. Enabled with `--spa` (or
-  `asset.metadata.spa_crawl = true`); falls back to the static crawl if Playwright
-  isn't installed (a missing tool never breaks a run).
+  `asset.metadata.spa_crawl = true`); falls back to the static crawl if the headless
+  browser isn't installed (a missing component never breaks a run).
 - Runs in the `web` module's discovery phase and feeds the check engine
   automatically; also available standalone: `pentestiq crawl https://app.example.com --token <jwt> --spa`.
 
@@ -235,12 +235,12 @@ benchmark against a real SaaS engagement.
               │  audit trail
               ▼
      ┌────────┴─────────────────────────────────────┐
-     │  asset modules  ──►  tool integrations        │
-     │  (infra, web, … )    (Nmap, ZAP, MobSF, …)    │
+     │  asset modules  ──►  scan engines             │
+     │  (infra, web, … )    (native + bundled)       │
      │           │                                   │
      │           ▼                                   │
      │  safe validators  ──►  detected → validated   │
-     │  (XSS / SQLi)          or  false-positive      │
+     │  (XSS / SQLi)          or  false-positive     │
      └───────────────────────────────────────────────┘
 ```
 
@@ -264,8 +264,9 @@ See **[INSTALL.md](INSTALL.md)** for copy-paste quick-start blocks per OS.
 ### Requirements
 - **Python 3.10+** (for the pip/pipx and source paths), **or** Docker (for the
   container path), **or** just download a prebuilt binary (no Python needed).
-- Optional external scanners on PATH, detected at runtime and skipped if missing:
-  `nmap`, `nuclei`, `zap-baseline.py`, `wpscan`, and a running **MobSF** server for mobile.
+- PentestIQ's core (crawler, OWASP checks, out-of-band detection, injection fuzzer,
+  reporting) needs **no external components**. The Docker image additionally bundles
+  the deep-scan backend and the mobile-analysis service.
 
 ### Option A — prebuilt binary (no Python, no Docker)
 Download the single-file executable for your OS from the
@@ -294,16 +295,16 @@ Or into a virtualenv:
 ```bash
 git clone https://github.com/sajid-infosec/PentestIQ.git && cd PentestIQ
 python3 -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\Activate.ps1
-pip install ".[api,reports,desktop]"                    # or ".[all]" for everything incl. SPA/Playwright
+pip install ".[api,reports,desktop]"                    # or ".[all]" for everything incl. SPA rendering
 pentestiq serve                                          # open http://localhost:8080
 ```
 
 ### Option C — one-command installer scripts
 ```bash
-# Linux (Docker SaaS stack: PentestIQ + MobSF)
+# Linux (Docker SaaS stack — full backend bundled)
 sudo ./install.sh
 
-# macOS (installs Colima+Docker via Homebrew, then deploys — no Docker Desktop GUI needed)
+# macOS (installs Docker via Homebrew, then deploys — no Docker Desktop GUI needed)
 ./install.sh
 
 # Windows (PowerShell) — Python path (venv + serve); add -Docker for the container stack
@@ -314,7 +315,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker
 ### Option D — Docker (any OS with Docker/Docker Desktop)
 ```bash
 cd deploy
-docker compose up -d --build          # PentestIQ console on :8080 + MobSF on :8000
+docker compose up -d --build          # PentestIQ console on :8080 (full backend bundled)
 ```
 
 ### Extras
@@ -323,19 +324,16 @@ docker compose up -d --build          # PentestIQ console on :8080 + MobSF on :8
 | *(none)* | pydantic, PyYAML, typer, rich | Engine + CLI + crawler + OAST + fuzzer |
 | `api` | fastapi, uvicorn, python-multipart | REST API, web console, uploads |
 | `reports` | reportlab, python-docx | PDF & DOCX report export |
-| `desktop` | lief | Desktop binary hardening analysis |
-| `spa` | playwright | Headless-browser SPA crawling (`playwright install chromium`) |
+| `desktop` | binary-analysis backend | Desktop binary hardening analysis |
+| `spa` | headless-browser engine | SPA crawling (one-time browser setup after install) |
 | `all` | all of the above | Everything |
 | `dev` | pytest, httpx (+ above) | Running the test suite |
 
-### Optional external scanners (orchestrated, never reimplemented)
-```bash
-sudo apt install -y nmap wpscan            # Debian/Kali
-brew install nmap                          # macOS
-# nuclei: https://github.com/projectdiscovery/nuclei · ZAP: https://www.zaproxy.org/download/
-```
-> Every module skips a missing tool gracefully and logs a warning — the native
-> crawler, OWASP checks, OAST and injection fuzzer need **no external tools**.
+### Deep-scan backend
+The native crawler, OWASP checks, out-of-band detection, and injection fuzzer run
+with **no external components**. The **Docker deployment bundles the full deep-scan
+backend and the mobile-analysis service** — nothing else to install. (Advanced
+operators running from `pip` can add optional backends; see `docs/`.)
 
 ---
 
@@ -349,7 +347,7 @@ pentestiq version
 pentestiq modules            # infra, web, wordpress, api, mobile, desktop, network-device, firewall, hardening
 
 # 2. (optional) stand up the local vulnerable lab — needs Docker
-cd lab && docker compose up -d && cd ..     # Juice Shop :3000, DVWA :8080
+cd lab && docker compose up -d && cd ..     # intentionally-vulnerable demo targets
 
 # 3. write a scope file  (myscope.yaml)
 cat > myscope.yaml <<'YAML'
@@ -381,7 +379,8 @@ pentestiq serve                                        # http://127.0.0.1:8000
 ```
 
 Then open **http://127.0.0.1:8000** for the console, or **/docs** for interactive API docs.
-Bootstrap a tenant + owner without the UI:
+On first run a default workspace is created — sign in with **`pentestiq`** / **`p3nt3st!q`**
+(change the password after first login). To bootstrap another tenant + owner from the CLI:
 
 ```bash
 pentestiq init-tenant --tenant "Acme" --username alice --password "s3cr3tpass"
@@ -396,7 +395,7 @@ pentestiq init-tenant --tenant "Acme" --username alice --password "s3cr3tpass"
 
 The installer **detects your Linux distribution**, installs **all prerequisites**
 (Docker Engine, Docker Compose, git/curl/openssl), generates secrets, and brings up
-the **entire stack** (PentestIQ API + web console + MobSF). No manual setup.
+the **entire stack** (PentestIQ API + web console + mobile-analysis service). No manual setup.
 
 ```bash
 git clone https://github.com/sajid-infosec/PentestIQ.git
@@ -404,7 +403,7 @@ cd PentestIQ
 sudo ./install.sh
 ```
 
-That's it — open **http://localhost:8080**, click **Register**, and start scanning.
+That's it — open **http://localhost:8080** and sign in with **`pentestiq`** / **`p3nt3st!q`** (change it after first login), then start scanning.
 
 > Works on Debian / Ubuntu / Kali / Parrot / Mint, RHEL / CentOS / Fedora / Rocky /
 > AlmaLinux, Arch / Manjaro, and openSUSE / SLES. Idempotent — safe to re-run.
@@ -421,7 +420,7 @@ sudo ./install.sh --down        # stop the stack
 | Service | Port | Purpose |
 |---|---|---|
 | `pentestiq` | 8080 | REST API + web console |
-| `mobsf` | 8000 | Mobile static analysis (orchestrated by PentestIQ) |
+| `mobile-analysis` | 8000 | Mobile static-analysis service (managed by PentestIQ) |
 
 ### Manual (if you already run Docker)
 
@@ -436,6 +435,42 @@ Full deployment guide, environment variables, and production notes (Postgres, sc
 ---
 
 ## 📚 User Manual
+
+### Using the web console (step by step)
+
+The console is the fastest way to run a full assessment — no CLI needed.
+
+**1 · Sign in.** Open `http://localhost:8080`. A default workspace is provisioned on
+first run: **`pentestiq`** / **`p3nt3st!q`** (change the password after first login).
+Use **Create workspace** to set up a separate, isolated tenant.
+
+**2 · Scan live targets (web / API / infra).** Go to **New scan → Scan targets**:
+name the engagement, record who authorised it, enter targets one per line (optionally
+prefixed — `web=`, `api=`, `wordpress=`, `infra=`), pick scope enforcement, then
+**Create & open → Run scan**.
+
+**3 · Test an API.** **New scan → Upload & scan**, asset type **API**: choose the
+OpenAPI/Swagger file, set the **Base URL**, paste an access token. Add a **second
+token + object IDs** to unlock cross-tenant access-control (BOLA) testing, tick
+**Enable active testing** for injection & brute-force (authorised targets only), and
+**Upload & scan**. Endpoints, identities and injection points are derived automatically.
+
+**4 · Assess a mobile / desktop app or device config.** Pick the matching asset type
+and upload the file (Android/iOS package, desktop binary, or a network-device /
+firewall / hardening configuration). Analysis starts automatically. For live mobile
+instrumentation, use the **Dynamic kit**.
+
+**5 · Read the results (Dashboard).** Severity tiles and bars give the risk breakdown;
+the **OWASP coverage** grid shows which Web/API Top-10 categories were exercised (red =
+a critical finding); the **findings table** lists risk score, severity, title, location
+and OWASP mapping. **Open report** produces a client-ready report (executive summary,
+evidence, remediation, compliance mapping).
+
+**6 · Good practice.** Only scan assets you're authorised to test; keep active testing
+off for production unless you have a window; re-run engagements to track remediation.
+
+> The same in-app guide is always available under **User manual** in the console sidebar.
+
 
 ### 1. Scope files
 
@@ -497,14 +532,14 @@ pentestiq serve --host 0.0.0.0 --port 8080
 
 The **same command** runs any asset type — the module is chosen automatically from each target's type. Examples (put the targets in a scope file, then `pentestiq run -s scope.yaml -o out/`):
 
-| Asset | Scope entry | Requires (host tools) |
+| Asset | Scope entry | Engine |
 |---|---|---|
-| **Infrastructure** | `infra=10.0.0.0/24` | `nmap`, `nuclei` |
-| **Web app** | `web=https://app.example.com` | `zap-baseline.py`, `nuclei` |
-| **WordPress** | `wordpress=https://blog.example.com` | `wpscan`, `nuclei` |
-| **API** | `api=https://api.example.com/openapi.json` | *(built-in)*, `nuclei` |
-| **Mobile** | *(upload the .apk/.ipa — see §4)* | running **MobSF** |
-| **Desktop** | *(upload the binary — see §4)* | *(built-in; `lief` for hardening)* |
+| **Infrastructure** | `infra=10.0.0.0/24` | Network discovery + vuln scanning |
+| **Web app** | `web=https://app.example.com` | Crawl + OWASP active testing (native) |
+| **WordPress** | `wordpress=https://blog.example.com` | CMS CVE + enumeration |
+| **API** | `api=https://api.example.com/openapi.json` | Endpoint + access-control testing (native) |
+| **Mobile** | *(upload the .apk/.ipa — see §4)* | Mobile analysis service (bundled) |
+| **Desktop** | *(upload the binary — see §4)* | Native binary analysis |
 | **Network device** | `network_device=./router.cfg` | *(built-in)* |
 | **Firewall** | `firewall=./iptables.rules` | *(built-in)* |
 | **Hardening** | `hardening=./sshd_config` | *(built-in)* |
@@ -557,8 +592,8 @@ become data-exposure targets; the bearer token is auto-analysed by the JWT check
 In the console this is the **API** asset type — the form reveals base-URL, token
 and object-ID fields dynamically.
 
-**Dynamic mobile analysis (Frida).** MobSF static analysis runs server-side; for
-live instrumentation, grab the **Frida kit** from the console (or
+**Dynamic mobile analysis.** Static analysis runs automatically on upload; for
+live instrumentation, download the **dynamic-analysis kit** from the console (or
 `GET /kit/frida.zip`) — SSL-pinning bypass, root/jailbreak-detection bypass,
 crypto and WebView hooks, with a runner guide. Capture the app's API traffic,
 then feed those endpoints + a token back into the **API** upload above.
@@ -640,8 +675,8 @@ Passwords are PBKDF2-hashed; API keys are stored only as a hash (shown once at c
 | Variable | Default | Purpose |
 |---|---|---|
 | `PENTESTIQ_SECRET_KEY` | *(random per run)* | Signs session tokens — **set in production** so logins survive restarts |
-| `MOBSF_URL` | `http://localhost:8000` | MobSF server base URL (mobile module) |
-| `MOBSF_API_KEY` | *(empty)* | MobSF REST API key |
+| `MOBSF_URL` | `http://localhost:8000` | Mobile-analysis service base URL |
+| `MOBSF_API_KEY` | *(empty)* | Mobile-analysis service API key |
 
 **Engine config file** (optional, pass with `-c`): [`config/pentestiq.example.yaml`](config/pentestiq.example.yaml)
 
