@@ -187,8 +187,8 @@ start_docker() {
 }
 
 ensure_compose() {
-  if $SUDO docker compose version >/dev/null 2>&1; then DC="$SUDO docker compose"; ok "Docker Compose v2 available."; return; fi
-  if command -v docker-compose >/dev/null 2>&1; then DC="$SUDO docker-compose"; ok "docker-compose (v1) available."; return; fi
+  if $SUDO docker compose version >/dev/null 2>&1; then DC="$SUDO docker compose"; DC_BIN="docker compose"; ok "Docker Compose v2 available."; return; fi
+  if command -v docker-compose >/dev/null 2>&1; then DC="$SUDO docker-compose"; DC_BIN="docker-compose"; ok "docker-compose (v1) available."; return; fi
   log "Installing the Docker Compose plugin…"
   local ver="v2.29.7" arch dest
   case "$(uname -m)" in x86_64) arch=x86_64;; aarch64|arm64) arch=aarch64;; armv7l) arch=armv7;; *) arch="$(uname -m)";; esac
@@ -196,7 +196,7 @@ ensure_compose() {
   $SUDO mkdir -p "$dest"
   $SUDO curl -fsSL "https://github.com/docker/compose/releases/download/${ver}/docker-compose-linux-${arch}" -o "$dest/docker-compose"
   $SUDO chmod +x "$dest/docker-compose"
-  $SUDO docker compose version >/dev/null 2>&1 && DC="$SUDO docker compose" || die "Docker Compose install failed."
+  $SUDO docker compose version >/dev/null 2>&1 && { DC="$SUDO docker compose"; DC_BIN="docker compose"; } || die "Docker Compose install failed."
   ok "Docker Compose plugin installed."
 }
 
@@ -220,7 +220,13 @@ ENV
 deploy() {
   [ -f "$COMPOSE_FILE" ] || die "compose file not found: $COMPOSE_FILE (run this from the PentestIQ repo)"
   log "Building and starting the stack (this can take a few minutes on first run)…"
-  $DC --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --build
+  # Pre-pull the base image via the daemon (reliable), then build with the LEGACY
+  # builder. BuildKit uses a separate DNS resolver that some VM / corporate DNS
+  # setups can't use to reach the registry (auth.docker.io), even when the daemon
+  # itself resolves fine; the legacy builder shares the daemon's networking.
+  $SUDO docker pull python:3.11-slim >/dev/null 2>&1 || true
+  $SUDO env DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 ${DC_BIN:-docker compose} \
+    --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --build
   ok "Containers started."
 }
 
