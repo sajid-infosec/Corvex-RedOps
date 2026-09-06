@@ -27,11 +27,28 @@ services:
       - MOBSF_URL=http://mobsf:8000
       - MOBSF_API_KEY=${MOBSF_API_KEY:?set MOBSF_API_KEY}
       - PENTESTIQ_SECRET_KEY=${PENTESTIQ_SECRET_KEY:?set PENTESTIQ_SECRET_KEY}
+      - PENTESTIQ_AI=${PENTESTIQ_AI:-}
+      - OLLAMA_URL=${OLLAMA_URL:-http://ollama:11434}
+      - PENTESTIQ_AI_MODEL=${PENTESTIQ_AI_MODEL:-qwen2.5:7b-instruct}
     ports:
       - "${PENTESTIQ_PORT:-8080}:8080"   # PentestIQ API + console
     volumes:
       - pentestiq-data:/app/data
     restart: unless-stopped
 
+  # Optional local LLM for the AI layer. Start with:  docker compose --profile ai up -d
+  # then pull a model:  docker exec -it pentestiq-ollama ollama pull qwen2.5:7b-instruct
+  # and set PENTESTIQ_AI=1 in deploy/.env. Everything works without it.
+  ollama:
+    image: ollama/ollama:latest
+    container_name: pentestiq-ollama
+    profiles: ["ai"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    restart: unless-stopped
+
 volumes:
   pentestiq-data:
+  ollama-models:

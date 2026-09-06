@@ -32,6 +32,7 @@
 - [Burp Suite import](#-burp-suite-import)
 - [Out-of-band detection (OAST)](#-out-of-band-detection-oast)
 - [Native OWASP active checks](#-native-owasp-active-checks-vapt-depth)
+- [AI layer (self-hosted)](#-ai-layer-optional-self-hosted)
 - [How It Works](#-how-it-works)
 - [Screens & Samples](#-screens--samples)
 - [Installation](#-installation)
@@ -79,7 +80,7 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 - **Safe exploit validation** — non-destructive reflected-XSS and boolean-based SQLi confirmation that flips findings from *detected* to *validated* (with evidence) or dismisses false positives.
 - **Risk scoring (0–100)** blending severity, CVSS, confidence, and validation state.
 - **Attack-chain correlation** — links findings that share a host + service into one story.
-- **AI-assisted reporting** with a pluggable LLM hook that degrades gracefully to a strong data-driven summary (works with zero budget / no API key).
+- **Optional local-AI layer (self-hosted, zero budget)** — a local open-source model via **Ollama** powers analyst-grade write-ups, **attack-chain correlation**, a **false-positive verifier**, and an in-console **copilot**; plus a **self-learning** confidence model that improves from analyst confirm/dismiss feedback. Fully optional and fail-safe: with no model present, PentestIQ runs exactly as before on its deterministic engine.
 
 ### Safety & governance (built in, not bolted on)
 - **Scope enforcement** — every engagement runs against a validated scope; out-of-scope targets are blocked (or warned) by policy.
@@ -264,6 +265,44 @@ which remain gaps. See [`docs/GAP_ANALYSIS.md`](docs/GAP_ANALYSIS.md) for the fu
 benchmark against a real SaaS engagement.
 
 ---
+
+## 🤖 AI layer (optional, self-hosted)
+
+PentestIQ ships an **optional** AI layer that runs entirely on your own hardware
+via [Ollama](https://ollama.com) — **no cloud API, no API key, no data leaves the
+host**. Every capability degrades gracefully: with no model present the platform
+behaves exactly as its deterministic engine.
+
+- **Analyst-grade write-ups** — a local model (default `qwen2.5:7b-instruct`,
+  swappable) rewrites finding descriptions, business impact and phased remediation,
+  and the executive narrative.
+- **AI attack-chain correlation** — the model reasons over the whole finding set to
+  assemble realistic multi-step chains (recon → foothold → escalation → impact),
+  beyond host/service grouping.
+- **False-positive verifier** — an adversarial pass that flags findings likely to be
+  false positives, with a rationale.
+- **In-console copilot** — ask questions about a scan ("what's the most urgent risk
+  and why?") grounded strictly in the engagement's findings.
+- **Self-learning confidence model** — analysts mark findings **confirmed** or
+  **false-positive** in the console; a lightweight scikit-learn model retrains on
+  that feedback and scores how likely future findings are real. Genuine
+  self-improvement, no GPU required.
+
+**Enable it:**
+
+```bash
+# start the bundled Ollama service and pull a model
+docker compose --profile ai up -d
+docker exec -it pentestiq-ollama ollama pull qwen2.5:7b-instruct
+# then set PENTESTIQ_AI=1 in deploy/.env and redeploy
+```
+
+API: `GET /ai/status`, `POST /ai/ask`, `POST /engagements/{id}/ai/analyze`,
+`POST /engagements/{id}/findings/{fid}/feedback`, `POST /ai/retrain`.
+
+> **On coverage:** the AI layer *augments* detection and analysis — it does not
+> replace an analyst. Business-logic flaws and bespoke exploitation still need
+> human judgement; no scanner (PentestIQ or otherwise) finds those autonomously.
 
 ## ⚙️ How It Works
 

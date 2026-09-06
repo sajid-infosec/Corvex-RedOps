@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY . /app
-RUN pip install --no-cache-dir -e ".[api,reports]"
+RUN pip install --no-cache-dir -e ".[api,reports,ai]"
 
 # Headless browser for the SPA crawler (best-effort; native crawl still works).
 RUN pip install --no-cache-dir playwright \
