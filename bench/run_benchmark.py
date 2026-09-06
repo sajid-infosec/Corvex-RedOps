@@ -32,6 +32,12 @@ PLANTED = {
     "Path traversal / LFI": "Path traversal",
     "SSTI (template injection)": "template injection",
     "OS command injection": "command injection",
+    "NoSQL injection": "NoSQL injection",
+    "CRLF header injection": "CRLF",
+    "Open redirect": "Open redirect",
+    "XXE (out-of-band/file)": "XML External Entity",
+    "Missing anti-CSRF token": "anti-CSRF",
+    "Vulnerable JS library": "Outdated library",
 }
 
 

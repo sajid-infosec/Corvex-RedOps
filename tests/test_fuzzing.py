@@ -157,3 +157,93 @@ def test_fuzzer_end_to_end_all_classes(vuln_server):
     assert "Path traversal / LFI" in classes
     assert "Server-side template injection" in classes
     assert "OS command injection" in classes
+
+
+# ---------------------------------------------- unit: new detector classes
+from pentestiq.fuzzing.detectors import (
+    NoSqliDetector, CrlfDetector, OpenRedirectDetector, XxeDetector,
+)
+from pentestiq.fuzzing.points import InjectionPoint as _IP
+
+
+def test_nosqli_error_detector():
+    def send(v):
+        return _resp(500, "MongoServerError: unknown operator $where") if "$" in v or "{" in v else _resp(200, "ok")
+    hit = NoSqliDetector().probe(send, _IP("GET", "http://t/nosearch", "query", "q"),
+                                 _resp(200, "ok"), _Ctx())
+    assert hit and hit["cwe"] == "CWE-943"
+
+
+def test_nosqli_boolean_detector():
+    def send(v):
+        if "'1'=='1" in v or "1==1" in v:
+            return _resp(200, "alice bob carol dave erin frank grace hank ivan")
+        return _resp(200, "no results")
+    base = _resp(200, "alice bob carol dave erin frank grace hank ivan")
+    hit = NoSqliDetector().probe(send, _IP("GET", "http://t/n", "query", "q"), base, _Ctx())
+    assert hit and "boolean" in hit["class"].lower()
+
+
+class _CrlfCtx:
+    extra = {}
+    oast = None
+    class http:
+        @staticmethod
+        def raw_request(method, url, headers=None, allow_redirects=True):
+            # server folds an injected CRLF value into a real response header
+            from urllib.parse import urlsplit, parse_qs, unquote
+            q = parse_qs(urlsplit(url).query)
+            nxt = unquote(q.get("next", [""])[0])
+            hdrs = {"location": "/home"}
+            for line in nxt.replace("\r", "\n").split("\n"):
+                if ":" in line:
+                    k, _, v = line.partition(":")
+                    hdrs[k.strip().lower()] = v.strip()
+            return Response(status=302, headers=hdrs, text="", elapsed_ms=1.0, url=url)
+
+
+def test_crlf_detector():
+    hit = CrlfDetector().probe(lambda v: _resp(200, ""),
+                               _IP("GET", "http://t/redirect", "query", "next"),
+                               _resp(200, ""), _CrlfCtx())
+    assert hit and hit["cwe"] == "CWE-113"
+
+
+class _RedirCtx:
+    extra = {}
+    oast = None
+    class http:
+        @staticmethod
+        def raw_request(method, url, headers=None, allow_redirects=True):
+            from urllib.parse import urlsplit, parse_qs
+            v = parse_qs(urlsplit(url).query).get("url", [""])[0]
+            return Response(status=302, headers={"location": v or "/home"},
+                            text="", elapsed_ms=1.0, url=url)
+
+
+def test_open_redirect_detector():
+    hit = OpenRedirectDetector().probe(lambda v: _resp(200, ""),
+                                       _IP("GET", "http://t/goto", "query", "url"),
+                                       _resp(200, ""), _RedirCtx())
+    assert hit and hit["cwe"] == "CWE-601"
+
+
+class _XxeCtx:
+    extra = {}
+    oast = None
+    class http:
+        @staticmethod
+        def request(method, url, headers=None, data=None):
+            if data and "file:///etc/passwd" in data:
+                return Response(status=200, headers={"content-type": "application/xml"},
+                                text="<ptiq><x>root:x:0:0:root:/root:/bin/bash</x></ptiq>",
+                                elapsed_ms=1.0, url=url)
+            return Response(status=200, headers={}, text="ok", elapsed_ms=1.0, url=url)
+
+
+def test_xxe_detector_file_read():
+    base = Response(status=200, headers={"content-type": "application/xml"},
+                    text="<a/>", elapsed_ms=1.0, url="http://t/xml")
+    hit = XxeDetector().probe(lambda v: _resp(200, ""),
+                              _IP("POST", "http://t/xml", "body", "data"), base, _XxeCtx())
+    assert hit and hit["cwe"] == "CWE-611"

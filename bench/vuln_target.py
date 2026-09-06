@@ -70,13 +70,50 @@ class _H(BaseHTTPRequestHandler):
                     "<a href=\"/render?name=hi\">render</a>"
                     "<a href=\"/file?path=readme\">file</a>"
                     "<a href=\"/ping?host=127.0.0.1\">ping</a>"
+                    "<a href=\"/nosearch?q=x\">nosql</a>"
+                    "<a href=\"/redirect?next=home\">redir</a>"
+                    "<a href=\"/goto?url=home\">goto</a>"
                     "<form action=\"/auth/forgot\" method=\"post\">"
                     "<input name=\"email\"></form>"
+                    "<form action=\"/xml\" method=\"post\"><input name=\"data\"></form>"
+                    "<script src=\"/static/jquery-1.12.4.min.js\"></script>"
                     "<script src=\"/app.js\"></script></body></html>")
             return self._send(200, html, ctype="text/html")
         if p == "/app.js":
             js = 'fetch("/api/user/me");const t="/api/user/{id}";var s="/search";'
             return self._send(200, js, ctype="application/javascript")
+        if p == "/static/jquery-1.12.4.min.js":     # VULN: outdated JS library
+            return self._send(200, "/*! jQuery v1.12.4 */", ctype="application/javascript")
+        if p == "/nosearch":                       # VULN: NoSQL injection (error + boolean)
+            from urllib.parse import urlsplit, parse_qs
+            v = parse_qs(urlsplit(self.path).query).get("q", [""])[0]
+            if any(c in v for c in ("$", "{", "[", ";", "`")):
+                return self._send(500, "MongoServerError: unknown operator $where near '%s'" % v,
+                                  ctype="text/plain")
+            # boolean: a JS-truthy tautology returns the full set, else empty
+            if "'1'=='1" in v or "1==1" in v:
+                return self._send(200, "<div>alice bob carol dave erin frank grace</div>",
+                                  ctype="text/html")
+            return self._send(200, "<div>no results</div>", ctype="text/html")
+        if p == "/redirect":                       # VULN: CRLF / response-header injection
+            from urllib.parse import urlsplit, parse_qs, unquote
+            raw = urlsplit(self.path).query
+            val = ""
+            for kv in raw.split("&"):
+                if kv.startswith("next="):
+                    val = unquote(kv[5:])
+            # reflect raw value into headers (folds CR/LF -> header injection)
+            extra = {}
+            for line in val.replace("\r", "\n").split("\n"):
+                if ":" in line:
+                    k, _, vv = line.partition(":")
+                    if k.strip():
+                        extra[k.strip()] = vv.strip()
+            return self._send(302, "", extra={"Location": "/home", **extra})
+        if p == "/goto":                           # VULN: open redirect
+            from urllib.parse import urlsplit, parse_qs
+            v = parse_qs(urlsplit(self.path).query).get("url", [""])[0]
+            return self._send(302, "", extra={"Location": v or "/home"})
         if p == "/search":
             from urllib.parse import urlsplit, parse_qs
             v = parse_qs(urlsplit(self.path).query).get("q", [""])[0]
@@ -116,6 +153,22 @@ class _H(BaseHTTPRequestHandler):
         return self._send(404, json.dumps({"error": "not found"}))
 
     def do_POST(self):
+        if self.path.split("?")[0] == "/xml":          # VULN: XXE (file + OOB)
+            ln = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(ln).decode("utf-8", "replace") if ln else ""
+            import re as _re
+            m = _re.search(r'SYSTEM\s+"file://([^"]+)"', body)
+            if m and "etc/passwd" in m.group(1):
+                return self._send(200, "<ptiq><x>root:x:0:0:root:/root:/bin/bash</x></ptiq>",
+                                  ctype="application/xml")
+            m2 = _re.search(r'SYSTEM\s+"(https?://[^"]+)"', body)
+            if m2:
+                try:
+                    urllib.request.urlopen(m2.group(1), timeout=4).read()
+                except Exception:
+                    pass
+                return self._send(200, "<ptiq><x>ok</x></ptiq>", ctype="application/xml")
+            return self._send(200, "<ptiq><x>ok</x></ptiq>", ctype="application/xml")
         if self.path == "/auth/forgot":                # VULN: account enumeration
             ln = int(self.headers.get("Content-Length", 0))
             try:
