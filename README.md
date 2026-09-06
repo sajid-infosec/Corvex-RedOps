@@ -32,6 +32,7 @@
 - [Burp Suite import](#-burp-suite-import)
 - [Out-of-band detection (OAST)](#-out-of-band-detection-oast)
 - [Native OWASP active checks](#-native-owasp-active-checks-vapt-depth)
+- [Burp Suite parity](#-burp-suite-parity-scan-check-coverage)
 - [AI layer (self-hosted)](#-ai-layer-optional-self-hosted)
 - [How It Works](#-how-it-works)
 - [Screens & Samples](#-screens--samples)
@@ -265,6 +266,41 @@ which remain gaps. See [`docs/GAP_ANALYSIS.md`](docs/GAP_ANALYSIS.md) for the fu
 benchmark against a real SaaS engagement.
 
 ---
+
+## 🧭 Burp Suite parity (scan-check coverage)
+
+PentestIQ tracks its detection surface against the **full Burp Suite Professional
+scan-check catalogue** (~130 checks) so parity is *measurable*, not a marketing
+claim. `GET /coverage/burp` (and **Settings → Scan coverage** in the console)
+returns the live matrix — every Burp check mapped to a PentestIQ detector as
+`covered`, `partial`, or `planned`.
+
+Native detectors now include, in addition to the OWASP/API core:
+
+- **Injection:** SQLi (error/boolean/time), NoSQLi, **XPath**, **LDAP**, OS
+  command, **server-side code injection** (PHP/Ruby/Python/Perl/EL/Node),
+  **SSI**, SSTI, XXE, CRLF/response-header injection, path traversal.
+- **Client / response:** reflected XSS, **CSS injection**, open redirect,
+  **CSP analysis** (untrusted script/style, clickjacking, form-hijacking,
+  not-enforced), **Host header injection**.
+- **Passive / light:** **Flash/Silverlight cross-domain policy**, **GraphQL
+  exposure** (endpoint/introspection/suggestions), **CORS variants**
+  (arbitrary/unencrypted/all-subdomains), **cookie hygiene** (Secure/HttpOnly/
+  SameSite/parent-domain/duplicate), **information disclosure** (source code,
+  backup/`.git`/`.env`, directory listing, private keys, DB connection strings,
+  emails, private IPs), **sensitive data in URL** (password/session token),
+  cleartext credential submission, vulnerable JS dependency, JWT weaknesses,
+  clickjacking, dangerous HTTP methods (PUT/TRACE), and blind SSRF/XSS/RCE via
+  the OAST collaborator.
+
+Items still marked *planned* (e.g. request smuggling, web-cache poisoning, the
+DOM-based client-side family that needs a full JS taint engine) are tracked in
+the same catalogue as the roadmap — see `pentestiq/checks/burp_catalog.py`.
+
+> The goal is not to reproduce Burp but to **exceed a Burp-plus-extensions
+> workflow**: one engine that also does authenticated BOLA/BFLA, OAST out-of-band
+> confirmation, AI attack-chain correlation, and client-ready reporting — in one
+> run, self-hosted, at zero licence cost.
 
 ## 🤖 AI layer (optional, self-hosted)
 

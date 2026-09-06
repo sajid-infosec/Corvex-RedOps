@@ -67,6 +67,8 @@ def main():
     meta.update(crawl.to_check_metadata())     # <-- crawler feeds the check engine
     meta["oast_wait"] = 1.5                      # allow the out-of-band callback to arrive
     meta["fuzz_time_delay"] = 1                  # keep time-based probes quick in the demo
+    meta["fuzz_max_points"] = 60                 # visit every planted injection point
+    meta["fuzz_max_requests"] = 8000             # generous budget so no endpoint is skipped
 
     # 3) OAST — stand up a collaborator and confirm blind vulns out-of-band
     from pentestiq.oast import OastServer, OastClient
