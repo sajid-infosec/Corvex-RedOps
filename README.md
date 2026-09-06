@@ -92,7 +92,7 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 - **Web console** — create engagements, upload apps/configs, run scans, watch findings, open reports — served at `/`.
 - **Authentication, multi-tenancy & RBAC** — user login (PBKDF2), session tokens, per-tenant API keys (hashed), and roles (`viewer` → `member` → `admin` → `owner`).
 - **Continuous scanning** — recurring schedules with **diffing** (new / fixed / persisting) and **Slack/webhook notifications**.
-- **Reporting at scale** — HTML / Markdown / PDF / DOCX, **compliance mapping** (OWASP / PCI-DSS / ISO 27001 / MITRE ATT&CK), and **per-tenant white-label branding**.
+- **Two report types, four formats** — a **Full Technical Report** (cover page, executive summary, scope, CVSS risk methodology, findings summary, per-finding detail with issue/impact/evidence/PoC/CVSS-vector/CWE/remediation, remediation roadmap, conclusion and OWASP appendices) and a management-facing **Executive Summary** (risk-posture gauge, severity donut, OWASP bar chart, top risks, attack chains, remediation priorities). Both export to **HTML / PDF / DOCX** (full report also Markdown), print-ready with running headers and page numbers, **compliance mapping** (OWASP / PCI-DSS / ISO 27001 / MITRE ATT&CK), and **per-tenant white-label branding**.
 
 ### Deployment
 - **Self-hostable** — `pip install` for the engine; **Docker Compose** for the full stack with the integrated mobile-analysis service. The image bundles the orchestrated tools (nmap, a headless browser for SPA crawling, and nuclei) so a container deploy has full capability out of the box.
@@ -516,7 +516,7 @@ instrumentation, use the **Dynamic kit**.
 the **OWASP coverage** grid shows which Web/API Top-10 categories were exercised (red =
 a critical finding); the **findings table** lists risk score, severity, title, location
 and OWASP mapping. **Open report** produces a client-ready report (executive summary,
-evidence, remediation, compliance mapping).
+evidence, remediation, compliance mapping). The **Report** dropdown offers the **Full technical report** and an **Executive summary** (for management) in HTML, PDF or DOCX.
 
 **7 · Good practice.** Only scan assets you're authorised to test; use a maintenance
 window for production; re-run engagements to track remediation.
@@ -668,7 +668,7 @@ curl "http://localhost:8080/engagements/<id>/report?format=pdf"   -H "Authorizat
 curl "http://localhost:8080/engagements/<id>/report?format=docx"  -H "Authorization: Bearer $TOKEN" -o report.docx
 ```
 
-Every report includes an **executive summary**, severity breakdown, prioritized findings with evidence + remediation, attack chains, and a **compliance mapping** (OWASP Top 10 / PCI-DSS / ISO 27001 / MITRE ATT&CK). See also `GET /engagements/{id}/compliance`.
+Two report types via `GET /engagements/{id}/report?format=html|pdf|docx|md&variant=full|exec`: the **full technical report** and a visual **executive summary** for management. Both carry severity breakdowns, prioritized findings with evidence + remediation, attack chains, and **compliance mapping** (OWASP Top 10 / PCI-DSS / ISO 27001 / MITRE ATT&CK). See also `GET /engagements/{id}/compliance`.
 
 **White-label branding** (per tenant) — set your firm's name, accent color, and footer; it flows into every report format:
 
