@@ -76,6 +76,8 @@ Flags — same actions on every OS:
 - macOS/Linux: `sudo ./install.sh --port 9090`, `sudo ./install.sh --update`, `sudo ./install.sh --down`
 - Windows: `... install.ps1 -Docker -Port 9090`, `... install.ps1 -Docker -Update`, `... install.ps1 -Docker -Down`
 
+During install/update you'll be asked **"Do you want to install / integrate AI? [y/N]"** — **y** adds the local self-hosted AI layer (Ollama, ~5 GB model; needs 8+ cores / 16 GB+ RAM), **n** installs lean. Skip the prompt with `--ai`/`--no-ai` (sh) or `-Ai`/`-NoAi` (ps1).
+
 ---
 
 ## D. Docker

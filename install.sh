@@ -28,6 +28,8 @@ COMPOSE_FILE="$REPO_DIR/deploy/docker-compose.yml"
 ENV_FILE="$REPO_DIR/deploy/.env"
 PORT="8080"
 ACTION="up"
+AI_CHOICE=""            # ""=ask, 1=yes, 0=no
+AI_MODEL="${PENTESTIQ_AI_MODEL:-qwen2.5:7b-instruct}"
 
 usage() {
   cat <<'HELP'
@@ -40,6 +42,8 @@ SaaS stack (PentestIQ API + web console + MobSF).
 Usage:
   sudo ./install.sh              install prerequisites + deploy
   sudo ./install.sh --port 9090  deploy on a custom console port
+  sudo ./install.sh --ai         deploy WITH the local AI layer (Ollama)
+  sudo ./install.sh --no-ai      deploy without AI (skip the prompt)
   sudo ./install.sh --update     rebuild & redeploy (after a git pull)
   sudo ./install.sh --down       stop the stack
   ./install.sh --help            show this help
@@ -50,6 +54,8 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --port) PORT="${2:?}"; shift 2;;
     --down) ACTION="down"; shift;;
+    --ai) AI_CHOICE=1; shift;;
+    --no-ai) AI_CHOICE=0; shift;;
     --update) ACTION="update"; shift;;
     -h|--help) usage;;
     *) die "unknown option: $1 (try --help)";;
@@ -202,6 +208,42 @@ ensure_compose() {
 
 # ----------------------------------------------------------------------------- secrets
 gen_secret() { openssl rand -hex 32 2>/dev/null || head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n'; }
+ask_ai() {
+  # honor flags / existing choice / non-interactive
+  if [ -n "$AI_CHOICE" ]; then return; fi
+  if [ -f "$ENV_FILE" ] && grep -q '^PENTESTIQ_AI=1' "$ENV_FILE" 2>/dev/null; then AI_CHOICE=1; return; fi
+  if [ ! -t 0 ]; then AI_CHOICE=0; log "Non-interactive shell — installing without AI (use --ai to enable)."; return; fi
+  printf "\n${c_blue}[PentestIQ]${c_off} Optional AI layer (local, self-hosted Ollama model).\n"
+  printf "${c_dim}  It adds AI-written findings, attack-chain correlation, a false-positive\n"
+  printf "  verifier, an in-console copilot, and a self-learning confidence model.\n"
+  printf "  ${c_yel}Requires a high-spec workstation/lab: 8+ CPU cores, 16 GB+ RAM (GPU\n"
+  printf "  optional), plus a ~5 GB one-time model download.${c_off}${c_dim} Everything runs locally;\n"
+  printf "  no data leaves the host. You can enable it later with --ai.${c_off}\n"
+  printf "${c_blue}Do you want to install / integrate AI? [y/N]:${c_off} "
+  read -r _ans || _ans=""
+  case "$_ans" in [Yy]*) AI_CHOICE=1;; *) AI_CHOICE=0;; esac
+}
+
+wait_ollama() {
+  log "Waiting for the local AI service (Ollama) to become ready…"
+  for _ in $(seq 1 40); do
+    if curl -fsS "http://localhost:11434/api/tags" >/dev/null 2>&1; then ok "Ollama is up."; return 0; fi
+    sleep 3
+  done
+  warn "Ollama did not become ready in time — you can pull the model later with:"
+  warn "  $SUDO docker exec -it pentestiq-ollama ollama pull $AI_MODEL"
+  return 1
+}
+
+pull_model() {
+  log "Pulling the AI model '$AI_MODEL' (~5 GB, one-time)… this can take a while."
+  if $SUDO docker exec pentestiq-ollama ollama pull "$AI_MODEL"; then
+    ok "AI model ready: $AI_MODEL"
+  else
+    warn "Model pull failed — retry later with: $SUDO docker exec -it pentestiq-ollama ollama pull $AI_MODEL"
+  fi
+}
+
 write_env() {
   mkdir -p "$(dirname "$ENV_FILE")"
   if [ -f "$ENV_FILE" ]; then ok "Reusing existing secrets ($ENV_FILE)."; return; fi
@@ -211,9 +253,22 @@ write_env() {
 MOBSF_API_KEY=$(gen_secret)
 PENTESTIQ_SECRET_KEY=$(gen_secret)
 PENTESTIQ_PORT=${PORT}
+PENTESTIQ_AI=${AI_CHOICE:-0}
+OLLAMA_URL=http://ollama:11434
+PENTESTIQ_AI_MODEL=${AI_MODEL}
 ENV
   chmod 600 "$ENV_FILE"
   ok "Secrets generated."
+}
+
+set_ai_env() {
+  # keep PENTESTIQ_AI in an existing .env in sync with the chosen option
+  [ -f "$ENV_FILE" ] || return 0
+  if grep -q '^PENTESTIQ_AI=' "$ENV_FILE"; then
+    sed -i.bak "s/^PENTESTIQ_AI=.*/PENTESTIQ_AI=${AI_CHOICE:-0}/" "$ENV_FILE" && rm -f "$ENV_FILE.bak"
+  else
+    printf "PENTESTIQ_AI=%s\nOLLAMA_URL=http://ollama:11434\nPENTESTIQ_AI_MODEL=%s\n" "${AI_CHOICE:-0}" "$AI_MODEL" >> "$ENV_FILE"
+  fi
 }
 
 # ----------------------------------------------------------------------------- deploy
@@ -225,8 +280,9 @@ deploy() {
   # setups can't use to reach the registry (auth.docker.io), even when the daemon
   # itself resolves fine; the legacy builder shares the daemon's networking.
   $SUDO docker pull python:3.11-slim >/dev/null 2>&1 || true
+  local profile=""; [ "${AI_CHOICE:-0}" = "1" ] && profile="--profile ai" && log "AI layer enabled — the Ollama service will start too."
   $SUDO env DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 ${DC_BIN:-docker compose} \
-    --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --build
+    --env-file "$ENV_FILE" -f "$COMPOSE_FILE" $profile up -d --build
   ok "Containers started."
 }
 
@@ -253,6 +309,11 @@ summary() {
   printf "  Web console : ${c_blue}http://localhost:%s${c_off}   (or http://%s:%s)\n" "$PORT" "$ip" "$PORT"
   printf "  API docs    : ${c_blue}http://localhost:%s/docs${c_off}\n" "$PORT"
   printf "  MobSF       : http://localhost:8000  ${c_dim}(mobile analysis engine)${c_off}\n"
+  if [ "${AI_CHOICE:-0}" = "1" ]; then
+    printf "  AI layer    : ${c_grn}enabled${c_off} — local model ${c_blue}%s${c_off} via Ollama (http://localhost:11434)\n" "$AI_MODEL"
+  else
+    printf "  AI layer    : ${c_dim}disabled (re-run with --ai to enable)${c_off}\n"
+  fi
   printf "\n  Next steps:\n"
   printf "    1) Open the console and sign in with ${c_blue}pentestiq${c_off} / ${c_blue}p3nt3st!q${c_off} (change the password after first login).\n"
   printf "    2) Create a scan from ${c_blue}New scan${c_off}, or upload an app / API spec, then Run scan.\n"
@@ -284,9 +345,12 @@ BANNER
   if [ "$ACTION" = "update" ]; then
     log "Update mode: rebuilding and redeploying (skipping prerequisite install)."
     ensure_compose
+    ask_ai
     write_env
+    set_ai_env
     deploy
     wait_healthy
+    if [ "${AI_CHOICE:-0}" = "1" ]; then wait_ollama && pull_model; fi
     summary || true
     exit 0
   fi
@@ -295,9 +359,12 @@ BANNER
   install_docker
   start_docker
   ensure_compose
+  ask_ai
   write_env
+  set_ai_env
   deploy
   wait_healthy
+  if [ "${AI_CHOICE:-0}" = "1" ]; then wait_ollama && pull_model; fi
   summary || true
 }
 main "$@"

@@ -324,14 +324,26 @@ behaves exactly as its deterministic engine.
   that feedback and scores how likely future findings are real. Genuine
   self-improvement, no GPU required.
 
-**Enable it:**
+**Enable it — the installer asks during setup:**
+
+```
+Do you want to install / integrate AI? [y/N]
+```
+
+Answer **y** and the installer starts the bundled Ollama service, pulls the model
+(~5 GB, one-time) and turns the AI layer on; answer **n** for a lean install. You
+can also skip the prompt:
 
 ```bash
-# start the bundled Ollama service and pull a model
-docker compose --profile ai up -d
-docker exec -it pentestiq-ollama ollama pull qwen2.5:7b-instruct
-# then set PENTESTIQ_AI=1 in deploy/.env and redeploy
+sudo ./install.sh --ai       # macOS / Linux — deploy WITH the local AI layer
+sudo ./install.sh --no-ai    # deploy without AI
+# Windows:
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker -Ai
 ```
+
+> **Disclaimer:** AI mode runs a local LLM — plan for a high-spec workstation/lab
+> (**8+ CPU cores, 16 GB+ RAM**, GPU optional). Everything runs locally; no data
+> leaves the host.
 
 API: `GET /ai/status`, `POST /ai/ask`, `POST /engagements/{id}/ai/analyze`,
 `POST /engagements/{id}/findings/{fid}/feedback`, `POST /ai/retrain`.
