@@ -28,6 +28,10 @@
 - [What is PentestIQ?](#-what-is-pentestiq)
 - [Features](#-features)
 - [Asset Coverage](#-asset-coverage)
+- [Attack-surface crawler](#-attack-surface-crawler)
+- [Burp Suite import](#-burp-suite-import)
+- [Out-of-band detection (OAST)](#-out-of-band-detection-oast)
+- [Native OWASP active checks](#-native-owasp-active-checks-vapt-depth)
 - [How It Works](#-how-it-works)
 - [Screens & Samples](#-screens--samples)
 - [Installation](#-installation)
@@ -70,7 +74,8 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 
 ### Core engine
 - **One normalized findings model** across every tool and asset type — deduplicate, correlate, and risk-score once.
-- **9 asset modules** covering the complete attack surface (see [Asset Coverage](#-asset-coverage)).
+- **10 asset modules** covering the complete attack surface (see [Asset Coverage](#-asset-coverage)).
+- **Burp Suite XML import** — turn a proxy/history export into a ready-to-run engagement: every captured endpoint, parameter and bearer-token identity is extracted and fed straight to the active engine (a 90 MB history parses in ~1s).
 - **Safe exploit validation** — non-destructive reflected-XSS and boolean-based SQLi confirmation that flips findings from *detected* to *validated* (with evidence) or dismisses false positives.
 - **Risk scoring (0–100)** blending severity, CVSS, confidence, and validation state.
 - **Attack-chain correlation** — links findings that share a host + service into one story.
@@ -90,7 +95,7 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 - **Reporting at scale** — HTML / Markdown / PDF / DOCX, **compliance mapping** (OWASP / PCI-DSS / ISO 27001 / MITRE ATT&CK), and **per-tenant white-label branding**.
 
 ### Deployment
-- **Self-hostable** — `pip install` for the engine; **Docker Compose** for the full stack with the integrated mobile-analysis service.
+- **Self-hostable** — `pip install` for the engine; **Docker Compose** for the full stack with the integrated mobile-analysis service. The image bundles the orchestrated tools (nmap, a headless browser for SPA crawling, and nuclei) so a container deploy has full capability out of the box.
 - **Postgres-ready** — SQLite by default, swappable behind clean storage interfaces.
 
 ---
@@ -102,7 +107,7 @@ Ten modules — the complete VAPT surface, driven by PentestIQ's own engines wit
 | # | Module | Asset type | What PentestIQ does |
 |---|---|---|---|
 | 1 | `infra` | Infrastructure / network | Host & service discovery, port enumeration, network vulnerability scanning |
-| 2 | `web` | Web applications | Crawl (static + headless SPA), OWASP Top-10 active checks (headers/CORS/JWT/authz/errors), injection fuzzing, out-of-band detection, safe exploit validation |
+| 2 | `web` | Web applications | Crawl (static + headless SPA), OWASP Top-10 active checks (headers/CORS/JWT/authz/errors/CSRF/outdated-JS), injection fuzzing (SQLi/NoSQLi/XSS/XXE/CRLF/open-redirect/SSTI/traversal/cmd-i), out-of-band detection, safe exploit validation |
 | 3 | `wordpress` | WordPress sites | Core/plugin/theme CVEs, user enumeration, weak-credential checks |
 | 4 | `api` | REST / OpenAPI | Endpoint mapping + **authenticated access-control (BOLA/IDOR), token analysis, tenant confusion, excessive-data-exposure** (OWASP API Top 10) |
 | 5 | `mobile` | Mobile apps (Android / iOS) | Static analysis of code, manifest, permissions, secrets & certificates (CWE/MASVS) + on-device dynamic kit |
@@ -125,7 +130,7 @@ across the whole application instead of only the endpoints you supply:
 - **BFS crawl**, same-scope (optional subdomains), depth- and page-bounded, rate-limited.
 - Extracts **links, forms (action/method/inputs), query parameters**, and
   **endpoints mined from JavaScript bundles** (the recon that surfaced internal
-  endpoints in the real Convay assessment).
+  endpoints in a real SaaS assessment).
 - **Templatizes id paths** (`/user/42` → `/user/{id}`) → automatic **BOLA/IDOR**
   candidates; GET paths become **data-exposure** targets.
 - **Headless-browser SPA mode** (optional): renders JavaScript, follows
@@ -135,6 +140,28 @@ across the whole application instead of only the endpoints you supply:
   browser isn't installed (a missing component never breaks a run).
 - Runs in the `web` module's discovery phase and feeds the check engine
   automatically; also available standalone: `pentestiq crawl https://app.example.com --token <jwt> --spa`.
+
+## 🐙 Burp Suite import
+
+Already proxied the target through Burp? Import that history and skip the crawl —
+PentestIQ turns a **Burp "Save items" / proxy-history XML** export into a
+ready-to-run engagement:
+
+- **Streams** the export (scales to large multi-hundred-MB histories), filtering
+  to the **in-scope host(s)** you name — analytics/telemetry/CDN noise is dropped
+  automatically (or auto-detects the busiest first-party host).
+- Decodes each request and extracts the **endpoints, query & body parameters**,
+  templatized **BOLA/IDOR** candidates, and every **bearer token** seen in an
+  `Authorization` header — which become test **identities** for access-control
+  testing, no manual token wrangling.
+- Hands that exact surface to the native engine, so BOLA, injection, JWT and
+  data-exposure checks run against the endpoints and parameters you actually
+  captured — the surface a fresh crawl of a SPA would miss.
+
+Upload it from the console (**New scan → Upload → Burp Suite**, with an optional
+scope-hosts field), or wire it into automation via the upload API
+(`asset_type=burp`). Everything runs under `allow_active`, on by default for
+authorized targets.
 
 ## 📡 Out-of-band detection (OAST)
 
@@ -159,7 +186,8 @@ self-hostable **OAST collaborator** (the Burp-Collaborator / AcuMonitor model):
   (or `{"domain": "oast.example.com"}`); OAST checks are gated behind `allow_active`.
 
 Verified end-to-end in `bench/`: the benchmark stands up a collaborator and
-**confirms blind SSRF out-of-band** as the 14th planted vulnerability.
+**confirms blind SSRF out-of-band** as one of **25/25 planted vulnerabilities**
+detected across the crawl → checks → OAST → fuzz pipeline.
 
 ## 🧪 Native OWASP active checks (VAPT depth)
 
@@ -181,9 +209,15 @@ run in the `web` and `api` `assess()` phase, feeding the same dedup / risk-scori
 | **Security headers / clickjacking / cookies** | HSTS, CSP, `frame-ancestors:*`, XFO, cookie flags | A05 |
 | **CORS** | origin reflection with credentials | API8 |
 | **HTTP methods / error handling** | dangerous methods; Java/Python/.NET/SQL stack-trace leakage | A05 |
+| **Anti-CSRF token** | state-changing (POST/PUT/DELETE) forms with no CSRF token / SameSite defence | A01 |
+| **Vulnerable JS libraries** | outdated front-end libs with known CVEs, fingerprinted from crawled script assets (retire.js-style) | A06 |
 
-**Safe by default** — every probe is read-only (GET/OPTIONS); anything that
-generates auth traffic (login brute-force) is gated behind `allow_active`.
+**Active by default for authorized web/API scans** — target scans created from the
+console or a scope file enable active testing automatically (governed by the
+`active_scan` flag; a **Thorough** toggle widens the crawl and injection budget).
+Passive probes stay read-only (GET/OPTIONS); traffic-generating probes
+(injection, brute-force, OAST) run under `allow_active`, which is on by default
+for web/API/network targets and one switch away from off.
 
 ### Native injection-fuzzing engine
 
@@ -196,8 +230,12 @@ confirms bugs by response signal — no external scanner needed:
 | **SQL injection** | error-signature, boolean-blind (TRUE≈baseline / FALSE differs), **time-blind** (injected sleep) | A03 / CWE-89 |
 | **Reflected XSS** | unique marker reflected unescaped in HTML context | A03 / CWE-79 |
 | **OS command injection** | **blind out-of-band** (via the OAST collaborator) and time-blind | A03 / CWE-78 |
+| **NoSQL injection** | Mongo/JS error-signature and boolean-blind (TRUE≈baseline / FALSE differs) | A03 / CWE-943 |
 | **Path traversal / LFI** | reads `/etc/passwd` / `win.ini` via traversal | A01 / CWE-22 |
 | **SSTI** | template evaluates a distinctive arithmetic product | A03 / CWE-1336 |
+| **XXE** | external-entity file read and **blind out-of-band** (via the OAST collaborator) | A05 / CWE-611 |
+| **CRLF / response splitting** | injected value folds into a response header | A03 / CWE-113 |
+| **Open redirect** | redirect param sends `Location:` to an attacker-controlled host | A01 / CWE-601 |
 
 Payloads are non-destructive proofs (a syntax error, a benign reflection, a timed
 sleep, a read-only file, an arithmetic evaluation) — never `DROP`/`DELETE`/`rm`.
@@ -454,7 +492,8 @@ Use **Create workspace** to set up a separate, isolated tenant.
 **2 · Scan live targets (web / API / infra).** Go to **New scan → Scan targets**:
 name the engagement, record who authorised it, enter targets one per line (optionally
 prefixed — `web=`, `api=`, `wordpress=`, `infra=`), pick scope enforcement, then
-**Create & open → Run scan**.
+**Create & open → Run scan**. **Active testing is on by default** for authorised
+targets; tick **Thorough** for a wider crawl and a larger injection budget.
 
 **3 · Test an API.** **New scan → Upload & scan**, asset type **API**: choose the
 OpenAPI/Swagger file, set the **Base URL**, paste an access token. Add a **second
@@ -462,19 +501,25 @@ token + object IDs** to unlock cross-tenant access-control (BOLA) testing, tick
 **Enable active testing** for injection & brute-force (authorised targets only), and
 **Upload & scan**. Endpoints, identities and injection points are derived automatically.
 
-**4 · Assess a mobile / desktop app or device config.** Pick the matching asset type
+**4 · Import a Burp Suite capture.** **New scan → Upload & scan**, asset type
+**Burp Suite**: choose your proxy/history **XML** export and (optionally) name the
+in-scope hosts. PentestIQ extracts every captured endpoint, parameter and bearer
+token, then runs the active engine against that real surface — ideal for SPAs a
+fresh crawl can't fully map.
+
+**5 · Assess a mobile / desktop app or device config.** Pick the matching asset type
 and upload the file (Android/iOS package, desktop binary, or a network-device /
 firewall / hardening configuration). Analysis starts automatically. For live mobile
 instrumentation, use the **Dynamic kit**.
 
-**5 · Read the results (Dashboard).** Severity tiles and bars give the risk breakdown;
+**6 · Read the results (Dashboard).** Severity tiles and bars give the risk breakdown;
 the **OWASP coverage** grid shows which Web/API Top-10 categories were exercised (red =
 a critical finding); the **findings table** lists risk score, severity, title, location
 and OWASP mapping. **Open report** produces a client-ready report (executive summary,
 evidence, remediation, compliance mapping).
 
-**6 · Good practice.** Only scan assets you're authorised to test; keep active testing
-off for production unless you have a window; re-run engagements to track remediation.
+**7 · Good practice.** Only scan assets you're authorised to test; use a maintenance
+window for production; re-run engagements to track remediation.
 
 > The same in-app guide is always available under **User manual** in the console sidebar.
 
@@ -572,6 +617,12 @@ curl -XPOST http://localhost:8080/engagements/upload \
 curl -XPOST http://localhost:8080/engagements/upload \
   -H "Authorization: Bearer $TOKEN" \
   -F "file=@router.cfg" -F "asset_type=network_device" -F "name=edge-router"
+
+# a Burp Suite proxy/history export — extract endpoints, params & tokens, then scan
+curl -XPOST http://localhost:8080/engagements/upload \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@burp-history.xml" -F "asset_type=burp" \
+  -F "scope_hosts=app.example.com,example.com" -F "allow_active=true" -F "name=web-from-burp"
 ```
 
 Then run it: `POST /engagements/{id}/run`.

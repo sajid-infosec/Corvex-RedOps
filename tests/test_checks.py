@@ -136,7 +136,7 @@ def test_jwt_check_flags_weak_secret_and_embedded_token():
     payload = {"role": "Owner", "access_token": "syt_abc123",
                "permission": {"a": True, "b": True, "c": True, "d": True},
                "iat": 0, "exp": 86400}
-    tok = _make_jwt({"alg": "HS512"}, payload, secret="convay", alg="HS512")
+    tok = _make_jwt({"alg": "HS512"}, payload, secret="company", alg="HS512")
     meta = {"jwt": tok}
     findings = JwtSecurityCheck().run(_ctx(FakeHttp(lambda *a: _resp()), meta=meta))
     titles = " | ".join(f.title for f in findings)

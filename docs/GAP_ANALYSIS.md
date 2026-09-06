@@ -1,7 +1,6 @@
 # PentestIQ Gap Analysis & OWASP Top 10 Coverage
 
-**Benchmark:** the real, completed VAPT of **Convay/Synesis** (`convay2.0/`) — a
-multi-tenant video-conferencing SaaS. 52 test cases mapped to OWASP WSTG +
+**Benchmark:** a real, completed VAPT of a **multi-tenant video-conferencing SaaS**. 52 test cases mapped to OWASP WSTG +
 API Security Top 10, ~35 confirmed findings across web, API, JWT, authorization,
 business logic, real-time/chat, and infrastructure.
 
@@ -12,12 +11,12 @@ VA orchestrator does not do?** — and how PentestIQ now closes that gap.
 
 ## 1. What the real engagement proved
 
-The Convay engagement's confirmed findings were overwhelmingly **authorization,
+The engagement's confirmed findings were overwhelmingly **authorization,
 JWT, and business-logic** issues — the exact classes that automated VA scanners
 (ZAP/Nuclei/Nessus) structurally cannot find, because they need authenticated,
 multi-identity, active probing:
 
-| # | Confirmed finding (Convay) | OWASP | Scanner can find? |
+| # | Confirmed finding | OWASP | Scanner can find? |
 |---|---|---|---|
 | TC-C05 | App JWT embeds a cleartext Matrix `syt_` token → full Matrix takeover | API2 | No |
 | TC-C06 | 24h token, no server-side revocation on logout | API2 | No |
@@ -26,7 +25,7 @@ multi-identity, active probing:
 | TC-D06 | `downloadFile/{uuid}` served with no auth (IDOR) | API1 | Partial |
 | TC-D07 | `userId` query param overrides token tenant scope | API1 | No |
 | TC-F02 | Stored XSS in `firstName` (renders in meetings/admin) | A03 | Partial |
-| TC-G01 | CORS reflects any `*.convay.com` origin with credentials | API8 | Partial |
+| TC-G01 | CORS reflects any `*.example.com` origin with credentials | API8 | Partial |
 | TC-G02 | No HSTS anywhere; CSP `frame-ancestors:*` | A05 | Yes |
 | TC-H01 | Unrestricted upload (`.php`, SVG-XSS) | A05 | Partial |
 | TC-I02 | Payment result manipulation (fake gateway sub-id accepted) | API6 | No |
@@ -53,7 +52,7 @@ XSS, SQLi).
 
 That leaves the crown-jewel classes uncovered:
 
-| Class | Convay cases | Covered before? |
+| Class | Engagement cases | Covered before? |
 |---|---|---|
 | JWT security (alg confusion, weak secret, claim trust, embedded tokens, TTL) | TC-C01–C06 | ❌ none |
 | BOLA / IDOR / tenant confusion (multi-identity diff) | TC-D01–D07 | ❌ none |
@@ -143,11 +142,12 @@ login, JWT) — see `pentestiq/checks/engine.py`.
 - ✅ **Native injection-fuzzing engine** (`pentestiq.fuzzing`) — from-scratch active
   fuzzer for SQLi (error/boolean/time), reflected XSS, OS command injection
   (blind-OAST + time), path traversal/LFI and SSTI, run across the crawler surface.
-  Benchmark now covers all classes: **19/19** planted vulnerabilities detected.
+  Benchmark now covers all classes — including NoSQLi, XXE, CRLF, open redirect,
+  anti-CSRF and outdated-JS-library checks: **25/25** planted vulnerabilities detected.
 
 ## 6. Still orchestrated / roadmap (honest gaps)
 
-Some Convay findings remain best served by external tools (already orchestrated)
+Some findings remain best served by external tools (already orchestrated)
 or are candidates for future native checks:
 
 - **Mass assignment (TC-F05), SSRF (TC-F04), host-header (TC-F06)** — active
@@ -163,14 +163,14 @@ or are candidates for future native checks:
 
 ---
 
-## 7. Asset-type coverage (as tested on Convay's real assets)
+## 7. Asset-type coverage (as tested on the engagement's real assets)
 
-| Convay asset | File | PentestIQ module |
+| Asset | File | PentestIQ module |
 |---|---|---|
-| Web app (`app.convay.com` SPA) | JS bundles | `web` + native checks |
+| Web app (`app.example.com` SPA) | JS bundles | `web` + native checks |
 | REST API (218 endpoints, JWT) | Burp capture | `api` + native checks (BOLA/JWT/authz) |
-| Mobile app | `convaychat-x-production.apk` (323 MB) | `mobile` (MobSF) |
-| Desktop app | `convay-desktop-production…​.exe` (70 MB) | `desktop` (native PE/ELF/Mach-O) |
+| Mobile app | `target-android.apk` | `mobile` (MobSF) |
+| Desktop app | `target-desktop.exe` | `desktop` (native PE/ELF/Mach-O) |
 | Infrastructure | nmap + Nessus | `infra` (nmap/nuclei) |
 | Firewall / hardening / network device | configs | `firewall` / `hardening` / `netdev` |
 
