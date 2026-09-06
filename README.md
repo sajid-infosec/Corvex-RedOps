@@ -97,7 +97,7 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 
 ## 🎯 Asset Coverage
 
-Nine modules — the complete VAPT surface, driven by PentestIQ's own engines with additional deep-scan backends bundled in the platform (auto-detected; anything unavailable is skipped, never fatal).
+Ten modules — the complete VAPT surface, driven by PentestIQ's own engines with additional deep-scan backends bundled in the platform (auto-detected; anything unavailable is skipped, never fatal).
 
 | # | Module | Asset type | What PentestIQ does |
 |---|---|---|---|
@@ -110,6 +110,7 @@ Nine modules — the complete VAPT surface, driven by PentestIQ's own engines wi
 | 7 | `network-device` | Routers / switches | Device config audit: telnet, default/RW SNMP, weak passwords, cleartext management |
 | 8 | `firewall` | Firewall rulesets | *nipper-class* ruleset audit: any-any permits, exposed services, shadowed rules |
 | 9 | `hardening` | System hardening | Host hardening gaps (SSH/kernel/CIS) + hardening-report ingestion |
+| 10 | `active-directory` | Active Directory / domain | Domain security-posture review from a policy export: password policy, Kerberos (AS-REP roasting / Kerberoasting), unconstrained delegation, GPP cpassword, SMBv1/LLMNR, machine-account quota, privileged-group sprawl |
 
 Plus **lab automation** — `lab/docker-compose.yml` stands up intentionally-vulnerable targets for testing and demos.
 
@@ -541,6 +542,7 @@ The **same command** runs any asset type — the module is chosen automatically 
 | **Mobile** | *(upload the .apk/.ipa — see §4)* | Mobile analysis service (bundled) |
 | **Desktop** | *(upload the binary — see §4)* | Native binary analysis |
 | **Network device** | `network_device=./router.cfg` | *(built-in)* |
+| **Active Directory** | `ad=./secpol.inf` *(secedit export)* | Native AD posture review |
 | **Firewall** | `firewall=./iptables.rules` | *(built-in)* |
 | **Hardening** | `hardening=./sshd_config` | *(built-in)* |
 
