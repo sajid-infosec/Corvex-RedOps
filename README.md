@@ -412,10 +412,16 @@ That's it — open **http://localhost:8080** and sign in with **`pentestiq`** / 
 **Installer options:**
 
 ```bash
+# macOS / Linux
 sudo ./install.sh --port 9090   # custom console port
 sudo ./install.sh --update      # rebuild & redeploy after a `git pull`
 sudo ./install.sh --down        # stop the stack
 ./install.sh --help
+
+# Windows (Docker stack) — identical actions
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker -Port 9090
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker -Update   # rebuild & redeploy
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker -Down     # stop the stack
 ```
 
 | Service | Port | Purpose |

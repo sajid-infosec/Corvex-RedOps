@@ -72,8 +72,9 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker
 ```
 
-Flags: `--port 9090` (sh) / `-Port 9090` (ps1), `sudo ./install.sh --update`,
-`sudo ./install.sh --down`.
+Flags — same actions on every OS:
+- macOS/Linux: `sudo ./install.sh --port 9090`, `sudo ./install.sh --update`, `sudo ./install.sh --down`
+- Windows: `... install.ps1 -Docker -Port 9090`, `... install.ps1 -Docker -Update`, `... install.ps1 -Docker -Down`
 
 ---
 

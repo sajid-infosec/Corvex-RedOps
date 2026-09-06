@@ -1,0 +1,17 @@
+# Keep line endings deterministic across macOS / Linux / Windows checkouts.
+# Shell scripts and Dockerfiles MUST stay LF or bash/Docker break on a Windows clone.
+*.sh            text eol=lf
+install.sh      text eol=lf
+Dockerfile      text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+*.py            text eol=lf
+# PowerShell is fine either way; pin LF for consistency.
+*.ps1           text eol=lf
+# Never touch binaries.
+*.png           binary
+*.jpg           binary
+*.ico           binary
+*.pdf           binary
+*.apk           binary
+*.ipa           binary
