@@ -931,6 +931,8 @@ Passwords are PBKDF2-hashed; API keys are stored only as a hash (shown once at c
 | `PENTESTIQ_SECRET_KEY` | *(random per run)* | Signs session tokens — **set in production** so logins survive restarts |
 | `MOBSF_URL` | `http://localhost:8000` | Mobile-analysis service base URL |
 | `MOBSF_API_KEY` | *(empty)* | Mobile-analysis service API key |
+| `PENTESTIQ_SCAN_TIMEOUT_S` | `14400` (4h) | Wall-clock **time budget per scan**. On reaching it, the scan finishes with the results gathered so far (a graceful partial completion, not a failure). Raise it for very large targets; override per-engagement via asset metadata `scan_timeout_s`. |
+| `PENTESTIQ_INTEL_OFFLINE` | *(unset)* | Force offline threat-intel (no EPSS/KEV network lookups) |
 
 **Engine config file** (optional, pass with `-c`): [`config/pentestiq.example.yaml`](config/pentestiq.example.yaml)
 
@@ -966,6 +968,7 @@ Base URL: `http://<host>:<port>` · Auth: `Authorization: Bearer <token>` **or**
 | `POST` | `/engagements/upload` | member+ | Upload an app/binary/config and create an engagement |
 | `GET` | `/engagements` | any | List engagements (tenant-scoped) |
 | `GET` | `/engagements/{id}` | any | Engagement detail (assets + findings) |
+| `DELETE` | `/engagements/{id}` | member+ | Delete an engagement (stops any running scan first) |
 | `POST` | `/engagements/{id}/run` | member+ | Run the scan (background; status updates) |
 | `GET` | `/engagements/{id}/findings` | any | Findings, prioritized by risk |
 | `GET` | `/engagements/{id}/report?format=html\|md\|pdf\|docx&variant=full\|exec` | any | Download the report (full technical or executive summary) |
