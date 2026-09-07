@@ -2,20 +2,35 @@
 
 # 🛡️ PentestIQ
 
-### The orchestration-driven VAPT platform — every asset, one engine, client-ready in minutes.
+### One platform for Vulnerability Assessment **and** Penetration Testing — every asset, one engine, client-ready in minutes.
 
-*Vulnerability Assessment **and** validated Penetration Testing across infrastructure, web, WordPress, APIs, mobile, desktop, network devices, firewalls, and system hardening — normalized, risk-scored, correlated, and reported. Safely, with authorization built in.*
+*Web · API · Mobile · Desktop · Infrastructure · Network devices · Firewalls · Hardening · WordPress · Active Directory — discovered, actively tested, **safely validated**, threat-prioritized, correlated, and reported. Self-hosted. AI-assisted. Zero licensing cost.*
+
+<br/>
 
 ![CI](https://github.com/sajid-infosec/PentestIQ/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
-![Tests](https://img.shields.io/badge/tests-118%20passing-brightgreen.svg)
-![Modules](https://img.shields.io/badge/asset%20modules-9-8a2be2.svg)
-![Status](https://img.shields.io/badge/status-active%20development-orange.svg)
+![Tests](https://img.shields.io/badge/tests-130%2B%20passing-brightgreen.svg)
+![Asset modules](https://img.shields.io/badge/asset%20modules-10-8a2be2.svg)
+<br/>
+![Self-hosted](https://img.shields.io/badge/self--hosted-air--gappable-0aa.svg)
+![AI](https://img.shields.io/badge/AI-local%20%26%20private%20(Ollama)-6366f1.svg)
+![Prioritization](https://img.shields.io/badge/prioritization-EPSS%20%2B%20CISA%20KEV-ff6633.svg)
+![OWASP](https://img.shields.io/badge/OWASP-Top10%20%2F%20API%20%2F%20WSTG%20%2F%20MASVS-brightgreen.svg)
+![Cost](https://img.shields.io/badge/licensing%20cost-%240-success.svg)
 
-[Features](#-features) · [Asset Coverage](#-asset-coverage) · [Installation](#-installation) · [Quick Start](#-quick-start) · [Deployment](#-deployment) · [User Manual](#-user-manual) · [API Reference](#-rest-api-reference)
+[Why PentestIQ](#-why-pentestiq) · [vs Commercial Tools](#-how-pentestiq-compares) · [Features](#-features) · [Screens](#-screens--samples) · [Install](#-installation) · [Quick Start](#-quick-start) · [API](#-rest-api-reference)
+
+<br/>
+
+<img src="docs/img/overview.png" alt="PentestIQ console — Overview dashboard" width="90%"/>
 
 </div>
+
+---
+
+> **Replaces two product categories with one.** Vulnerability-management suites (Tenable, Rapid7) *find* but don't exploit; pentest tools (Metasploit, Core Impact) *exploit* but don't do continuous assessment, prioritization or reporting. PentestIQ does **both** — and adds transparent, exploit-aware prioritization (EPSS + CISA KEV) that the enterprise tools charge for and keep opaque. See the full [**comparison →**](docs/COMPETITIVE.md)
 
 ---
 
@@ -26,7 +41,10 @@
 ## 📖 Table of Contents
 
 - [What is PentestIQ?](#-what-is-pentestiq)
+- [Why PentestIQ](#-why-pentestiq)
+- [How PentestIQ compares](#-how-pentestiq-compares)
 - [Features](#-features)
+- [Threat-informed prioritization](#-threat-informed-prioritization)
 - [Asset Coverage](#-asset-coverage)
 - [Attack-surface crawler](#-attack-surface-crawler)
 - [Burp Suite import](#-burp-suite-import)
@@ -72,6 +90,34 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 
 ---
 
+## 💡 Why PentestIQ
+
+| | The problem with the status quo | What PentestIQ does |
+|---|---|---|
+| **Two silos, two invoices** | VM tools scan; PT tools exploit. You buy and stitch together both. | **One platform** does assessment *and* safe exploit validation. |
+| **Opaque, paywalled prioritization** | Tenable VPR / Rapid7 Real Risk are black boxes on premium tiers. | **Transparent PRP** — CVSS × EPSS × CISA KEV, every factor shown, free & offline. |
+| **Cloud lock-in** | Insight/Tenable One are cloud-tethered — a non-starter when air-gapped. | **Fully self-hosted & air-gappable.** Your data never leaves your lab. |
+| **Narrow coverage** | Burp is web-only; Nessus is thin on web/mobile. | **11 asset classes** in one engine, incl. an AI-assisted mobile runtime kit. |
+| **Bolt-on, cloud AI** | AI features are per-seat cloud upsells. | **Local, private AI** (Ollama) for correlation, FP-reduction & a copilot. |
+| **$$$$ licensing** | Enterprise suites run five to six figures a year. | **Apache-2.0, $0 licensing.** Open-core. |
+
+## 🥊 How PentestIQ compares
+
+| Capability | PentestIQ | Tenable | Rapid7 | Burp EE | Metasploit | Core Impact |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|
+| Licensing cost | **Free** | 💰💰💰 | 💰💰💰 | 💰💰💰 | 💰💰 | 💰💰💰💰 |
+| Self-hosted / air-gap | ✅ | 🟡 | 🟡 | ✅ | ✅ | ✅ |
+| VA + safe exploit validation | ✅ | ❌ | 🟡 | ❌ | ✅ | ✅ |
+| Web · API · Mobile · Desktop · Infra · AD | ✅ | 🟡 | 🟡 | web only | 🟡 | 🟡 |
+| Exploit-aware prioritization (EPSS + KEV) | ✅ transparent | 💰 opaque | 💰 opaque | ❌ | ❌ | ❌ |
+| Remediation SLA tracking | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Local, private AI | ✅ | 🟡 cloud | 🟡 cloud | ❌ | ❌ | ❌ |
+| Client-ready reports (exec + technical) | ✅ | ✅ | ✅ | 🟡 | ✅ | ✅ |
+
+<sub>✅ full · 🟡 partial / add-on / roadmap · ❌ none · 💰 paid tier. Full breakdown, tool-by-tool analysis and honest gaps in **[docs/COMPETITIVE.md](docs/COMPETITIVE.md)**.</sub>
+
+---
+
 ## ✨ Features
 
 ### Core engine
@@ -80,6 +126,8 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 - **Burp Suite XML import** — turn a proxy/history export into a ready-to-run engagement: every captured endpoint, parameter and bearer-token identity is extracted and fed straight to the active engine (a 90 MB history parses in ~1s).
 - **Safe exploit validation** — non-destructive reflected-XSS and boolean-based SQLi confirmation that flips findings from *detected* to *validated* (with evidence) or dismisses false positives.
 - **Risk scoring (0–100)** blending severity, CVSS, confidence, and validation state.
+- **Threat-informed prioritization — PentestIQ Risk Priority (PRP)** — blends CVSS with **FIRST EPSS** (exploit probability) and **CISA KEV** (known-exploited, incl. ransomware) into one transparent 0–100 score, with the SLA state for every finding. This is the exploit-aware ranking Tenable (VPR) and Rapid7 (Real Risk) charge for and keep opaque — here **explainable, free, and offline-capable** (bundled KEV seed; live refresh from CISA/FIRST). See [`pentestiq/intel/`](pentestiq/intel/).
+- **Remediation SLA tracking** — per-severity windows (Critical 7d / High 30d / Medium 90d …), due dates, overdue flags and MTTR — matching Rapid7 Remediation Projects.
 - **Attack-chain correlation** — links findings that share a host + service into one story.
 - **Optional local-AI layer (self-hosted, zero budget)** — a local open-source model via **Ollama** powers analyst-grade write-ups, **attack-chain correlation**, a **false-positive verifier**, and an in-console **copilot**; plus a **self-learning** confidence model that improves from analyst confirm/dismiss feedback. Fully optional and fail-safe: with no model present, PentestIQ runs exactly as before on its deterministic engine.
 
@@ -311,6 +359,37 @@ the same catalogue as the roadmap — see `pentestiq/checks/burp_catalog.py`.
 > confirmation, AI attack-chain correlation, and client-ready reporting — in one
 > run, self-hosted, at zero licence cost.
 
+## ⚡ Threat-informed prioritization
+
+Severity alone is noise. A "critical" with no public exploit can wait; a "high"
+that's being used in ransomware campaigns **right now** cannot. Enterprise
+suites solve this with proprietary scores — **Tenable VPR**, **Rapid7 Real
+Risk** — locked behind premium tiers and opaque by design.
+
+PentestIQ computes an equivalent, **transparent** score for free:
+
+```
+PRP = base(severity / CVSS)
+      × exploit-pressure(EPSS)         # FIRST EPSS: P(exploited in 30 days)
+      × known-exploited(CISA KEV)      # in-the-wild use, incl. ransomware
+      × validation-state × confidence
+```
+
+Every factor is returned with the number, so an analyst — or a client — sees
+*why* a finding is urgent. A **KEV** hit floors the priority high and labels it
+**"Act now — known exploited."**
+
+| Signal | Source | Cost | Offline |
+|---|---|---|---|
+| **EPSS** exploit probability | [FIRST EPSS](https://www.first.org/epss/) | Free | cached |
+| **KEV** known-exploited + ransomware | [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) | Free | **bundled seed** + live refresh |
+
+Paired with **remediation SLA tracking** — per-severity windows, due dates,
+overdue flags and MTTR — this is the Tenable/Rapid7 prioritization-and-track
+workflow, self-hosted and transparent. Endpoints: `GET
+/engagements/{id}/prioritization`, `GET /intel/status`, `POST /intel/refresh`,
+`POST /intel/enrich`. Code: [`pentestiq/intel/`](pentestiq/intel/).
+
 ## 🤖 AI layer (optional, self-hosted)
 
 PentestIQ ships an **optional** AI layer that runs entirely on your own hardware
@@ -385,8 +464,20 @@ Pipeline: **scope → scan → normalize → validate → prioritize & correlate
 
 ## 🖼️ Screens & Samples
 
-- **Web console** — a live dashboard (create engagements, upload apps/configs, run scans, view findings + severity chart + attack chains, open reports). Preview: [`examples/console-preview.html`](examples/console-preview.html).
-- **Client report** — a branded, multi-format report with compliance mapping. Sample: [`examples/sample-report/`](examples/sample-report/) (HTML, Markdown, **PDF**, DOCX).
+<table>
+<tr>
+<td width="50%"><img src="docs/img/prioritization.png" alt="Threat-informed prioritization"/><br/><sub><b>Threat-informed prioritization</b> — PRP (CVSS × EPSS × CISA KEV), KEV badges, SLA states. The exploit-aware ranking enterprises pay for.</sub></td>
+<td width="50%"><img src="docs/img/dynamic-kit.png" alt="AI-assisted Dynamic kit"/><br/><sub><b>AI-assisted Dynamic kit</b> — platform detection, runtime-protection analysis, tailored Frida scripts and a MASVS-aligned test plan.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/img/owasp-coverage.png" alt="OWASP coverage"/><br/><sub><b>OWASP coverage</b> — measured against Top 10, API Top 10, WSTG and MASVS/MASTG with per-standard weighting.</sub></td>
+<td width="50%"><img src="docs/img/scan-gallery.png" alt="Scan template gallery"/><br/><sub><b>Scan templates</b> — one click per asset class; PentestIQ maps the target to the right engine automatically.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/img/overview-light.png" alt="Light theme"/><br/><sub><b>Light &amp; dark themes</b> — the whole console, either way.</sub></td>
+<td width="50%" valign="top"><br/><b>Also included</b><br/><br/>• <b>Web console</b> preview: <a href="examples/console-preview.html"><code>examples/console-preview.html</code></a><br/>• <b>Client report</b> sample (HTML / Markdown / <b>PDF</b> / DOCX): <a href="examples/sample-report/"><code>examples/sample-report/</code></a><br/>• Full-technical <b>and</b> executive-summary report types, white-label branded.</td>
+</tr>
+</table>
 
 ---
 
@@ -877,8 +968,19 @@ Base URL: `http://<host>:<port>` · Auth: `Authorization: Bearer <token>` **or**
 | `GET` | `/engagements/{id}` | any | Engagement detail (assets + findings) |
 | `POST` | `/engagements/{id}/run` | member+ | Run the scan (background; status updates) |
 | `GET` | `/engagements/{id}/findings` | any | Findings, prioritized by risk |
-| `GET` | `/engagements/{id}/report?format=html\|md\|pdf\|docx` | any | Download the report |
+| `GET` | `/engagements/{id}/report?format=html\|md\|pdf\|docx&variant=full\|exec` | any | Download the report (full technical or executive summary) |
 | `GET` | `/engagements/{id}/compliance` | any | OWASP/PCI/ISO/MITRE mapping |
+| `GET` | `/engagements/{id}/prioritization` | any | Threat-informed ranking (PRP + EPSS + KEV + SLA) |
+| `GET` | `/engagements/{id}/kit/plan` | any | AI-assisted mobile/desktop runtime test plan |
+
+**Prioritization & threat intel**
+
+| Method | Endpoint | Role | Description |
+|---|---|---|---|
+| `GET` | `/intel/status` | any | KEV/EPSS data status |
+| `POST` | `/intel/enrich` | any | Enrich a list of CVEs with KEV + EPSS |
+| `POST` | `/intel/refresh` | admin+ | Pull the full CISA KEV catalogue |
+| `GET` | `/coverage/owasp` · `/coverage/burp` | any | OWASP / scan-check coverage matrices |
 
 **Schedules (continuous scanning)**
 
@@ -933,11 +1035,12 @@ CI runs the suite on Python 3.10–3.12 (workflow provided at [`docs/github-acti
 
 ## 🗺️ Roadmap
 
-- **Phase 1 — open-source engine (v0.1.0):** ✅ complete — 9 asset modules, safe validation, reporting.
+- **Phase 1 — open-source engine (v0.1.0):** ✅ complete — 10 asset modules, safe validation, reporting.
 - **Phase 2 — SaaS platform:** ✅ API, web console, auth/RBAC, scheduling, reporting at scale · ⏳ billing & tiers.
-- **Beyond:** PostgreSQL backend, distributed scanning workers, dynamic mobile (emulator), more firewall vendors, OpenSCAP/XCCDF, live CVE feeds.
+- **Phase 3 — exceed the incumbents:** ✅ OWASP-aligned coverage · ✅ threat-informed prioritization (EPSS + CISA KEV) · ✅ remediation SLA tracking · ✅ AI-assisted mobile runtime kit · ✅ local private AI (correlation / FP-reduction / copilot).
+- **Next (to widen the lead over Tenable/Rapid7):** first-class **asset inventory & attack-surface management**; **trend/posture analytics** (MTTR over time); native **Jira / ServiceNow / Slack** remediation workflow; deeper exploit validation + optional Metasploit hand-off; agent-based & container scanning; PostgreSQL backend and distributed workers.
 
-Detail: [docs/ROADMAP.md](docs/ROADMAP.md) · [docs/PHASE2_ROADMAP.md](docs/PHASE2_ROADMAP.md) · [CHANGELOG.md](CHANGELOG.md).
+Detail: [docs/COMPETITIVE.md](docs/COMPETITIVE.md) · [docs/ROADMAP.md](docs/ROADMAP.md) · [docs/PHASE2_ROADMAP.md](docs/PHASE2_ROADMAP.md) · [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
