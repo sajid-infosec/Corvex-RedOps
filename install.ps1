@@ -215,40 +215,59 @@ if ($Docker -or $Update -or $Down) {
 }
 
 # --------------------------------------------------------------- Python path
-function Test-PythonCandidate($exe, $pre) {
+# Supported for the local (venv) path: 3.10 - 3.12. Newer (3.13/3.14) often has
+# no prebuilt wheels for compiled deps (pydantic-core, lxml, pillow, scipy),
+# so pip tries to BUILD them from source and hangs on a box without a toolchain.
+$MaxMinor = 12
+function Get-PyInfo($exe, $pre) {
   $cmd = Get-Command $exe -ErrorAction SilentlyContinue
   if (-not $cmd) { return $null }
   if ($cmd.Source -and $cmd.Source -like "*\WindowsApps\*") { return $null }  # Store alias stub
   try { $out = (& $cmd.Source @pre "--version" 2>&1 | Out-String) } catch { return $null }
   if ($out -match "Python\s+(\d+)\.(\d+)") {
     $maj = [int]$Matches[1]; $min = [int]$Matches[2]
-    if ($maj -gt 3 -or ($maj -eq 3 -and $min -ge 10)) {
-      return [pscustomobject]@{ Exe = $cmd.Source; Pre = $pre; Ver = "$maj.$min" }
+    if ($maj -eq 3 -and $min -ge 10) {
+      $supported = ($min -le $MaxMinor)
+      return [pscustomobject]@{ Exe = $cmd.Source; Pre = $pre; Ver = "$maj.$min"; Min = $min; Supported = $supported }
     }
   }
   return $null
 }
 
-$Py = $null
-foreach ($c in @(,@("py", @("-3"))) + @(,@("python3", @())) + @(,@("python", @()))) {
-  $Py = Test-PythonCandidate $c[0] $c[1]
-  if ($Py) { break }
+$Py = $null; $TooNew = $null
+# Prefer an explicitly supported interpreter (3.12 -> 3.11 -> 3.10) even when a
+# newer one is also installed, then fall back to generic launchers.
+$candidates = @(
+  ,@("py", @("-3.12")), ,@("py", @("-3.11")), ,@("py", @("-3.10")),
+  ,@("py", @("-3")),    ,@("python3", @()),    ,@("python", @())
+)
+foreach ($c in $candidates) {
+  $info = Get-PyInfo $c[0] $c[1]
+  if ($info) {
+    if ($info.Supported) { $Py = $info; break }
+    elseif (-not $TooNew) { $TooNew = $info }
+  }
 }
 
 if (-not $Py) {
-  Warn "Python 3.10+ was not found. (The 'python' Windows may offer is a Microsoft Store placeholder.)"
+  if ($TooNew) {
+    Warn "Python $($TooNew.Ver) is newer than PentestIQ's supported range (3.10-3.12)."
+    Warn "Its compiled dependencies have no prebuilt wheels yet, so pip would try to build them from source (this is the 'stuck installing' hang)."
+  } else {
+    Warn "Python 3.10-3.12 was not found. (The 'python' Windows may offer is a Microsoft Store placeholder.)"
+  }
   if (Get-Command winget -ErrorAction SilentlyContinue) {
     Info "Installing Python 3.12 via winget..."
     try {
       winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements
       Write-Host ""
-      Warn "Python installed. Close this window, open a NEW PowerShell, and run install.ps1 again."
+      Warn "Python 3.12 installed. Close this window, open a NEW PowerShell, and run install.ps1 again (it will now prefer 3.12)."
       exit 0
     } catch {
-      Die "Automatic install failed. Get Python 3.10+ from https://python.org (tick 'Add python.exe to PATH'), then re-run."
+      Die "Automatic install failed. Get Python 3.12 from https://python.org (tick 'Add python.exe to PATH'), then re-run — or use -Docker with Docker Desktop."
     }
   }
-  Die "Install Python 3.10+ from https://python.org (tick 'Add python.exe to PATH') and re-run, or use -Docker with Docker Desktop."
+  Die "Install Python 3.12 from https://python.org (tick 'Add python.exe to PATH') and re-run, or use -Docker with Docker Desktop."
 }
 Ok "Python $($Py.Ver) detected."
 
@@ -263,7 +282,12 @@ if (-not (Test-Path $vpy)) { Die "venv creation failed (no $vpy)." }
 Info "Installing PentestIQ and dependencies (this may take a minute)..."
 & $vpy -m pip install --upgrade pip --quiet
 $extras = if ($All) { ".[all]" } else { ".[api,reports]" }
-& $vpy -m pip install --quiet $extras
+# --prefer-binary: use prebuilt wheels rather than compiling from source, so a
+# missing toolchain fails fast with a clear error instead of hanging for hours.
+& $vpy -m pip install --prefer-binary $extras
+if ($LASTEXITCODE -ne 0) {
+  Die "Dependency install failed. Most often this is an unsupported Python (use 3.10-3.12) or a package with no wheel for your platform. Try -Docker (Docker Desktop), or reinstall with Python 3.12."
+}
 Ok "PentestIQ installed."
 
 $pentestiq = Join-Path $venv "Scripts\pentestiq.exe"
