@@ -37,7 +37,7 @@ def test_report_formats(ctx):
     tok, tid = _reg(c)
     eid = _seed(store, tid)
     H = {"Authorization": f"Bearer {tok}"}
-    assert "VAPT Report" in c.get(f"/engagements/{eid}/report?format=html", headers=H).text
+    assert "Vulnerability Assessment" in c.get(f"/engagements/{eid}/report?format=html", headers=H).text
     pdf = c.get(f"/engagements/{eid}/report?format=pdf", headers=H)
     assert pdf.status_code == 200 and pdf.headers["content-type"] == "application/pdf"
     assert pdf.content[:4] == b"%PDF"

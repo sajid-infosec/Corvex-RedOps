@@ -32,7 +32,7 @@
 - [Burp Suite import](#-burp-suite-import)
 - [Out-of-band detection (OAST)](#-out-of-band-detection-oast)
 - [Native OWASP active checks](#-native-owasp-active-checks-vapt-depth)
-- [Burp Suite parity](#-burp-suite-parity-scan-check-coverage)
+- [OWASP coverage checklist](#-owasp-coverage-checklist)
 - [AI layer (self-hosted)](#-ai-layer-optional-self-hosted)
 - [How It Works](#-how-it-works)
 - [Screens & Samples](#-screens--samples)
@@ -267,13 +267,22 @@ benchmark against a real SaaS engagement.
 
 ---
 
-## 🧭 Burp Suite parity (scan-check coverage)
+## 🧭 OWASP coverage checklist
 
-PentestIQ tracks its detection surface against the **full Burp Suite Professional
-scan-check catalogue** (~130 checks) so parity is *measurable*, not a marketing
-claim. `GET /coverage/burp` (and **Settings → Scan coverage** in the console)
-returns the live matrix — every Burp check mapped to a PentestIQ detector as
-`covered`, `partial`, or `planned`.
+PentestIQ measures itself against the **OWASP standards a professional VAPT is
+judged by** — not a single vendor's scanner — so coverage is *measurable*, not a
+marketing claim:
+
+- **OWASP Top 10 (2021)** — web application risks
+- **OWASP API Security Top 10 (2023)** — API-specific risks
+- **OWASP WSTG** — the hands-on Web Security Testing Guide test cases
+- **OWASP MASVS / MASTG** — Mobile Application Security verification
+
+`GET /coverage/owasp` (and **Settings → OWASP coverage** in the console) returns
+the live matrix — every OWASP control mapped to a PentestIQ detector as
+`covered`, `partial`, or `planned`, with per-standard progress. A vendor
+scan-check catalogue is also tracked separately at `GET /coverage/burp` for
+teams migrating from Burp Suite Professional.
 
 Native detectors now include, in addition to the OWASP/API core:
 
@@ -738,11 +747,19 @@ become data-exposure targets; the bearer token is auto-analysed by the JWT check
 In the console this is the **API** asset type — the form reveals base-URL, token
 and object-ID fields dynamically.
 
-**Dynamic mobile analysis.** Static analysis runs automatically on upload; for
-live instrumentation, download the **dynamic-analysis kit** from the console (or
-`GET /kit/frida.zip`) — SSL-pinning bypass, root/jailbreak-detection bypass,
-crypto and WebView hooks, with a runner guide. Capture the app's API traffic,
-then feed those endpoints + a token back into the **API** upload above.
+**Dynamic mobile & desktop analysis (AI-assisted).** Static analysis runs
+automatically on upload; then open the **Dynamic kit**, pick the engagement and
+click **Analyze**. PentestIQ infers the platform (Android / iOS / desktop),
+detects the app's **runtime protections** — TLS certificate pinning, root /
+jailbreak detection, debuggable / anti-tamper, exposed WebViews / JS bridges —
+from the static findings, hands you the **platform-tailored Frida scripts** to
+defeat them, and builds a **step-by-step, MASVS-aligned runtime test plan**
+enriched by the local AI model when one is available (`GET
+/engagements/{id}/kit/plan`). Grab the scripts from the console or
+`GET /kit/frida.zip` — SSL-pinning bypass, root/jailbreak-detection bypass, crypto
+and WebView hooks, with a runner guide. Capture the app's API traffic, then feed
+those endpoints + a token back into the **API** upload above for BOLA/BFLA/JWT
+testing against the real surface.
 
 ### 5. Reports
 

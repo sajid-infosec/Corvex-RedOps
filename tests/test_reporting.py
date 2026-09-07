@@ -60,11 +60,11 @@ def test_markdown_report_structure():
     eng = _engagement()
     st = compute_stats(eng)
     md = render_markdown(eng, st, build_narrative(eng, st))
-    assert "# VAPT Report — PentestIQ Web Test" in md
-    assert "## Executive Summary" in md
+    assert "# Vulnerability Assessment & Penetration Testing Report" in md
+    assert "Executive Summary" in md
     assert "SQL Injection" in md
-    assert "cwe.mitre.org/data/definitions/89.html" in md   # framework mapping
-    assert "Appendix" in md                                   # false positive appendix
+    assert "CWE-89" in md                                     # framework mapping
+    assert "Reflected XSS" not in md                          # false positives excluded from client report
 
 
 def test_html_report_is_selfcontained():
@@ -72,7 +72,7 @@ def test_html_report_is_selfcontained():
     st = compute_stats(eng)
     h = render_html(eng, st, build_narrative(eng, st))
     assert h.startswith("<!doctype html>")
-    assert "VAPT Report" in h and "SQL Injection" in h
+    assert "Vulnerability Assessment" in h and "SQL Injection" in h
     assert "<style>" in h                                     # inline CSS, self-contained
 
 

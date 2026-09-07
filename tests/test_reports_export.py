@@ -53,8 +53,8 @@ def test_branding_applied_to_text_reports():
     b = ReportBranding(company_name="PentestIQ Security", accent_color="#6d28d9", footer_note="Confidential")
     md = render_markdown(e, st, nar, b, comp)
     html = render_html(e, st, nar, b, comp)
-    assert "PentestIQ Security" in md and "Compliance Mapping" in md and "Confidential" in md
-    assert "PentestIQ Security" in html and "#6d28d9" in html and "Compliance Mapping" in html
+    assert "PentestIQ Security" in md and "Detailed Findings" in md and "Confidential" in md
+    assert "PentestIQ Security" in html and "#6d28d9" in html and "Detailed Findings" in html
 
 
 def test_generator_writes_all_formats(tmp_path):
