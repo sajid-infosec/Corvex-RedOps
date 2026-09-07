@@ -158,7 +158,7 @@ Ten modules — the complete VAPT surface, driven by PentestIQ's own engines wit
 |---|---|---|---|
 | 1 | `infra` | Infrastructure / network | Host & service discovery, port enumeration, network vulnerability scanning |
 | 2 | `web` | Web applications | Crawl (static + headless SPA), OWASP Top-10 active checks (headers/CORS/JWT/authz/errors/CSRF/outdated-JS), injection fuzzing (SQLi/NoSQLi/XSS/XXE/CRLF/open-redirect/SSTI/traversal/cmd-i), out-of-band detection, safe exploit validation |
-| 3 | `wordpress` | WordPress sites | Core/plugin/theme CVEs, user enumeration, weak-credential checks |
+| 3 | `wordpress` | WordPress sites | **Native checks** (fingerprint/version, user enumeration, XML-RPC exposure, exposed config/backup/debug files, directory listing) with **no external tools**; WPScan CVE data + Nuclei layer on when installed |
 | 4 | `api` | REST / OpenAPI | Endpoint mapping + **authenticated access-control (BOLA/IDOR), token analysis, tenant confusion, excessive-data-exposure** (OWASP API Top 10) |
 | 5 | `mobile` | Mobile apps (Android / iOS) | Static analysis of code, manifest, permissions, secrets & certificates (CWE/MASVS) + on-device dynamic kit |
 | 6 | `desktop` | Desktop binaries (PE / ELF / Mach-O) | Hardcoded secrets/keys, insecure URLs, missing binary hardening (NX/PIE/RELRO/canary/DEP/CFG) |

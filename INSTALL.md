@@ -78,6 +78,27 @@ Flags — same actions on every OS:
 
 During install/update you'll be asked **"Do you want to install / integrate AI? [y/N]"** — **y** adds the local self-hosted AI layer (Ollama, ~5 GB model; needs 8+ cores / 16 GB+ RAM), **n** installs lean. Skip the prompt with `--ai`/`--no-ai` (sh) or `-Ai`/`-NoAi` (ps1).
 
+## Troubleshooting
+
+**macOS: `failed to connect to the docker API ... docker.sock`** — the Colima
+Docker VM isn't running (it stops on reboot). Start it and re-run:
+```bash
+colima start
+./install.sh --update
+```
+The installer now auto-starts Colima in `--update` mode, so this is handled for you.
+
+**macOS: `git push` / HTTPS hangs while Colima is running** — start Colima with
+**plain `colima start`**, never `colima start --network-address`. The
+`--network-address` flag adds a vmnet interface that can black-hole outbound
+routes to some hosts (e.g. `github.com:443` times out while other sites work).
+PentestIQ is reached via `localhost:8080` port-forwarding either way, so you
+never need `--network-address`. If you already started it that way:
+`colima stop && colima start`.
+
+**macOS: don't use `sudo`** — Colima is per-user; the installer auto-re-execs as
+your user if you run it with `sudo`, but `./install.sh` (no sudo) is cleanest.
+
 ---
 
 ## D. Docker

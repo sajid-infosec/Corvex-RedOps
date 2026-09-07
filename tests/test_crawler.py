@@ -93,6 +93,37 @@ def test_crawler_respects_depth_limit():
     assert r.stats["pages_crawled"] == 1
 
 
+class RedirectHttp(HttpClient):
+    """Apex host redirects to www: the seed request lands on www.app.test,
+    and the site links to www.app.test/* — the crawler must stay in scope."""
+    def request(self, method, url, headers=None, data=None):
+        path = urlsplit(url).path or "/"
+        pages = {
+            "/": ('<html><body><a href="https://www.app.test/about">about</a>'
+                  '<a href="https://www.app.test/contact">c</a></body></html>'),
+            "/about": '<html><body>about</body></html>',
+            "/contact": '<html><body>contact</body></html>',
+        }
+        body = pages.get(path)
+        if body is None:
+            return Response(status=404, headers={}, text="", elapsed_ms=1.0, url=url)
+        # seed apex request "redirects" to the www host
+        final = url.replace("http://app.test", "https://www.app.test")
+        return Response(status=200, headers={"content-type": "text/html"},
+                        text=body, elapsed_ms=1.0, url=final)
+
+    def get(self, url, headers=None):
+        return self.request("GET", url, headers)
+
+
+def test_crawler_apex_www_redirect_stays_in_scope():
+    r = Crawler(http=RedirectHttp()).crawl("http://app.test/")
+    paths = sorted(urlsplit(u).path for u in r.urls)
+    # without the www-normalization / redirect-host expansion this would be just ["/"]
+    assert "/about" in paths and "/contact" in paths
+    assert r.stats["pages_crawled"] >= 3
+
+
 def test_parser_and_helpers():
     links, scripts, forms = parse_html(
         '<a href="/x">x</a><script src="/y.js"></script>'
