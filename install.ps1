@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  PentestIQ installer for Windows — Docker SaaS stack or a local Python run.
+  PentestIQ installer for Windows  -  Docker SaaS stack or a local Python run.
 
 .DESCRIPTION
   Docker path (recommended, full parity with macOS/Linux install.sh):
@@ -264,7 +264,7 @@ if (-not $Py) {
       Warn "Python 3.12 installed. Close this window, open a NEW PowerShell, and run install.ps1 again (it will now prefer 3.12)."
       exit 0
     } catch {
-      Die "Automatic install failed. Get Python 3.12 from https://python.org (tick 'Add python.exe to PATH'), then re-run — or use -Docker with Docker Desktop."
+      Die "Automatic install failed. Get Python 3.12 from https://python.org (tick 'Add python.exe to PATH'), then re-run  -  or use -Docker with Docker Desktop."
     }
   }
   Die "Install Python 3.12 from https://python.org (tick 'Add python.exe to PATH') and re-run, or use -Docker with Docker Desktop."
