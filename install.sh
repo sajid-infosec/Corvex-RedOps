@@ -326,6 +326,13 @@ summary() {
 
 # ----------------------------------------------------------------------------- main
 main() {
+  # macOS: Docker runs via Colima, which is per-user. If launched with sudo,
+  # root's Docker context can't see the user's Colima socket — so re-exec as the
+  # invoking user for a consistent, working context (no sudo needed on macOS).
+  if [ "$(uname -s)" = "Darwin" ] && [ "$(id -u)" = "0" ] && [ -n "${SUDO_USER:-}" ] && [ "${SUDO_USER}" != "root" ]; then
+    printf "[PentestIQ] macOS uses Colima (per-user Docker) — re-running as %s (sudo not needed here)…\n" "${SUDO_USER}"
+    exec sudo -u "${SUDO_USER}" -H "$0" "$@"
+  fi
   printf "${c_blue}"; cat <<'BANNER'
   ____            _            _   ___ ___
  |  _ \ ___ _ __ | |_ ___  ___| |_|_ _/ _ \
@@ -344,6 +351,7 @@ BANNER
 
   if [ "$ACTION" = "update" ]; then
     log "Update mode: rebuilding and redeploying (skipping prerequisite install)."
+    start_docker          # ensure the daemon (Colima/Docker) is up before we build
     ensure_compose
     ask_ai
     write_env
