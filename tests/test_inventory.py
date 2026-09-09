@@ -100,3 +100,42 @@ def test_assets_api_rbac(client):
     VH = {"Authorization": "Bearer " + vt}
     assert client.get("/assets", headers=VH).status_code == 200          # viewer can read
     assert client.post("/assets", json={"identifier": "x.com"}, headers=VH).status_code == 403
+
+
+# ---- A2: auto-populate from engagements ---------------------------------
+def test_engagement_creation_populates_inventory(client):
+    H = _owner(client)
+    assert client.get("/assets", headers=H).json() == []
+    client.post("/engagements", headers=H, json={
+        "engagement": {"name": "q3"},
+        "scope": {"in_scope": ["web=https://app.example.com", "api=https://api.example.com",
+                               "infra=10.0.0.0/24"]}})
+    assets = client.get("/assets", headers=H).json()
+    idents = sorted(a["identifier"] for a in assets)
+    assert idents == ["10.0.0.0/24", "api.example.com", "app.example.com"]
+    assert all(a["source"] == "engagement" and a["engagements"] == 1 for a in assets)
+
+
+def test_reuse_across_engagements_dedupes_and_links(client):
+    H = _owner(client)
+    client.post("/engagements", headers=H, json={
+        "engagement": {"name": "a"}, "scope": {"in_scope": ["web=https://app.example.com"]}})
+    client.post("/engagements", headers=H, json={
+        "engagement": {"name": "b"}, "scope": {"in_scope": ["http://app.example.com/login"]}})
+    assets = client.get("/assets", headers=H).json()
+    assert len(assets) == 1
+    assert assets[0]["engagements"] == 2
+
+
+def test_populate_helper_includes_finding_hosts():
+    from pentestiq.inventory import SqliteInventoryStore, populate_from_engagement
+    from pentestiq.models import Engagement, Scope, Asset, Finding, AssetType, Severity
+    a = Asset(type=AssetType.WEB, identifier="https://app.example.com")
+    eng = Engagement(name="e", scope=Scope(name="s", in_scope=["https://app.example.com"]), assets=[a])
+    disc = Asset(type=AssetType.WEB, identifier="https://admin.example.com/panel")
+    eng.add_findings([Finding(asset=disc, title="found host", severity=Severity.INFO)])
+    inv = SqliteInventoryStore(tempfile.mktemp(suffix=".db"))
+    n = populate_from_engagement(inv, "t", "e1", eng)
+    idents = sorted(x.identifier for x in inv.list("t"))
+    assert "app.example.com" in idents and "admin.example.com" in idents
+    assert n >= 2
