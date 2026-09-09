@@ -982,6 +982,7 @@ Base URL: `http://<host>:<port>` · Auth: `Authorization: Bearer <token>` **or**
 |---|---|---|---|
 | `GET` | `/assets` | any | List inventory assets (filters: `kind`, `tag`, `criticality`, `q`) |
 | `POST` | `/assets` | member+ | Register an asset (deduped by canonical identifier) |
+| `POST` | `/discovery` | member+ | External discovery (EASM) for a root domain — crt.sh + subfinder + live-host probe → registry |
 | `GET` | `/assets/stats` | any | Counts by kind / criticality |
 | `GET` | `/assets/{id}` | any | Asset detail |
 | `PATCH` | `/assets/{id}` | member+ | Update tags / criticality / owner / label / notes |

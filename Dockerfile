@@ -36,6 +36,18 @@ RUN set -eux; \
       && (nuclei -update-templates || true) ) \
     || echo "nuclei unavailable — native check engine covers this surface"
 
+# subfinder (best-effort) for richer external subdomain discovery (EASM). The
+# discovery module works without it via crt.sh + native DNS/HTTP probing;
+# subfinder just adds many more passive sources.
+RUN set -eux; \
+    arch="$(dpkg --print-architecture)"; \
+    case "$arch" in amd64) NA=amd64;; arm64) NA=arm64;; *) NA=amd64;; esac; \
+    ( curl -fsSL "https://github.com/projectdiscovery/subfinder/releases/latest/download/subfinder_$(curl -fsSL https://api.github.com/repos/projectdiscovery/subfinder/releases/latest | grep -oE '\"tag_name\": \"v[0-9.]+\"' | grep -oE '[0-9.]+')_linux_${NA}.zip" -o /tmp/subfinder.zip \
+      && unzip -o /tmp/subfinder.zip -d /usr/local/bin subfinder \
+      && chmod +x /usr/local/bin/subfinder \
+      && rm -f /tmp/subfinder.zip ) \
+    || echo "subfinder unavailable - crt.sh + native probing cover discovery"
+
 # WPScan (best-effort) for WordPress CVE data. The native WordPress checks work
 # without it; WPScan layers on core/plugin/theme CVEs when a WPSCAN_API_TOKEN is
 # configured. Kept optional so a failure never breaks the build.
