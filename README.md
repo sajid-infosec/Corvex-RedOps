@@ -976,6 +976,17 @@ Base URL: `http://<host>:<port>` · Auth: `Authorization: Bearer <token>` **or**
 | `GET` | `/engagements/{id}/prioritization` | any | Threat-informed ranking (PRP + EPSS + KEV + SLA) |
 | `GET` | `/engagements/{id}/kit/plan` | any | AI-assisted mobile/desktop runtime test plan |
 
+**Asset inventory (attack surface)**
+
+| Method | Endpoint | Role | Description |
+|---|---|---|---|
+| `GET` | `/assets` | any | List inventory assets (filters: `kind`, `tag`, `criticality`, `q`) |
+| `POST` | `/assets` | member+ | Register an asset (deduped by canonical identifier) |
+| `GET` | `/assets/stats` | any | Counts by kind / criticality |
+| `GET` | `/assets/{id}` | any | Asset detail |
+| `PATCH` | `/assets/{id}` | member+ | Update tags / criticality / owner / label / notes |
+| `DELETE` | `/assets/{id}` | member+ | Remove an asset |
+
 **Prioritization & threat intel**
 
 | Method | Endpoint | Role | Description |
