@@ -67,7 +67,7 @@ def test_create_run_findings_report_flow(ctx):
     assert c.post(f"/engagements/{eid}/run", headers=_H(tok)).status_code == 202
     assert c.get(f"/engagements/{eid}", headers=_H(tok)).json()["status"] == "completed"
     assert c.get(f"/engagements/{eid}/findings", headers=_H(tok)).status_code == 200
-    assert "VAPT Report" in c.get(f"/engagements/{eid}/report", headers=_H(tok)).text
+    assert "Penetration Testing Report" in c.get(f"/engagements/{eid}/report", headers=_H(tok)).text
 
 
 def test_tenant_isolation(ctx):
