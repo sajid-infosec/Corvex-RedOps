@@ -128,9 +128,11 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
 - **G1 · Authenticated scanning** — `M`
   Credentialed checks (SSH/WinRM/HTTP-auth) for deeper infra/host findings; a
   **credential vault** (encrypted at rest). *Accept:* authed scan finds a local-only issue.
-- **G2 · CVE/NVD + KEV/EPSS enrichment on service findings** — `S`
-  Match discovered product+version → CVEs (NVD/OSV) and auto-enrich with the
-  existing intel layer. *Accept:* "nginx 1.18.0" → mapped CVEs with PRP.
+- **G2 · CVE/NVD + KEV/EPSS enrichment on service findings** — `S` ✅
+  Match discovered product+version → CVEs (curated seed + version ranges) and
+  auto-enrich with the existing intel layer (PRP/KEV/EPSS). `pentestiq/intel/service_cve.py`;
+  `POST /intel/service`, `POST /engagements/{eid}/enrich/services`; console "Match CVEs".
+  *Accept:* "nginx 1.18.0" → CVE-2021-23017 ranked by PRP. ✔
 - **G3 · nuclei template auto-update + tags** — `S`
   Keep nuclei templates fresh; expose which template packs ran. *Accept:* update command + coverage count.
 
