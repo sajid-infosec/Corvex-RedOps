@@ -145,12 +145,14 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
   *Accept:* update command refreshes store; coverage returns total + per-pack count. ✔
 
 ### EPIC H — Continuous Exposure & Analytics  *(cross-cutting; CTEM)*
-- **H1 · Posture trend analytics** — `M`
-  Historical dashboards: open/fixed/new over time, MTTR trend, exposure-score
-  trend. *Accept:* trend charts on the Overview.
-- **H2 · Continuous exposure scoring + alerts** — `M`
-  Org-level exposure score over time; alert (webhook/email) when a KEV/critical
-  appears on an internet-facing asset. *Accept:* new KEV on exposed asset → alert fires.
+- **H1 · Posture trend analytics** — `M` ✅
+  Posture snapshots (open/fixed/new, MTTR, exposure, KEV) captured after each scan;
+  self-contained SVG trend chart on the Overview. `pentestiq/analytics/posture.py`,
+  `store.py`; `POST /analytics/snapshot`, `GET /analytics/trends`. *Accept:* trend chart on Overview. ✔
+- **H2 · Continuous exposure scoring + alerts** — `M` ✅
+  Org exposure score tracked over time; webhook alert when a new KEV/critical lands
+  on an internet-facing asset (delta vs. last snapshot). `pentestiq/analytics/alerts.py`;
+  `/settings/alerts` + test; evaluated automatically on each snapshot. *Accept:* new KEV on exposed asset → alert fires. ✔
 
 ---
 
