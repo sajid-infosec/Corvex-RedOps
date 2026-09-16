@@ -154,6 +154,13 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
   on an internet-facing asset (delta vs. last snapshot). `pentestiq/analytics/alerts.py`;
   `/settings/alerts` + test; evaluated automatically on each snapshot. *Accept:* new KEV on exposed asset → alert fires. ✔
 
+### Cross-cutting — Report embedding ✅
+- The depth built across Epics C–H now surfaces into the client deliverables (HTML / PDF / DOCX / Markdown):
+  **MITRE ATT&CK coverage** matrix, **attack-path analysis** (self-contained SVG in HTML; tables in PDF/DOCX),
+  **cloud/container/IaC/CSPM findings**, and **compliance framework mapping** (OWASP/PCI/ISO/ATT&CK).
+  `pentestiq/reporting/report.py` (`_intel_sections`, `_md_intel_sections`, `_cloud_findings`),
+  `pdf_report.py`, `docx_report.py`. Sections auto-numbered before the conclusion; each self-guards on empty input.
+
 ---
 
 ## 4. Recommended order (fastest path to "beats the field")
