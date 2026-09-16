@@ -27,3 +27,31 @@ def test_role_ranking():
     assert Role.OWNER.satisfies(Role.MEMBER)
     assert Role.VIEWER.satisfies(Role.MEMBER) is False
     assert Role.ADMIN.satisfies(Role.ADMIN)
+
+
+def test_first_boot_generates_random_admin_password(tmp_path, monkeypatch):
+    """No password is shipped: first boot generates a random one (or uses env)."""
+    from pentestiq.auth.service import AuthService
+    from pentestiq.storage import SqliteAuthStore
+    monkeypatch.delenv("CORVEX_ADMIN_PASSWORD", raising=False)
+    monkeypatch.delenv("CORVEX_ADMIN_USER", raising=False)
+    a = AuthService(SqliteAuthStore(str(tmp_path / "a.db")), secret_key="s", session_ttl=3600)
+    res = a.ensure_default_admin()
+    assert res["created"] and res["user"] == "admin"
+    assert res["password"] and len(res["password"]) >= 12       # generated, strong
+    assert a.login("admin", res["password"])                    # the generated pw works
+    # idempotent + never re-emits the password
+    res2 = a.ensure_default_admin()
+    assert res2["created"] is False and res2["password"] is None
+
+
+def test_first_boot_honours_env_credentials(tmp_path, monkeypatch):
+    from pentestiq.auth.service import AuthService
+    from pentestiq.storage import SqliteAuthStore
+    monkeypatch.setenv("CORVEX_ADMIN_USER", "root")
+    monkeypatch.setenv("CORVEX_ADMIN_PASSWORD", "pinned-secret-123")
+    a = AuthService(SqliteAuthStore(str(tmp_path / "a.db")), secret_key="s", session_ttl=3600)
+    res = a.ensure_default_admin()
+    assert res["created"] and res["user"] == "root"
+    assert res["password"] is None                              # env-pinned → not echoed
+    assert a.login("root", "pinned-secret-123")
