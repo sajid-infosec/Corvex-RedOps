@@ -11,7 +11,7 @@
 ![CI](https://github.com/sajid-infosec/PentestIQ/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
-![Tests](https://img.shields.io/badge/tests-130%2B%20passing-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-450%2B%20passing-brightgreen.svg)
 ![Asset modules](https://img.shields.io/badge/asset%20modules-10-8a2be2.svg)
 <br/>
 ![Self-hosted](https://img.shields.io/badge/self--hosted-air--gappable-0aa.svg)
@@ -20,7 +20,7 @@
 ![OWASP](https://img.shields.io/badge/OWASP-Top10%20%2F%20API%20%2F%20WSTG%20%2F%20MASVS-brightgreen.svg)
 ![Cost](https://img.shields.io/badge/licensing%20cost-%240-success.svg)
 
-[Why Corvex](#-why-pentestiq) · [vs Commercial Tools](#-how-pentestiq-compares) · [Features](#-features) · [Screens](#-screens--samples) · [Install](#-installation) · [Quick Start](#-quick-start) · [API](#-rest-api-reference)
+[Why Corvex](#-why-corvex) · [vs Commercial Tools](#-how-corvex-compares) · [Features](#-features) · [Screens](#-screens--samples) · [Install](#-installation) · [Quick Start](#-quick-start) · [API](#-rest-api-reference)
 
 <br/>
 
@@ -40,9 +40,9 @@
 
 ## 📖 Table of Contents
 
-- [What is Corvex?](#-what-is-pentestiq)
-- [Why Corvex](#-why-pentestiq)
-- [How Corvex compares](#-how-pentestiq-compares)
+- [What is Corvex?](#-what-is-corvex)
+- [Why Corvex](#-why-corvex)
+- [How Corvex compares](#-how-corvex-compares)
 - [Features](#-features)
 - [Threat-informed prioritization](#-threat-informed-prioritization)
 - [Asset Coverage](#-asset-coverage)
@@ -97,7 +97,7 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 | **Two silos, two invoices** | VM tools scan; PT tools exploit. You buy and stitch together both. | **One platform** does assessment *and* safe exploit validation. |
 | **Opaque, paywalled prioritization** | Tenable VPR / Rapid7 Real Risk are black boxes on premium tiers. | **Transparent PRP** — CVSS × EPSS × CISA KEV, every factor shown, free & offline. |
 | **Cloud lock-in** | Insight/Tenable One are cloud-tethered — a non-starter when air-gapped. | **Fully self-hosted & air-gappable.** Your data never leaves your lab. |
-| **Narrow coverage** | Burp is web-only; Nessus is thin on web/mobile. | **11 asset classes** in one engine, incl. an AI-assisted mobile runtime kit. |
+| **Narrow coverage** | Burp is web-only; Nessus is thin on web/mobile. | **10 asset classes** in one engine, incl. an AI-assisted mobile runtime kit. |
 | **Bolt-on, cloud AI** | AI features are per-seat cloud upsells. | **Local, private AI** (Ollama) for correlation, FP-reduction & a copilot. |
 | **$$$$ licensing** | Enterprise suites run five to six figures a year. | **Apache-2.0, $0 licensing.** Open-core. |
 
@@ -106,7 +106,7 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 | Capability | Corvex | Tenable | Rapid7 | Burp EE | Metasploit | Core Impact |
 |---|:--:|:--:|:--:|:--:|:--:|:--:|
 | Licensing cost | **Free** | 💰💰💰 | 💰💰💰 | 💰💰💰 | 💰💰 | 💰💰💰💰 |
-| Self-hosted / air-gap | ✅ | 🟡 | 🟡 | ✅ | ✅ | ✅ |
+| Self-hosted / air-gap | ✅ | ✅¹ | 🟡 | ✅ | ✅ | ✅ |
 | VA + safe exploit validation | ✅ | ❌ | 🟡 | ❌ | ✅ | ✅ |
 | Web · API · Mobile · Desktop · Infra · AD | ✅ | 🟡 | 🟡 | web only | 🟡 | 🟡 |
 | Exploit-aware prioritization (EPSS + KEV) | ✅ transparent | 💰 opaque | 💰 opaque | ❌ | ❌ | ❌ |
@@ -114,7 +114,7 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 | Local, private AI | ✅ | 🟡 cloud | 🟡 cloud | ❌ | ❌ | ❌ |
 | Client-ready reports (exec + technical) | ✅ | ✅ | ✅ | 🟡 | ✅ | ✅ |
 
-<sub>✅ full · 🟡 partial / add-on / roadmap · ❌ none · 💰 paid tier. Full breakdown, tool-by-tool analysis and honest gaps in **[docs/COMPETITIVE.md](docs/COMPETITIVE.md)**.</sub>
+<sub>✅ full · 🟡 partial / add-on / roadmap · ❌ none · 💰 paid tier. ¹ Tenable ships fully on-prem products (Nessus, Tenable Security Center); Tenable One / Vulnerability Management are cloud. Full breakdown, tool-by-tool analysis and **honest gaps** (independent-benchmark results, single-maintainer status, Postgres/worker roadmap) in **[docs/COMPETITIVE.md](docs/COMPETITIVE.md)**.</sub>
 
 ---
 
@@ -189,7 +189,7 @@ across the whole application instead of only the endpoints you supply:
   `asset.metadata.spa_crawl = true`); falls back to the static crawl if the headless
   browser isn't installed (a missing component never breaks a run).
 - Runs in the `web` module's discovery phase and feeds the check engine
-  automatically; also available standalone: `pentestiq crawl https://app.example.com --token <jwt> --spa`.
+  automatically; also available standalone: `corvex crawl https://app.example.com --token <jwt> --spa`.
 
 ## 🐙 Burp Suite import
 
@@ -238,6 +238,12 @@ self-hostable **OAST collaborator** (the Burp-Collaborator / AcuMonitor model):
 Verified end-to-end in `bench/`: the benchmark stands up a collaborator and
 **confirms blind SSRF out-of-band** as one of **25/25 planted vulnerabilities**
 detected across the crawl → checks → OAST → fuzz pipeline.
+
+> **What this proves — and what it doesn't.** `bench/` is a *self-authored* lab: it
+> demonstrates the pipeline wires up end-to-end (crawl → detect → validate → report),
+> not that detection is competitive against arbitrary targets. Results on an
+> independent corpus (OWASP Benchmark, WAVSEP, public CTF sets) are on the roadmap and
+> are the honest bar for comparison. Treat the 25/25 as an integration test, not a detection score.
 
 ## 🧪 Native OWASP active checks (VAPT depth)
 
@@ -484,7 +490,7 @@ Pipeline: **scope → scan → normalize → validate → prioritize & correlate
 ## 📦 Installation
 
 Corvex runs on **Linux, macOS, and Windows**. Pick the path that fits — all
-three give you the same CLI (`pentestiq`) and the web console (`pentestiq serve`).
+three give you the same CLI (`corvex`) and the web console (`corvex serve`).
 See **[INSTALL.md](INSTALL.md)** for copy-paste quick-start blocks per OS.
 
 ### Requirements
@@ -519,10 +525,10 @@ pentestiq --help
 ```
 Or into a virtualenv:
 ```bash
-git clone https://github.com/sajid-infosec/PentestIQ.git && cd Corvex
+git clone https://github.com/sajid-infosec/PentestIQ.git && cd PentestIQ
 python3 -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\Activate.ps1
 pip install ".[api,reports,desktop]"                    # or ".[all]" for everything incl. SPA rendering
-pentestiq serve                                          # open http://localhost:8080
+corvex serve                                          # open http://localhost:8080
 ```
 
 ### Option C — one-command installer scripts
@@ -569,8 +575,8 @@ operators running from `pip` can add optional backends; see `docs/`.)
 
 ```bash
 # 1. verify install & see the modules
-pentestiq version
-pentestiq modules            # infra, web, wordpress, api, mobile, desktop, network-device, firewall, hardening
+corvex version
+corvex modules            # infra, web, wordpress, api, mobile, desktop, network-device, firewall, hardening, active-directory
 
 # 2. (optional) stand up the local vulnerable lab — needs Docker
 cd lab && docker compose up -d && cd ..     # intentionally-vulnerable demo targets
@@ -601,15 +607,16 @@ pentestiq run -s myscope.yaml -o out/
 ```bash
 pip install -e ".[api,reports,desktop]"
 export PENTESTIQ_SECRET_KEY=$(openssl rand -hex 32)   # so logins survive restarts
-pentestiq serve                                        # http://127.0.0.1:8000
+corvex serve                                        # http://127.0.0.1:8000
 ```
 
 Then open **http://127.0.0.1:8000** for the console, or **/docs** for interactive API docs.
-On first run a default workspace is created — sign in with **`pentestiq`** / **`p3nt3st!q`**
-(change the password after first login). To bootstrap another tenant + owner from the CLI:
+On first run Corvex creates an **`admin`** workspace and prints a **one-time random password to
+the server log** — copy it from the console output to sign in (or pin your own beforehand with
+`export CORVEX_ADMIN_PASSWORD=…`). Change it after first login. To bootstrap another tenant + owner from the CLI:
 
 ```bash
-pentestiq init-tenant --tenant "Corvex" --username sajid --password "s3cr3tpass"
+corvex init-tenant --tenant "Corvex" --username sajid --password "s3cr3tpass"
 #  -> prints an API key you can use with  -H "X-API-Key: <key>"
 ```
 
@@ -625,11 +632,11 @@ the **entire stack** (Corvex API + web console + mobile-analysis service). No ma
 
 ```bash
 git clone https://github.com/sajid-infosec/PentestIQ.git
-cd Corvex
+cd PentestIQ
 sudo ./install.sh
 ```
 
-That's it — open **http://localhost:8080** and sign in with **`pentestiq`** / **`p3nt3st!q`** (change it after first login), then start scanning.
+That's it — open **http://localhost:8080**, sign in as **`admin`** with the one-time password from the server log (or your pinned `CORVEX_ADMIN_PASSWORD`), change it, then start scanning.
 
 > Works on Debian / Ubuntu / Kali / Parrot / Mint, RHEL / CentOS / Fedora / Rocky /
 > AlmaLinux, Arch / Manjaro, and openSUSE / SLES. Idempotent — safe to re-run.
@@ -672,9 +679,9 @@ Full deployment guide, environment variables, and production notes (Postgres, sc
 
 The console is the fastest way to run a full assessment — no CLI needed.
 
-**1 · Sign in.** Open `http://localhost:8080`. A default workspace is provisioned on
-first run: **`pentestiq`** / **`p3nt3st!q`** (change the password after first login).
-Use **Create workspace** to set up a separate, isolated tenant.
+**1 · Sign in.** Open `http://localhost:8080`. On first run Corvex provisions an
+**`admin`** workspace and prints a one-time random password to the server log — sign in with
+that (or your pinned `CORVEX_ADMIN_PASSWORD`) and change it. Use **Create workspace** to set up a separate, isolated tenant.
 
 **2 · Scan live targets (web / API / infra).** Go to **New scan → Scan targets**:
 name the engagement, record who authorised it, enter targets one per line (optionally
@@ -756,15 +763,15 @@ Without a prefix, the type is inferred (URLs/hosts → web, IPs/CIDRs → infra,
 
 | Command | Description |
 |---|---|
-| `pentestiq version` | Print the version |
-| `pentestiq modules` | List registered asset modules |
+| `corvex version` | Print the version |
+| `corvex modules` | List registered asset modules |
 | `pentestiq run -s <scope> [-c <config>] [-o <dir>]` | Run an engagement; `-o` writes report.html/.md + engagement.json |
-| `pentestiq serve [--host H] [--port P]` | Start the REST API + web console |
-| `pentestiq init-tenant --tenant N --username U --password P` | Bootstrap a tenant + owner, print an API key |
+| `corvex serve [--host H] [--port P]` | Start the REST API + web console |
+| `corvex init-tenant --tenant N --username U --password P` | Bootstrap a tenant + owner, print an API key |
 
 ```bash
 pentestiq run --scope engagement.yaml --config pentestiq.yaml --out reports/
-pentestiq serve --host 0.0.0.0 --port 8080
+corvex serve --host 0.0.0.0 --port 8080
 ```
 
 ### 3. Scanning each asset type
@@ -928,6 +935,8 @@ Passwords are PBKDF2-hashed; API keys are stored only as a hash (shown once at c
 
 | Variable | Default | Purpose |
 |---|---|---|
+| `CORVEX_ADMIN_USER` | `admin` | Username for the first-run admin account |
+| `CORVEX_ADMIN_PASSWORD` | *(random, logged once)* | Pins the first-run admin password. If unset, Corvex generates a strong random one and prints it **once** to the server log — **no default password is shipped** |
 | `PENTESTIQ_SECRET_KEY` | *(random per run)* | Signs session tokens — **set in production** so logins survive restarts |
 | `MOBSF_URL` | `http://localhost:8000` | Mobile-analysis service base URL |
 | `MOBSF_API_KEY` | *(empty)* | Mobile-analysis service API key |
@@ -1037,7 +1046,7 @@ Full policy: **[docs/LEGAL_AND_ETHICS.md](docs/LEGAL_AND_ETHICS.md)**. *This is 
 
 ```bash
 pip install -e ".[dev,api,reports,desktop]"
-pytest -q            # 118 tests
+pytest -q            # 450+ tests
 ```
 
 - **Architecture & extension guide:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — how to write a new asset module or tool integration.
@@ -1075,6 +1084,25 @@ See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [CODE_OF
 ## 📄 License
 
 **Apache-2.0** — see [LICENSE](LICENSE). Future hosted SaaS / enterprise features may ship under a separate commercial license (open-core), as described in the [business plan](docs/BUSINESS_PLAN.md).
+
+### Third-party tools & licensing
+
+Corvex **orchestrates** external scanners rather than embedding them — each stays under
+its own license and is invoked only when present on the host (auto-detected; absent tools
+are skipped, never fatal). A few carry redistribution terms that matter the moment there is
+a paid tier or a bundled image:
+
+| Tool | License | Note |
+|---|---|---|
+| **nmap** | NPSL | Redistribution/commercial-bundling restrictions — do **not** ship it inside a commercial image without review |
+| **WPScan** | Non-commercial (WPScan license) | Free for non-commercial use; a commercial WPScan license/API token is required otherwise |
+| **MobSF** | GPL-3.0 | Copyleft — bundling in a distributed image has GPL obligations |
+| nuclei, trivy, semgrep, prowler, kube-bench | Apache-2.0 / MIT | Permissive |
+
+The default Docker image installs only permissively-licensed tools; nmap/WPScan/MobSF are
+expected to be provided by the operator. Corvex's own SCA engine emits CycloneDX SBOMs for
+scanned targets; a signed project-level SBOM and a clean licence attestation are tracked on
+the roadmap. **Have licensing reviewed before any commercial distribution or paid tier.**
 
 ---
 
