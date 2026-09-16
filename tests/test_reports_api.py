@@ -59,7 +59,7 @@ def test_settings_branding_rbac_and_applied(ctx):
     tok, tid = _reg(c)
     H = {"Authorization": f"Bearer {tok}"}
     # default branding
-    assert c.get("/settings", headers=H).json()["company_name"] == "PentestIQ"
+    assert c.get("/settings", headers=H).json()["company_name"] == "Corvex"
     # owner sets white-label branding
     r = c.put("/settings", headers=H, json={"company_name": "PentestIQ Security",
                                             "accent_color": "#6d28d9", "footer_note": "Confidential"})

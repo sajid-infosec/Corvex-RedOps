@@ -1,8 +1,8 @@
-# PentestIQ — Legal, Ethics & Safety Design
+# Corvex — Legal, Ethics & Safety Design
 
 *Version 0.1 · Draft · August 2026*
 
-PentestIQ is an **offensive security platform** that performs active testing and,
+Corvex is an **offensive security platform** that performs active testing and,
 when authorized, validated exploitation. This document defines the principles and
 technical controls that keep it a legitimate professional tool. These are
 **product requirements**, not disclaimers.
@@ -11,7 +11,7 @@ technical controls that keep it a legitimate professional tool. These are
 
 ## 1. Authorized Use Only
 
-PentestIQ is for testing systems you **own** or are **explicitly, verifiably
+Corvex is for testing systems you **own** or are **explicitly, verifiably
 authorized** to test. Unauthorized access to computer systems is illegal in most
 jurisdictions. The project:
 
@@ -33,7 +33,7 @@ jurisdictions. The project:
 
 ## 3. Responsible Disclosure
 
-PentestIQ supports the professional norm: findings are for the asset owner. The
+Corvex supports the professional norm: findings are for the asset owner. The
 platform's reporting is built to enable coordinated, responsible remediation, not
 public dumping of live vulnerabilities.
 
@@ -41,7 +41,7 @@ public dumping of live vulnerabilities.
 
 Findings and reports map to recognized frameworks to support audit/compliance
 work: **OWASP Top 10 / API Top 10 / MASVS**, **MITRE ATT&CK**, **CIS Benchmarks /
-DISA STIG**, and references useful for **PCI-DSS, ISO 27001, SOC 2**. PentestIQ is
+DISA STIG**, and references useful for **PCI-DSS, ISO 27001, SOC 2**. Corvex is
 a tool to *support* compliance testing, not a certification in itself.
 
 ## 5. Data Protection

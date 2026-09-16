@@ -1,4 +1,4 @@
-# Contributing to PentestIQ
+# Contributing to Corvex
 
 Thanks for your interest! Contribution guidelines will expand as the project
 matures. For now:

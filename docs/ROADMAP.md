@@ -1,4 +1,4 @@
-# PentestIQ — 2-Month Build Roadmap
+# Corvex — 2-Month Build Roadmap
 
 *Version 0.1 · Draft · Target window: ~8 weeks*
 
@@ -96,7 +96,7 @@ advanced AI reporting, PDF/DOCX polish. (These are sequenced in "Beyond Week 8".
 - README polish, CONTRIBUTING, security policy, issue templates.
 - Tag **v0.1.0**, publish repo, soft-launch (LinkedIn, r/netsec, relevant
   communities).
-- **Milestone:** PentestIQ is public, installable, and demoable.
+- **Milestone:** Corvex is public, installable, and demoable.
 
 ---
 

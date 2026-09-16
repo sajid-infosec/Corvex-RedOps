@@ -1,14 +1,14 @@
-# PentestIQ — Deployment
+# Corvex — Deployment
 
 ## One-command install (recommended)
 
 `install.sh` detects your Linux distribution, installs **all prerequisites**
 (Docker Engine, Docker Compose, git/curl/openssl), generates secrets, and deploys
-the full stack (PentestIQ API + web console + MobSF).
+the full stack (Corvex API + web console + MobSF).
 
 ```bash
 git clone https://github.com/sajid-infosec/PentestIQ.git
-cd PentestIQ
+cd Corvex
 sudo ./install.sh
 ```
 
@@ -54,10 +54,10 @@ docker compose -f deploy/docker-compose.yml up -d --build
 ## How mobile scanning works
 
 1. A user uploads an APK/IPA through the console (`POST /engagements/upload`).
-2. PentestIQ saves the file server-side and creates a `mobile` engagement.
+2. Corvex saves the file server-side and creates a `mobile` engagement.
 3. On run, the mobile module hands the file to **MobSF** (co-located, reached via
    `MOBSF_URL`) which performs the static analysis.
-4. MobSF's report is normalized into PentestIQ findings (with CWE / OWASP-Mobile /
+4. MobSF's report is normalized into Corvex findings (with CWE / OWASP-Mobile /
    MASVS references), scored, and included in the report — same pipeline as every
    other asset type.
 
@@ -71,7 +71,7 @@ docker compose -f deploy/docker-compose.yml up -d --build
 
 ## Other scanners
 
-`nmap` is bundled in the PentestIQ image. `nuclei`, `zaproxy`, and `wpscan` (for
+`nmap` is bundled in the Corvex image. `nuclei`, `zaproxy`, and `wpscan` (for
 web / WordPress modules) can be added to the image or run on a dedicated scanning
 host. Missing tools are skipped gracefully — the engine still runs.
 

@@ -1,6 +1,6 @@
-# PentestIQ — Demo
+# Corvex — Demo
 
-A walk-through of what PentestIQ produces. (Output below is from the bundled test
+A walk-through of what Corvex produces. (Output below is from the bundled test
 fixtures — Nmap + OWASP ZAP + Nuclei results for one host — so you can see the
 pipeline without a live target. On Kali with real tools, the same flow runs live.)
 
@@ -26,7 +26,7 @@ missing header into one story.
 
 ## 2. Safe exploit validation
 
-PentestIQ doesn't just report — it **confirms**. Non-destructive validators turn
+Corvex doesn't just report — it **confirms**. Non-destructive validators turn
 `detected` into `validated` (with evidence) or dismiss false positives:
 
 ```

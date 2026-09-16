@@ -1,4 +1,4 @@
-# PentestIQ — Business Plan
+# Corvex — Business Plan
 
 *Version 0.1 · Draft · August 2026*
 
@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-**PentestIQ** is an open-source, orchestration-driven Vulnerability Assessment
+**Corvex** is an open-source, orchestration-driven Vulnerability Assessment
 and Penetration Testing (VAPT) platform that unifies the fragmented pentest
 toolchain into one workflow-driven engine. It performs both **vulnerability
 assessment** and **safe, authorized validation/exploitation** across the full
@@ -61,7 +61,7 @@ practitioners in emerging markets.
 
 ## 3. The Solution
 
-PentestIQ provides:
+Corvex provides:
 
 - **One orchestration engine** that drives best-in-class tools per asset type.
 - **A normalized findings model** — dedupe, correlate, and risk-score once,
@@ -99,7 +99,7 @@ Key segment signals (PTaaS research):
 - **Healthcare** grows fastest by vertical.
 
 **Takeaway:** the fast money is in automation platforms serving SMEs, cloud
-surfaces, and APAC — precisely PentestIQ's lane.
+surfaces, and APAC — precisely Corvex's lane.
 
 ### 4.2 TAM / SAM / SOM (planning estimate)
 
@@ -134,18 +134,18 @@ surfaces, and APAC — precisely PentestIQ's lane.
 | **Picus, Cymulate** | Breach & attack simulation | Adjacent (validation, not full VAPT) |
 | **Synack, Veracode, Rapid7** | Testing platforms / crowdsourced | Established incumbents |
 
-**Gap PentestIQ exploits:** these are closed and enterprise-priced. None offers a
+**Gap Corvex exploits:** these are closed and enterprise-priced. None offers a
 free, self-hostable, all-asset engine that a practitioner or SME can adopt
 bottom-up and grow into a paid console.
 
 ### 5.2 Open-source
 
-| Project | What it does | PentestIQ's difference |
+| Project | What it does | Corvex's difference |
 |---|---|---|
-| **Faraday** | Vuln management / pentest IDE, aggregates tool output | PentestIQ adds active validation/exploitation + all-asset modules + reporting, not just aggregation |
-| **Nuclei** | Template-based vuln scanning | PentestIQ *orchestrates* Nuclei as one module among many |
-| **OpenVAS / Greenbone** | Network vuln scanning | One integration inside PentestIQ, not the whole product |
-| **Sn1per, AttackForge** | Recon automation / pentest management | PentestIQ spans the full VA→PT→report lifecycle across every asset type |
+| **Faraday** | Vuln management / pentest IDE, aggregates tool output | Corvex adds active validation/exploitation + all-asset modules + reporting, not just aggregation |
+| **Nuclei** | Template-based vuln scanning | Corvex *orchestrates* Nuclei as one module among many |
+| **OpenVAS / Greenbone** | Network vuln scanning | One integration inside Corvex, not the whole product |
+| **Sn1per, AttackForge** | Recon automation / pentest management | Corvex spans the full VA→PT→report lifecycle across every asset type |
 
 **Moat over time:** the normalized cross-tool findings model, the safe
 exploit-validation layer, breadth of asset coverage, AI reporting quality, and
@@ -187,7 +187,7 @@ mobility goals.
 - Keep the OSS core genuinely useful — adoption is the funnel.
 - Charge for **convenience, collaboration, scale, and compliance**, never for
   basic security capability.
-- MSSP/white-label tier is the highest-value wedge (they resell PentestIQ-driven
+- MSSP/white-label tier is the highest-value wedge (they resell Corvex-driven
   reports).
 
 ### 7.3 Revenue streams
@@ -257,7 +257,7 @@ every white-labeled MSSP report is a distribution channel.
 - **SaaS/enterprise features:** separate commercial license, closed.
 - **Contributor License Agreement (CLA):** adopt one so the commercial layer is
   legally clean.
-- **Trademark:** register the PentestIQ name/brand to protect the commercial
+- **Trademark:** register the Corvex name/brand to protect the commercial
   offering while the code stays open.
 
 *Decision needed (see Open Questions):* final core license choice.
@@ -282,7 +282,7 @@ every white-labeled MSSP report is a distribution channel.
 
 1. **Final core license** — Apache-2.0 (max adoption) vs. source-available (max
    commercial protection)?
-2. **Brand & entity** — register PentestIQ trademark; decide founding entity/
+2. **Brand & entity** — register Corvex trademark; decide founding entity/
    jurisdiction when SaaS revenue starts.
 3. **AI reporting dependency** — hosted LLM API vs. self-hostable model (affects
    cost, privacy positioning, and enterprise sales).

@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛡️ PentestIQ
+# 🛡️ Corvex
 
 ### One platform for Vulnerability Assessment **and** Penetration Testing — every asset, one engine, client-ready in minutes.
 
@@ -20,29 +20,29 @@
 ![OWASP](https://img.shields.io/badge/OWASP-Top10%20%2F%20API%20%2F%20WSTG%20%2F%20MASVS-brightgreen.svg)
 ![Cost](https://img.shields.io/badge/licensing%20cost-%240-success.svg)
 
-[Why PentestIQ](#-why-pentestiq) · [vs Commercial Tools](#-how-pentestiq-compares) · [Features](#-features) · [Screens](#-screens--samples) · [Install](#-installation) · [Quick Start](#-quick-start) · [API](#-rest-api-reference)
+[Why Corvex](#-why-pentestiq) · [vs Commercial Tools](#-how-pentestiq-compares) · [Features](#-features) · [Screens](#-screens--samples) · [Install](#-installation) · [Quick Start](#-quick-start) · [API](#-rest-api-reference)
 
 <br/>
 
-<img src="docs/img/overview.png" alt="PentestIQ console — Overview dashboard" width="90%"/>
+<img src="docs/img/overview.png" alt="Corvex console — Overview dashboard" width="90%"/>
 
 </div>
 
 ---
 
-> **Replaces two product categories with one.** Vulnerability-management suites (Tenable, Rapid7) *find* but don't exploit; pentest tools (Metasploit, Core Impact) *exploit* but don't do continuous assessment, prioritization or reporting. PentestIQ does **both** — and adds transparent, exploit-aware prioritization (EPSS + CISA KEV) that the enterprise tools charge for and keep opaque. See the full [**comparison →**](docs/COMPETITIVE.md)
+> **Replaces two product categories with one.** Vulnerability-management suites (Tenable, Rapid7) *find* but don't exploit; pentest tools (Metasploit, Core Impact) *exploit* but don't do continuous assessment, prioritization or reporting. Corvex does **both** — and adds transparent, exploit-aware prioritization (EPSS + CISA KEV) that the enterprise tools charge for and keep opaque. See the full [**comparison →**](docs/COMPETITIVE.md)
 
 ---
 
-> ⚠️ **Authorized use only.** PentestIQ performs active security testing, including safe, non-destructive exploit validation. Use it **only** against systems you own or are explicitly authorized to test. Scope enforcement, a safe-mode governor, and a full audit trail are **core, built-in features**. See [Legal & Ethics](docs/LEGAL_AND_ETHICS.md).
+> ⚠️ **Authorized use only.** Corvex performs active security testing, including safe, non-destructive exploit validation. Use it **only** against systems you own or are explicitly authorized to test. Scope enforcement, a safe-mode governor, and a full audit trail are **core, built-in features**. See [Legal & Ethics](docs/LEGAL_AND_ETHICS.md).
 
 ---
 
 ## 📖 Table of Contents
 
-- [What is PentestIQ?](#-what-is-pentestiq)
-- [Why PentestIQ](#-why-pentestiq)
-- [How PentestIQ compares](#-how-pentestiq-compares)
+- [What is Corvex?](#-what-is-pentestiq)
+- [Why Corvex](#-why-pentestiq)
+- [How Corvex compares](#-how-pentestiq-compares)
 - [Features](#-features)
 - [Threat-informed prioritization](#-threat-informed-prioritization)
 - [Asset Coverage](#-asset-coverage)
@@ -75,11 +75,11 @@
 
 ---
 
-## 🔍 What is PentestIQ?
+## 🔍 What is Corvex?
 
 Security teams run VAPT with a sprawl of disconnected point tools — each with its own output format and no shared model. The result is hours of glue work, false-positive overload, inconsistent methodology, and reporting that takes as long as the testing.
 
-**PentestIQ unifies the entire VAPT lifecycle into one workflow-driven platform.** It orchestrates best-in-class tools behind a single engine, normalizes their output into one findings model, **safely validates** whether findings are actually exploitable, prioritizes by risk, correlates issues into attack chains, and produces **client-ready reports** — HTML, Markdown, PDF, or DOCX, with compliance mapping and white-label branding.
+**Corvex unifies the entire VAPT lifecycle into one workflow-driven platform.** It orchestrates best-in-class tools behind a single engine, normalizes their output into one findings model, **safely validates** whether findings are actually exploitable, prioritizes by risk, correlates issues into attack chains, and produces **client-ready reports** — HTML, Markdown, PDF, or DOCX, with compliance mapping and white-label branding.
 
 It does **both halves** of the job:
 
@@ -90,9 +90,9 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 
 ---
 
-## 💡 Why PentestIQ
+## 💡 Why Corvex
 
-| | The problem with the status quo | What PentestIQ does |
+| | The problem with the status quo | What Corvex does |
 |---|---|---|
 | **Two silos, two invoices** | VM tools scan; PT tools exploit. You buy and stitch together both. | **One platform** does assessment *and* safe exploit validation. |
 | **Opaque, paywalled prioritization** | Tenable VPR / Rapid7 Real Risk are black boxes on premium tiers. | **Transparent PRP** — CVSS × EPSS × CISA KEV, every factor shown, free & offline. |
@@ -101,9 +101,9 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 | **Bolt-on, cloud AI** | AI features are per-seat cloud upsells. | **Local, private AI** (Ollama) for correlation, FP-reduction & a copilot. |
 | **$$$$ licensing** | Enterprise suites run five to six figures a year. | **Apache-2.0, $0 licensing.** Open-core. |
 
-## 🥊 How PentestIQ compares
+## 🥊 How Corvex compares
 
-| Capability | PentestIQ | Tenable | Rapid7 | Burp EE | Metasploit | Core Impact |
+| Capability | Corvex | Tenable | Rapid7 | Burp EE | Metasploit | Core Impact |
 |---|:--:|:--:|:--:|:--:|:--:|:--:|
 | Licensing cost | **Free** | 💰💰💰 | 💰💰💰 | 💰💰💰 | 💰💰 | 💰💰💰💰 |
 | Self-hosted / air-gap | ✅ | 🟡 | 🟡 | ✅ | ✅ | ✅ |
@@ -126,10 +126,10 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 - **Burp Suite XML import** — turn a proxy/history export into a ready-to-run engagement: every captured endpoint, parameter and bearer-token identity is extracted and fed straight to the active engine (a 90 MB history parses in ~1s).
 - **Safe exploit validation** — non-destructive reflected-XSS and boolean-based SQLi confirmation that flips findings from *detected* to *validated* (with evidence) or dismisses false positives.
 - **Risk scoring (0–100)** blending severity, CVSS, confidence, and validation state.
-- **Threat-informed prioritization — PentestIQ Risk Priority (PRP)** — blends CVSS with **FIRST EPSS** (exploit probability) and **CISA KEV** (known-exploited, incl. ransomware) into one transparent 0–100 score, with the SLA state for every finding. This is the exploit-aware ranking Tenable (VPR) and Rapid7 (Real Risk) charge for and keep opaque — here **explainable, free, and offline-capable** (bundled KEV seed; live refresh from CISA/FIRST). See [`pentestiq/intel/`](pentestiq/intel/).
+- **Threat-informed prioritization — Corvex Risk Priority (PRP)** — blends CVSS with **FIRST EPSS** (exploit probability) and **CISA KEV** (known-exploited, incl. ransomware) into one transparent 0–100 score, with the SLA state for every finding. This is the exploit-aware ranking Tenable (VPR) and Rapid7 (Real Risk) charge for and keep opaque — here **explainable, free, and offline-capable** (bundled KEV seed; live refresh from CISA/FIRST). See [`pentestiq/intel/`](pentestiq/intel/).
 - **Remediation SLA tracking** — per-severity windows (Critical 7d / High 30d / Medium 90d …), due dates, overdue flags and MTTR — matching Rapid7 Remediation Projects.
 - **Attack-chain correlation** — links findings that share a host + service into one story.
-- **Optional local-AI layer (self-hosted, zero budget)** — a local open-source model via **Ollama** powers analyst-grade write-ups, **attack-chain correlation**, a **false-positive verifier**, and an in-console **copilot**; plus a **self-learning** confidence model that improves from analyst confirm/dismiss feedback. Fully optional and fail-safe: with no model present, PentestIQ runs exactly as before on its deterministic engine.
+- **Optional local-AI layer (self-hosted, zero budget)** — a local open-source model via **Ollama** powers analyst-grade write-ups, **attack-chain correlation**, a **false-positive verifier**, and an in-console **copilot**; plus a **self-learning** confidence model that improves from analyst confirm/dismiss feedback. Fully optional and fail-safe: with no model present, Corvex runs exactly as before on its deterministic engine.
 
 ### Safety & governance (built in, not bolted on)
 - **Scope enforcement** — every engagement runs against a validated scope; out-of-scope targets are blocked (or warned) by policy.
@@ -152,9 +152,9 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 
 ## 🎯 Asset Coverage
 
-Ten modules — the complete VAPT surface, driven by PentestIQ's own engines with additional deep-scan backends bundled in the platform (auto-detected; anything unavailable is skipped, never fatal).
+Ten modules — the complete VAPT surface, driven by Corvex's own engines with additional deep-scan backends bundled in the platform (auto-detected; anything unavailable is skipped, never fatal).
 
-| # | Module | Asset type | What PentestIQ does |
+| # | Module | Asset type | What Corvex does |
 |---|---|---|---|
 | 1 | `infra` | Infrastructure / network | Host & service discovery, port enumeration, network vulnerability scanning |
 | 2 | `web` | Web applications | Crawl (static + headless SPA), OWASP Top-10 active checks (headers/CORS/JWT/authz/errors/CSRF/outdated-JS), injection fuzzing (SQLi/NoSQLi/XSS/XXE/CRLF/open-redirect/SSTI/traversal/cmd-i), out-of-band detection, safe exploit validation |
@@ -173,7 +173,7 @@ Plus **lab automation** — `lab/docker-compose.yml` stands up intentionally-vul
 
 ## 🕷️ Attack-surface crawler
 
-PentestIQ ships a native, dependency-free **crawler** (`pentestiq.crawler`) that
+Corvex ships a native, dependency-free **crawler** (`pentestiq.crawler`) that
 discovers the app surface — like the commercial DAST engines — so the checks run
 across the whole application instead of only the endpoints you supply:
 
@@ -194,7 +194,7 @@ across the whole application instead of only the endpoints you supply:
 ## 🐙 Burp Suite import
 
 Already proxied the target through Burp? Import that history and skip the crawl —
-PentestIQ turns a **Burp "Save items" / proxy-history XML** export into a
+Corvex turns a **Burp "Save items" / proxy-history XML** export into a
 ready-to-run engagement:
 
 - **Streams** the export (scales to large multi-hundred-MB histories), filtering
@@ -216,7 +216,7 @@ authorized targets.
 ## 📡 Out-of-band detection (OAST)
 
 For **blind** vulnerabilities — where the only signal is the target's own server
-reaching back to infrastructure you control — PentestIQ ships a native,
+reaching back to infrastructure you control — Corvex ships a native,
 self-hostable **OAST collaborator** (the Burp-Collaborator / AcuMonitor model):
 
 - **`pentestiq oast-server --port 9099 [--dns-port 53 --domain oast.example.com]`**
@@ -243,7 +243,7 @@ detected across the crawl → checks → OAST → fuzz pipeline.
 
 Generic scanners find *technical* web bugs; a real VAPT of a modern multi-tenant
 SaaS is ~70% **authorization, JWT, and business-logic** testing that needs
-authenticated, multi-identity, active probing. PentestIQ ships a native,
+authenticated, multi-identity, active probing. Corvex ships a native,
 dependency-free checks engine (`pentestiq.checks`) that provides exactly that —
 run in the `web` and `api` `assess()` phase, feeding the same dedup / risk-scoring
 / reporting pipeline.
@@ -317,7 +317,7 @@ benchmark against a real SaaS engagement.
 
 ## 🧭 OWASP coverage checklist
 
-PentestIQ measures itself against the **OWASP standards a professional VAPT is
+Corvex measures itself against the **OWASP standards a professional VAPT is
 judged by** — not a single vendor's scanner — so coverage is *measurable*, not a
 marketing claim:
 
@@ -327,7 +327,7 @@ marketing claim:
 - **OWASP MASVS / MASTG** — Mobile Application Security verification
 
 `GET /coverage/owasp` (and **Settings → OWASP coverage** in the console) returns
-the live matrix — every OWASP control mapped to a PentestIQ detector as
+the live matrix — every OWASP control mapped to a Corvex detector as
 `covered`, `partial`, or `planned`, with per-standard progress. A vendor
 scan-check catalogue is also tracked separately at `GET /coverage/burp` for
 teams migrating from Burp Suite Professional.
@@ -366,7 +366,7 @@ that's being used in ransomware campaigns **right now** cannot. Enterprise
 suites solve this with proprietary scores — **Tenable VPR**, **Rapid7 Real
 Risk** — locked behind premium tiers and opaque by design.
 
-PentestIQ computes an equivalent, **transparent** score for free:
+Corvex computes an equivalent, **transparent** score for free:
 
 ```
 PRP = base(severity / CVSS)
@@ -392,7 +392,7 @@ workflow, self-hosted and transparent. Endpoints: `GET
 
 ## 🤖 AI layer (optional, self-hosted)
 
-PentestIQ ships an **optional** AI layer that runs entirely on your own hardware
+Corvex ships an **optional** AI layer that runs entirely on your own hardware
 via [Ollama](https://ollama.com) — **no cloud API, no API key, no data leaves the
 host**. Every capability degrades gracefully: with no model present the platform
 behaves exactly as its deterministic engine.
@@ -438,7 +438,7 @@ API: `GET /ai/status`, `POST /ai/ask`, `POST /engagements/{id}/ai/analyze`,
 
 > **On coverage:** the AI layer *augments* detection and analysis — it does not
 > replace an analyst. Business-logic flaws and bespoke exploitation still need
-> human judgement; no scanner (PentestIQ or otherwise) finds those autonomously.
+> human judgement; no scanner (Corvex or otherwise) finds those autonomously.
 
 ## ⚙️ How It Works
 
@@ -471,7 +471,7 @@ Pipeline: **scope → scan → normalize → validate → prioritize & correlate
 </tr>
 <tr>
 <td width="50%"><img src="docs/img/owasp-coverage.png" alt="OWASP coverage"/><br/><sub><b>OWASP coverage</b> — measured against Top 10, API Top 10, WSTG and MASVS/MASTG with per-standard weighting.</sub></td>
-<td width="50%"><img src="docs/img/scan-gallery.png" alt="Scan template gallery"/><br/><sub><b>Scan templates</b> — one click per asset class; PentestIQ maps the target to the right engine automatically.</sub></td>
+<td width="50%"><img src="docs/img/scan-gallery.png" alt="Scan template gallery"/><br/><sub><b>Scan templates</b> — one click per asset class; Corvex maps the target to the right engine automatically.</sub></td>
 </tr>
 <tr>
 <td width="50%"><img src="docs/img/overview-light.png" alt="Light theme"/><br/><sub><b>Light &amp; dark themes</b> — the whole console, either way.</sub></td>
@@ -483,14 +483,14 @@ Pipeline: **scope → scan → normalize → validate → prioritize & correlate
 
 ## 📦 Installation
 
-PentestIQ runs on **Linux, macOS, and Windows**. Pick the path that fits — all
+Corvex runs on **Linux, macOS, and Windows**. Pick the path that fits — all
 three give you the same CLI (`pentestiq`) and the web console (`pentestiq serve`).
 See **[INSTALL.md](INSTALL.md)** for copy-paste quick-start blocks per OS.
 
 ### Requirements
 - **Python 3.10+** (for the pip/pipx and source paths), **or** Docker (for the
   container path), **or** just download a prebuilt binary (no Python needed).
-- PentestIQ's core (crawler, OWASP checks, out-of-band detection, injection fuzzer,
+- Corvex's core (crawler, OWASP checks, out-of-band detection, injection fuzzer,
   reporting) needs **no external components**. The Docker image additionally bundles
   the deep-scan backend and the mobile-analysis service.
 
@@ -519,7 +519,7 @@ pentestiq --help
 ```
 Or into a virtualenv:
 ```bash
-git clone https://github.com/sajid-infosec/PentestIQ.git && cd PentestIQ
+git clone https://github.com/sajid-infosec/PentestIQ.git && cd Corvex
 python3 -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\Activate.ps1
 pip install ".[api,reports,desktop]"                    # or ".[all]" for everything incl. SPA rendering
 pentestiq serve                                          # open http://localhost:8080
@@ -541,7 +541,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker
 ### Option D — Docker (any OS with Docker/Docker Desktop)
 ```bash
 cd deploy
-docker compose up -d --build          # PentestIQ console on :8080 (full backend bundled)
+docker compose up -d --build          # Corvex console on :8080 (full backend bundled)
 ```
 
 ### Extras
@@ -609,7 +609,7 @@ On first run a default workspace is created — sign in with **`pentestiq`** / *
 (change the password after first login). To bootstrap another tenant + owner from the CLI:
 
 ```bash
-pentestiq init-tenant --tenant "PentestIQ" --username sajid --password "s3cr3tpass"
+pentestiq init-tenant --tenant "Corvex" --username sajid --password "s3cr3tpass"
 #  -> prints an API key you can use with  -H "X-API-Key: <key>"
 ```
 
@@ -621,11 +621,11 @@ pentestiq init-tenant --tenant "PentestIQ" --username sajid --password "s3cr3tpa
 
 The installer **detects your Linux distribution**, installs **all prerequisites**
 (Docker Engine, Docker Compose, git/curl/openssl), generates secrets, and brings up
-the **entire stack** (PentestIQ API + web console + mobile-analysis service). No manual setup.
+the **entire stack** (Corvex API + web console + mobile-analysis service). No manual setup.
 
 ```bash
 git clone https://github.com/sajid-infosec/PentestIQ.git
-cd PentestIQ
+cd Corvex
 sudo ./install.sh
 ```
 
@@ -652,7 +652,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker -Down     # stop 
 | Service | Port | Purpose |
 |---|---|---|
 | `pentestiq` | 8080 | REST API + web console |
-| `mobile-analysis` | 8000 | Mobile static-analysis service (managed by PentestIQ) |
+| `mobile-analysis` | 8000 | Mobile static-analysis service (managed by Corvex) |
 
 ### Manual (if you already run Docker)
 
@@ -690,7 +690,7 @@ token + object IDs** to unlock cross-tenant access-control (BOLA) testing, tick
 
 **4 · Import a Burp Suite capture.** **New scan → Upload & scan**, asset type
 **Burp Suite**: choose your proxy/history **XML** export and (optionally) name the
-in-scope hosts. PentestIQ extracts every captured endpoint, parameter and bearer
+in-scope hosts. Corvex extracts every captured endpoint, parameter and bearer
 token, then runs the active engine against that real surface — ideal for SPAs a
 fresh crawl can't fully map.
 
@@ -717,7 +717,7 @@ Every engagement is defined by a **scope file** (YAML). It declares what to test
 
 ```yaml
 engagement:
-  name: "PentestIQ External Assessment"
+  name: "Corvex External Assessment"
   authorized_by: "Sajid"                # who authorized this test
   window:                               # optional testing window
     start: "2026-01-01T00:00:00Z"
@@ -840,7 +840,7 @@ and object-ID fields dynamically.
 
 **Dynamic mobile & desktop analysis (AI-assisted).** Static analysis runs
 automatically on upload; then open the **Dynamic kit**, pick the engagement and
-click **Analyze**. PentestIQ infers the platform (Android / iOS / desktop),
+click **Analyze**. Corvex infers the platform (Android / iOS / desktop),
 detects the app's **runtime protections** — TLS certificate pinning, root /
 jailbreak detection, debuggable / anti-tamper, exposed WebViews / JS bridges —
 from the static findings, hands you the **platform-tailored Frida scripts** to
@@ -870,18 +870,18 @@ Two report types via `GET /engagements/{id}/report?format=html|pdf|docx|md&varia
 ```bash
 curl -XPUT http://localhost:8080/settings -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"company_name":"PentestIQ","accent_color":"#1e3a8a","footer_note":"Confidential"}'
+  -d '{"company_name":"Corvex","accent_color":"#1e3a8a","footer_note":"Confidential"}'
 ```
 
 ### 6. Continuous scanning & scheduling
 
-Create a schedule and PentestIQ re-runs it automatically, **diffing** each run against the last (new / fixed / persisting) and notifying a Slack/webhook URL.
+Create a schedule and Corvex re-runs it automatically, **diffing** each run against the last (new / fixed / persisting) and notifying a Slack/webhook URL.
 
 ```bash
 # nightly scan with Slack notification
 curl -XPOST http://localhost:8080/schedules -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" -d '{
-    "name":"Nightly PentestIQ",
+    "name":"Nightly Corvex",
     "interval_seconds": 86400,
     "webhook_url":"https://hooks.slack.com/services/XXX",
     "scope":{"in_scope":["web=https://app.example.com"]}
@@ -892,16 +892,16 @@ curl http://localhost:8080/schedules/<id>/diff          -H "Authorization: Beare
 curl http://localhost:8080/schedules/<id>/runs          -H "Authorization: Bearer $TOKEN"  # run history
 ```
 
-Notification payload is Slack-compatible: *"PentestIQ · Nightly PentestIQ: scan complete — 1 new, 1 fixed, 2 persisting."*
+Notification payload is Slack-compatible: *"Corvex · Nightly Corvex: scan complete — 1 new, 1 fixed, 2 persisting."*
 
 ### 7. Authentication, tenants & RBAC
 
-PentestIQ is multi-tenant. Authenticate with a **session token** (`Authorization: Bearer …`) or a **per-tenant API key** (`X-API-Key: …`).
+Corvex is multi-tenant. Authenticate with a **session token** (`Authorization: Bearer …`) or a **per-tenant API key** (`X-API-Key: …`).
 
 ```bash
 # register a tenant + owner, get a token
 TOKEN=$(curl -s -XPOST http://localhost:8080/auth/register -H "Content-Type: application/json" \
-  -d '{"tenant_name":"PentestIQ","username":"sajid","password":"password123"}' | jq -r .token)
+  -d '{"tenant_name":"Corvex","username":"sajid","password":"password123"}' | jq -r .token)
 
 # who am I
 curl http://localhost:8080/me -H "Authorization: Bearer $TOKEN"
@@ -1020,7 +1020,7 @@ Base URL: `http://<host>:<port>` · Auth: `Authorization: Bearer <token>` **or**
 
 ## 🔒 Safety, Authorization & Legal
 
-PentestIQ is an **offensive security tool**. These controls are enforced in code, not left to policy:
+Corvex is an **offensive security tool**. These controls are enforced in code, not left to policy:
 
 - **Authorized use only** — test only what you own or are explicitly authorized to test.
 - **Scope enforcement** — every engagement requires a validated scope; `enforcement: block` hard-blocks out-of-scope targets.
@@ -1082,6 +1082,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [CODE_OF
 
 **Built by [Sajid](https://github.com/sajid-infosec)** — Senior Cybersecurity Engineer · EC-Council LPT (Master)
 
-*If PentestIQ is useful to you, consider starring the repo. ⭐*
+*If Corvex is useful to you, consider starring the repo. ⭐*
 
 </div>

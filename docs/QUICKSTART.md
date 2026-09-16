@@ -1,13 +1,13 @@
-# PentestIQ — Quickstart (first 15 minutes)
+# Corvex — Quickstart (first 15 minutes)
 
-> ⚠️ **Authorized use only.** Run PentestIQ only against systems you own or are
+> ⚠️ **Authorized use only.** Run Corvex only against systems you own or are
 > explicitly authorized to test. See [LEGAL_AND_ETHICS.md](LEGAL_AND_ETHICS.md).
 
 ## 1. Install (Python 3.10+)
 
 ```bash
 git clone https://github.com/sajid-infosec/PentestIQ.git
-cd PentestIQ
+cd Corvex
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 ```
@@ -61,7 +61,7 @@ pentestiq run -s myscope.yaml -o out/
 
 ## Real scanning (on Kali / Parrot)
 
-PentestIQ orchestrates these tools — install the ones you need and PentestIQ
+Corvex orchestrates these tools — install the ones you need and Corvex
 picks them up automatically (missing tools are skipped, never fatal):
 
 | Module | Tools |

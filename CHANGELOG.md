@@ -1,12 +1,12 @@
 # Changelog
 
-All notable changes to PentestIQ are documented here. This project adheres to
+All notable changes to Corvex are documented here. This project adheres to
 [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
-- **One-command installer** (`install.sh`) — detects the Linux distribution (apt/dnf/pacman/zypper), installs all prerequisites (Docker Engine, Docker Compose, git/curl/openssl), generates secrets, and deploys the full SaaS stack (PentestIQ + MobSF). Idempotent; `--port` / `--update` / `--down` options.
+- **One-command installer** (`install.sh`) — detects the Linux distribution (apt/dnf/pacman/zypper), installs all prerequisites (Docker Engine, Docker Compose, git/curl/openssl), generates secrets, and deploys the full SaaS stack (Corvex + MobSF). Idempotent; `--port` / `--update` / `--down` options.
 
 
 ### Added
@@ -33,7 +33,7 @@ All notable changes to PentestIQ are documented here. This project adheres to
 - **APK/IPA upload in the console** — `POST /engagements/upload` (multipart) plus an
   "Upload & scan" button; the server saves the app and runs it through MobSF.
   No file paths for the user. Deployment compose (`deploy/docker-compose.yml`) runs
-  PentestIQ + MobSF together; see docs/DEPLOYMENT.md.
+  Corvex + MobSF together; see docs/DEPLOYMENT.md.
 - **Mobile module** — APK/IPA static analysis via **MobSF** (code analysis, manifest
   issues, dangerous permissions, hardcoded secrets, certificate analysis) with
   CWE / OWASP-Mobile / MASVS references. Asset auto-typing for `.apk`/`.ipa`

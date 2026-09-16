@@ -1,8 +1,8 @@
-# PentestIQ vs. the Commercial Tools
+# Corvex vs. the Commercial Tools
 
-> How PentestIQ compares to the enterprise vulnerability-management and
+> How Corvex compares to the enterprise vulnerability-management and
 > penetration-testing platforms it is designed to replace — where they lead,
-> where they fall short, and the gaps PentestIQ closes to do more for **$0
+> where they fall short, and the gaps Corvex closes to do more for **$0
 > licensing**.
 
 This is an honest, engineering-grade comparison. Where a commercial tool is
@@ -21,7 +21,7 @@ The market is **split into two silos**, and buyers pay twice to cover both:
 
 VM tools scan but don't exploit. PT tools exploit but don't do continuous,
 fleet-wide assessment, prioritization, SLA tracking or client reporting.
-**PentestIQ unifies both** — assessment *and* safe, authorized exploit
+**Corvex unifies both** — assessment *and* safe, authorized exploit
 validation — in one self-hosted platform.
 
 ---
@@ -30,7 +30,7 @@ validation — in one self-hosted platform.
 
 Legend: ✅ full · 🟡 partial / add-on / roadmap · ❌ none · 💰 paid tier only
 
-| Capability | PentestIQ | Tenable VM / SC | Rapid7 InsightVM | Burp Enterprise | Metasploit Pro | Core Impact |
+| Capability | Corvex | Tenable VM / SC | Rapid7 InsightVM | Burp Enterprise | Metasploit Pro | Core Impact |
 |---|:--:|:--:|:--:|:--:|:--:|:--:|
 | **Licensing cost** | ✅ Free / OSS | 💰💰💰 | 💰💰💰 | 💰💰💰 | 💰💰 | 💰💰💰💰 |
 | **Self-hosted / air-gap** | ✅ | 🟡 (SC on-prem) | 🟡 (console on-prem, cloud-tethered) | ✅ | ✅ | ✅ |
@@ -64,10 +64,10 @@ Legend: ✅ full · 🟡 partial / add-on / roadmap · ❌ none · 💰 paid tie
 - **Leads:** the deepest plugin library (100k+ Nessus checks), mature asset
   inventory, VPR prioritization, compliance auditing, exposure management
   (Tenable One).
-- **Gaps PentestIQ exploits:** no real penetration testing / exploit
+- **Gaps Corvex exploits:** no real penetration testing / exploit
   validation; web-app scanning (WAS) and external attack surface are separate
   paid products; VPR is a proprietary black box; pricing scales painfully per
-  asset; cloud-first. **PentestIQ** adds exploit validation, unifies web/API/
+  asset; cloud-first. **Corvex** adds exploit validation, unifies web/API/
   mobile/desktop, and makes prioritization **transparent** (you see every
   factor) and **free**.
 
@@ -76,7 +76,7 @@ Legend: ✅ full · 🟡 partial / add-on / roadmap · ❌ none · 💰 paid tie
   Score, Insight Agent telemetry, InsightConnect SOAR.
 - **Gaps:** the Insight platform is cloud-tethered (a friction point for
   regulated / air-gapped environments); exploit validation requires bolting on
-  Metasploit; Real Risk is opaque; expensive. **PentestIQ** is fully
+  Metasploit; Real Risk is opaque; expensive. **Corvex** is fully
   self-hostable and air-gappable, bundles validation, and ships SLA tracking +
   KEV/EPSS prioritization out of the box.
 
@@ -85,7 +85,7 @@ Legend: ✅ full · 🟡 partial / add-on / roadmap · ❌ none · 💰 paid tie
   scheduling, Collaborator (OAST).
 - **Gaps:** **web only** — no network, infra, mobile, desktop, AD or config
   audit; no risk prioritization beyond severity; thin reporting/compliance;
-  per-agent pricing adds up. **PentestIQ** matches the web depth *and* covers
+  per-agent pricing adds up. **Corvex** matches the web depth *and* covers
   every other asset class, adds prioritization, compliance and richer reports —
   and imports Burp proxy history so existing Burp workflows carry straight over.
 
@@ -94,7 +94,7 @@ Legend: ✅ full · 🟡 partial / add-on / roadmap · ❌ none · 💰 paid tie
   brute force, pivoting, evasion, social engineering.
 - **Gaps:** it is an exploitation tool, not a VM platform — no continuous
   assessment, asset management, prioritization, SLA tracking or polished client
-  reporting; ageing UI. **PentestIQ** wraps assessment → *safe* validation →
+  reporting; ageing UI. **Corvex** wraps assessment → *safe* validation →
   prioritization → reporting in one modern workflow (and can hand
   exploit-worthy findings to Metasploit).
 
@@ -102,17 +102,17 @@ Legend: ✅ full · 🟡 partial / add-on / roadmap · ❌ none · 💰 paid tie
 - **Leads:** commercial-grade, vetted exploits across network/web/client-side/
   wireless, guided Rapid Penetration Tests, strong for red teams.
 - **Gaps:** very expensive; exploitation-centric with no continuous VM,
-  prioritization or SLA workflow; heavyweight. **PentestIQ** delivers the
+  prioritization or SLA workflow; heavyweight. **Corvex** delivers the
   assess-and-validate loop continuously and at zero licensing cost, with
   reporting and prioritization built in.
 
 ---
 
-## 4. Where PentestIQ is *already* ahead
+## 4. Where Corvex is *already* ahead
 
 1. **VA + PT in one loop.** Assess every asset, then safely validate the
    findings that matter — no second product, no second invoice.
-2. **Transparent, free, exploit-aware prioritization.** PentestIQ Risk
+2. **Transparent, free, exploit-aware prioritization.** Corvex Risk
    Priority (PRP) blends CVSS with **EPSS** exploit probability and **CISA KEV**
    known-exploited status and shows every factor — the capability Tenable (VPR)
    and Rapid7 (Real Risk) charge for and keep opaque. Works offline via a

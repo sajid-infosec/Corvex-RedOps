@@ -1,12 +1,12 @@
-# PentestIQ — Competitive Gap Backlog
+# Corvex — Competitive Gap Backlog
 
 > Analysis of ~45 enterprise security platforms grouped into the six product
-> categories they actually occupy, mapped against PentestIQ's current state, and
+> categories they actually occupy, mapped against Corvex's current state, and
 > turned into a **sequenced, one-task-at-a-time backlog** you can work through.
 >
 > Every task is scoped for **$0 licensing** — it orchestrates open-source
 > building blocks (nuclei, trivy, semgrep, subfinder/amass, prowler, OSV, …) the
-> same way PentestIQ already wraps nmap / ZAP / MobSF / WPScan.
+> same way Corvex already wraps nmap / ZAP / MobSF / WPScan.
 >
 > Legend: **S** ≤1 session · **M** 1–2 sessions · **L** 3+ sessions.
 > Do them top-to-bottom; each epic is ordered so earlier tasks unblock later ones.
@@ -26,9 +26,9 @@
 
 ---
 
-## 2. Where PentestIQ stands vs each category
+## 2. Where Corvex stands vs each category
 
-| Category | PentestIQ today | Gap to close |
+| Category | Corvex today | Gap to close |
 |---|---|---|
 | C1 ASM | ❌ no asset inventory, no external discovery | **Biggest strategic gap.** Asset register + EASM + exposure scoring |
 | C2 VM | 🟡 active scanning across 10 asset types; nuclei/nmap; **no** authenticated/agent scanning, thin CVE breadth | Authenticated scans, CVE/NVD enrichment, continuous discovery |
@@ -46,7 +46,7 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
 ## 3. The backlog (do these in order)
 
 ### EPIC A — Asset Inventory & Attack-Surface Management  *(closes C1; unblocks everything)*
-> Enterprises start from "what do I even own?" PentestIQ has no asset register.
+> Enterprises start from "what do I even own?" Corvex has no asset register.
 > This is the foundation the rest of the roadmap plugs into.
 
 - **A1 · Asset inventory data model + store** — `S`
@@ -68,16 +68,16 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
   *Accept:* Inventory tab lists assets ranked by exposure; matches Tenable/Bishop-Fox framing.
 
 ### EPIC B — Unified Findings Ingestion & Risk Aggregation  *(closes part of C1/C2; Brinqa/Balbix-class)*
-> Turn PentestIQ into the single pane that *aggregates* other scanners — a huge
+> Turn Corvex into the single pane that *aggregates* other scanners — a huge
 > differentiator and easy given the normalized findings model already exists.
 
 - **B1 · Normalized importer framework** — `S`
-  A pluggable `pentestiq/ingest/` that maps 3rd-party output → the PentestIQ
+  A pluggable `pentestiq/ingest/` that maps 3rd-party output → the Corvex
   `Finding` model, dedupes, and applies PRP. *Accept:* base importer + tests.
 - **B2 · Importers: Nessus (.nessus), Nuclei (jsonl), Trivy (json), ZAP, Semgrep (SARIF)** — `M`
   *Accept:* import a sample of each → normalized, de-duplicated findings with OWASP/CWE/CVE mapped.
 - **B3 · SARIF in/out** — `S`
-  Accept generic **SARIF** import and **export** PentestIQ findings as SARIF (GitHub code-scanning / CI native). *Accept:* round-trip SARIF.
+  Accept generic **SARIF** import and **export** Corvex findings as SARIF (GitHub code-scanning / CI native). *Accept:* round-trip SARIF.
 
 ### EPIC C — Application Security depth (SCA + SBOM + SAST)  *(closes C5; Checkmarx/Veracode/Snyk-class)*
 - **C1t · SCA + SBOM** — `M`
@@ -166,7 +166,7 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
 ## 4. Recommended order (fastest path to "beats the field")
 
 1. **A1 → A2** (asset inventory) — the missing foundation, quick wins.
-2. **B1 → B2** (ingestion) — instantly makes PentestIQ an aggregator; high wow, low effort.
+2. **B1 → B2** (ingestion) — instantly makes Corvex an aggregator; high wow, low effort.
 3. **C1t** (SCA+SBOM) — the most-requested AppSec gap, open-source-easy.
 4. **D1** (ATT&CK mapping) — cheap, very marketable.
 5. **A3 → A4** (EASM + exposure UI) — the headline C1 capability.

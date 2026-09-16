@@ -44,7 +44,8 @@ all = [
 ]
 
 [project.scripts]
-pentestiq = "pentestiq.cli:app"
+corvex = "pentestiq.cli:app"
+pentestiq = "pentestiq.cli:app"   # legacy alias — internal package path stays `pentestiq`
 
 [project.urls]
 Homepage = "https://github.com/sajid-infosec/PentestIQ"

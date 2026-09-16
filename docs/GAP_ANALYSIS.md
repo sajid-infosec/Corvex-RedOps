@@ -1,11 +1,11 @@
-# PentestIQ Gap Analysis & OWASP Top 10 Coverage
+# Corvex Gap Analysis & OWASP Top 10 Coverage
 
 **Benchmark:** a real, completed VAPT of a **multi-tenant video-conferencing SaaS**. 52 test cases mapped to OWASP WSTG +
 API Security Top 10, ~35 confirmed findings across web, API, JWT, authorization,
 business logic, real-time/chat, and infrastructure.
 
 The question this answers: **what does a real VAPT of a modern SaaS require that a
-VA orchestrator does not do?** — and how PentestIQ now closes that gap.
+VA orchestrator does not do?** — and how Corvex now closes that gap.
 
 ---
 
@@ -41,9 +41,9 @@ a true VAPT platform (Burp Suite Enterprise / Acunetix class), not a VA scanner.
 
 ---
 
-## 2. Gap: PentestIQ *before* this upgrade
+## 2. Gap: Corvex *before* this upgrade
 
-PentestIQ was a strong **VA orchestrator** — it wraps nmap, Nessus-class output,
+Corvex was a strong **VA orchestrator** — it wraps nmap, Nessus-class output,
 Nuclei, ZAP, WPScan, MobSF, and native analyzers for desktop/netdev/firewall/
 hardening, normalizes everything into one `Finding` model, dedupes, risk-scores,
 correlates, and reports. But for the *web/API* asset types it only ran ZAP +
@@ -152,7 +152,7 @@ or are candidates for future native checks:
 
 - **Mass assignment (TC-F05), SSRF (TC-F04), host-header (TC-F06)** — active
   write/OOB probes; planned as `allow_active`-gated checks.
-- **Payment/business-logic (TC-I02)** — inherently app-specific; PentestIQ flags
+- **Payment/business-logic (TC-I02)** — inherently app-specific; Corvex flags
   the surface, human confirms the write PoC (per rules-of-engagement).
 - **Real-time/chat (Matrix/LiveKit/Firebase, TC-K)** — protocol-specific probes;
   candidate native module.
@@ -165,7 +165,7 @@ or are candidates for future native checks:
 
 ## 7. Asset-type coverage (as tested on the engagement's real assets)
 
-| Asset | File | PentestIQ module |
+| Asset | File | Corvex module |
 |---|---|---|
 | Web app (`app.example.com` SPA) | JS bundles | `web` + native checks |
 | REST API (218 endpoints, JWT) | Burp capture | `api` + native checks (BOLA/JWT/authz) |
@@ -174,5 +174,5 @@ or are candidates for future native checks:
 | Infrastructure | nmap + Nessus | `infra` (nmap/nuclei) |
 | Firewall / hardening / network device | configs | `firewall` / `hardening` / `netdev` |
 
-Every asset type in the real engagement maps to a PentestIQ module; the upgrade
+Every asset type in the real engagement maps to a Corvex module; the upgrade
 closes the *depth* gap on the two hardest ones — web and API.

@@ -1,8 +1,8 @@
-# PentestIQ — Technical Architecture
+# Corvex — Technical Architecture
 
 *Version 0.1 · Draft · August 2026*
 
-This document describes the system design for PentestIQ. Guiding principle:
+This document describes the system design for Corvex. Guiding principle:
 **orchestrate best-in-class tools; build custom logic only where it
 differentiates** (correlation, safe exploit-validation, risk scoring, AI
 reporting, authorization/safety).
@@ -60,7 +60,7 @@ reporting, authorization/safety).
 ## 3. Core Components
 
 ### 3.1 Orchestration Engine
-The heart of PentestIQ. Responsibilities:
+The heart of Corvex. Responsibilities:
 - **Scope Manager** — loads/validates the engagement scope (targets, exclusions,
   time windows, allowed actions). Nothing runs outside scope.
 - **Workflow Runner** — executes per-asset workflows (recon → assess → validate →
@@ -151,7 +151,7 @@ downstream (dedupe, scoring, reporting) reads it.
 ### 5.1 Lab Automation (`lab/`)
 Docker/Vagrant/Terraform blueprints that stand up intentionally-vulnerable
 targets (e.g., DVWA, Juice Shop, Metasploitable-class, a vulnerable WP, a vuln
-API) for testing PentestIQ itself, demos, and training. **Isolated networks
+API) for testing Corvex itself, demos, and training. **Isolated networks
 only.**
 
 ---
@@ -200,7 +200,7 @@ one language to start.
 ## 8. Repository Layout
 
 ```
-PentestIQ/
+Corvex/
 ├── core/              # orchestration engine, scope mgr, scheduler, safe-mode governor
 ├── modules/           # per-asset-type modules (infra, web, wordpress, api, mobile, ...)
 ├── integrations/      # adapters wrapping external tools into the findings model

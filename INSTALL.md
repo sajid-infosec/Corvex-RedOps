@@ -1,4 +1,4 @@
-# Installing PentestIQ
+# Installing Corvex
 
 Runs on **Linux, macOS, and Windows**. Every path gives you the same CLI
 (`pentestiq`) and web console (`pentestiq serve` → http://localhost:8080).
@@ -42,7 +42,7 @@ pentestiq --help
 **Virtualenv from source**
 ```bash
 git clone https://github.com/sajid-infosec/PentestIQ.git
-cd PentestIQ
+cd Corvex
 python3 -m venv .venv
 source .venv/bin/activate            # Windows: .venv\Scripts\Activate.ps1
 pip install ".[api,reports,desktop]" # or ".[all]" for everything (incl. SPA)
@@ -56,7 +56,7 @@ Extras: `api` (REST + console), `reports` (PDF/DOCX), `desktop` (binary hardenin
 
 ## C. Installer script
 
-**Linux** — deploys the Docker SaaS stack (PentestIQ + MobSF):
+**Linux** — deploys the Docker SaaS stack (Corvex + MobSF):
 ```bash
 sudo ./install.sh
 ```
@@ -92,7 +92,7 @@ The installer now auto-starts Colima in `--update` mode, so this is handled for 
 **plain `colima start`**, never `colima start --network-address`. The
 `--network-address` flag adds a vmnet interface that can black-hole outbound
 routes to some hosts (e.g. `github.com:443` times out while other sites work).
-PentestIQ is reached via `localhost:8080` port-forwarding either way, so you
+Corvex is reached via `localhost:8080` port-forwarding either way, so you
 never need `--network-address`. If you already started it that way:
 `colima stop && colima start`.
 
@@ -117,7 +117,7 @@ docker compose up -d --build         # console :8080, MobSF :8000
 3. Add a target (New scan) or upload an app / OpenAPI spec, then **Run scan**.
 
 ## Deep-scan backend
-PentestIQ's native crawler, OWASP checks, out-of-band detection, and injection
+Corvex's native crawler, OWASP checks, out-of-band detection, and injection
 fuzzer need **no external components**. The **Docker deployment (option D) bundles
 the full deep-scan backend and mobile-analysis service** — nothing else to install.
 
