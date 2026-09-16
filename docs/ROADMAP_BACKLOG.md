@@ -133,8 +133,12 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
   auto-enrich with the existing intel layer (PRP/KEV/EPSS). `pentestiq/intel/service_cve.py`;
   `POST /intel/service`, `POST /engagements/{eid}/enrich/services`; console "Match CVEs".
   *Accept:* "nginx 1.18.0" → CVE-2021-23017 ranked by PRP. ✔
-- **G3 · nuclei template auto-update + tags** — `S`
-  Keep nuclei templates fresh; expose which template packs ran. *Accept:* update command + coverage count.
+- **G3 · nuclei template auto-update + tags** — `S` ✅
+  Keep nuclei templates fresh; expose installed packs / severities / tags + version,
+  and scope scans by tag/severity. `pentestiq/integrations/nuclei_templates.py`
+  (NucleiTemplateManager, template_coverage); `POST /tools/nuclei/update`,
+  `GET /tools/nuclei/coverage`; config `nuclei_tags`/`nuclei_severity`; Settings card.
+  *Accept:* update command refreshes store; coverage returns total + per-pack count. ✔
 
 ### EPIC H — Continuous Exposure & Analytics  *(cross-cutting; CTEM)*
 - **H1 · Posture trend analytics** — `M`
