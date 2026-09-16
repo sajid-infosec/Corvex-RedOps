@@ -125,9 +125,13 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
   Group findings into assignable projects with owners + due dates (SLA already exists). *Accept:* create a project, assign, track completion.
 
 ### EPIC G — VM depth (authenticated + CVE breadth)  *(closes C2; Qualys/Nessus depth)*
-- **G1 · Authenticated scanning** — `M`
-  Credentialed checks (SSH/WinRM/HTTP-auth) for deeper infra/host findings; a
-  **credential vault** (encrypted at rest). *Accept:* authed scan finds a local-only issue.
+- **G1 · Authenticated scanning** — `M` ✅
+  Credentialed local checks (sudo NOPASSWD, world-writable sensitive files,
+  GTFOBins SUID, outdated services→CVE) over an injectable SSH runner; encrypted
+  **credential vault** (scrypt + Fernet, secrets never returned by the API).
+  `pentestiq/vault/`, `pentestiq/authscan/`; `/vault/credentials` CRUD,
+  `POST /engagements/{eid}/authscan` (authorization-gated); Settings vault card + Auth-scan action.
+  *Accept:* injected credentialed run surfaces sudo-NOPASSWD local privesc. ✔
 - **G2 · CVE/NVD + KEV/EPSS enrichment on service findings** — `S` ✅
   Match discovered product+version → CVEs (curated seed + version ranges) and
   auto-enrich with the existing intel layer (PRP/KEV/EPSS). `pentestiq/intel/service_cve.py`;
