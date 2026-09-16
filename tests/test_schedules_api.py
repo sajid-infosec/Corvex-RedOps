@@ -21,6 +21,7 @@ def _H(t):
     return {"Authorization": f"Bearer {t}"}
 
 
+@pytest.mark.live
 def test_schedule_crud_and_run_now(client):
     c = client; tok = _tok(c)
     r = c.post("/schedules", headers=_H(tok), json={

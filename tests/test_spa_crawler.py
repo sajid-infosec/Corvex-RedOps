@@ -8,11 +8,21 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
 
+# Needs a real headless browser — opt-in (run with `pytest -m live`), and re-enables
+# SPA crawling that the default test env disables via CORVEX_SPA_CRAWL=0.
+pytestmark = pytest.mark.live
+
 pytest.importorskip("playwright.sync_api")
 from pentestiq.crawler import SpaCrawler
 
 if not SpaCrawler.is_available():
     pytest.skip("Playwright browser not available", allow_module_level=True)
+
+
+@pytest.fixture(autouse=True)
+def _enable_spa(monkeypatch):
+    # The default test env disables SPA crawling; these tests exercise it.
+    monkeypatch.setenv("CORVEX_SPA_CRAWL", "1")
 
 
 _SPA = (b"<html><body><div id=app></div><script>"

@@ -31,7 +31,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "httpx>=0.27", "reportlab>=4.0", "python-docx>=1.1", "python-multipart>=0.0.9", "lief>=0.14"]
+dev = ["pytest>=8.0", "pytest-timeout>=2.3", "httpx>=0.27", "reportlab>=4.0", "python-docx>=1.1", "python-multipart>=0.0.9", "lief>=0.14"]
 authscan = ["paramiko>=3.4", "pywinrm>=0.4"]   # credentialed SSH / WinRM scanning
 api = ["fastapi>=0.110", "uvicorn>=0.29", "python-multipart>=0.0.9"]
 reports = ["reportlab>=4.0", "python-docx>=1.1"]
@@ -65,3 +65,11 @@ include = ["pentestiq*"]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+# Live-scan tests drive a real scan against a network target and are slow /
+# environment-dependent; they are opt-in. Run them with:  pytest -m live
+# Everything else runs fast and network-free by default. (Add a hard hang guard
+# with pytest-timeout installed:  pytest --timeout=120 --timeout-method=thread)
+addopts = "-m 'not live'"
+markers = [
+    "live: needs a live target or a real browser/network (slow, opt-in)",
+]

@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 from pentestiq.engine import Engine, load_scope, infer_asset_type
 from pentestiq.models import AssetType
@@ -10,6 +11,7 @@ def test_infer_asset_type():
     assert infer_asset_type("example.com") == AssetType.WEB
 
 
+@pytest.mark.live
 def test_load_scope_and_empty_workflow(tmp_path: Path):
     scope_file = tmp_path / "scope.yaml"
     scope_file.write_text(

@@ -55,6 +55,7 @@ def test_register_login_flow(ctx):
     assert dup.status_code == 409
 
 
+@pytest.mark.live
 def test_create_run_findings_report_flow(ctx):
     c, _, _ = ctx
     tok = _register(c)
