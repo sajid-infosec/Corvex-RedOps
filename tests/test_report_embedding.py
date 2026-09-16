@@ -83,6 +83,18 @@ def test_html_embeds_all_dimensions(ctx):
     assert concl and int(concl.group(1)) > 7
 
 
+def test_severity_methodology_badge_classes(ctx):
+    """Regression: the risk-rating table must map every severity label to a real
+    CSS colour class (Critical->b-critical, Medium->b-medium), not the truncated
+    b-crit / b-medi that rendered grey."""
+    eng, st, nar = ctx
+    html = render_html(eng, st, nar)
+    import re
+    classes = set(re.findall(r'badge b-(\w+)">(?:Critical|High|Medium|Low|Informational)', html))
+    assert {"critical", "high", "medium", "low", "info"} <= classes
+    assert 'b-crit"' not in html and 'b-medi"' not in html
+
+
 # ---- PDF ----------------------------------------------------------------
 def test_pdf_builds_with_sections(ctx):
     pytest.importorskip("reportlab")
