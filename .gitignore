@@ -44,3 +44,4 @@ deploy/.env
 # threat-intel runtime caches (refreshed from CISA/FIRST at runtime)
 pentestiq/intel/data/kev_catalog.json
 pentestiq/intel/data/epss_cache.json
+qa/samples/
