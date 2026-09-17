@@ -1,13 +1,13 @@
-# Corvex — Quickstart (first 15 minutes)
+# Corvex-RedOps — Quickstart (first 15 minutes)
 
-> ⚠️ **Authorized use only.** Run Corvex only against systems you own or are
+> ⚠️ **Authorized use only.** Run Corvex-RedOps only against systems you own or are
 > explicitly authorized to test. See [LEGAL_AND_ETHICS.md](LEGAL_AND_ETHICS.md).
 
 ## 1. Install (Python 3.10+)
 
 ```bash
 git clone https://github.com/sajid-infosec/PentestIQ.git
-cd Corvex
+cd Corvex-RedOps
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 ```
@@ -61,21 +61,20 @@ pentestiq run -s myscope.yaml -o out/
 
 ## Real scanning (on Kali / Parrot)
 
-Corvex orchestrates these tools — install the ones you need and Corvex
+Corvex-RedOps orchestrates these tools — install the ones you need and Corvex-RedOps
 picks them up automatically (missing tools are skipped, never fatal):
 
-| Module | Tools |
+| Module | Engines |
 |---|---|
-| infra | `nmap`, `nuclei` |
-| web | `zap-baseline.py` (OWASP ZAP), `nuclei` |
-| wordpress | `wpscan`, `nuclei` |
-| api | OpenAPI (built-in), `nuclei` |
+| infra | port & service discovery, template-based scanning |
+| web | DAST baseline scan, template-based scanning |
+| wordpress | WordPress scanning, template-based scanning |
+| api | OpenAPI (built-in), template-based scanning |
 
 ```bash
-# Kali examples
+# Kali examples — install the engines your modules need
 sudo apt install -y nmap wpscan
-# nuclei: https://github.com/projectdiscovery/nuclei  (Go binary)
-# ZAP:    https://www.zaproxy.org/download/
+# other engines (template-based scanner, DAST web scanner) install per their upstream docs
 ```
 
 ## What you get

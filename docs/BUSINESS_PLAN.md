@@ -1,4 +1,4 @@
-# Corvex — Business Plan
+# Corvex-RedOps — Business Plan
 
 *Version 0.1 · Draft · August 2026*
 
@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-**Corvex** is an open-source, orchestration-driven Vulnerability Assessment
+**Corvex-RedOps** is an open-source, orchestration-driven Vulnerability Assessment
 and Penetration Testing (VAPT) platform that unifies the fragmented pentest
 toolchain into one workflow-driven engine. It performs both **vulnerability
 assessment** and **safe, authorized validation/exploitation** across the full
@@ -38,9 +38,11 @@ experience — real practitioner credibility in a market where trust is the gate
 ## 2. The Problem
 
 Security teams and consultancies run VAPT with a sprawl of disconnected tools:
-Nmap, OpenVAS/Nessus, Nuclei, ZAP/Burp, WPScan, MobSF, sqlmap, and more. Each has
-its own output format, its own workflow, and no shared model. This creates real
-pain:
+the port & service discovery engine, open-source and commercial VM scanners, the
+template-based scanning engine, DAST web-scanners and web proxies, the WordPress
+scanning engine, the mobile-analysis engine, the SQL-injection engine, and more.
+Each has its own output format, its own workflow, and no shared model. This
+creates real pain:
 
 1. **Toolchain fragmentation** — hours per engagement lost to glue work and
    manual correlation.
@@ -61,7 +63,7 @@ practitioners in emerging markets.
 
 ## 3. The Solution
 
-Corvex provides:
+Corvex-RedOps provides:
 
 - **One orchestration engine** that drives best-in-class tools per asset type.
 - **A normalized findings model** — dedupe, correlate, and risk-score once,
@@ -99,7 +101,7 @@ Key segment signals (PTaaS research):
 - **Healthcare** grows fastest by vertical.
 
 **Takeaway:** the fast money is in automation platforms serving SMEs, cloud
-surfaces, and APAC — precisely Corvex's lane.
+surfaces, and APAC — precisely Corvex-RedOps's lane.
 
 ### 4.2 TAM / SAM / SOM (planning estimate)
 
@@ -124,28 +126,27 @@ surfaces, and APAC — precisely Corvex's lane.
 
 ### 5.1 Commercial automated-pentest / PTaaS
 
-| Player | Focus | Notes |
+| Category | Focus | Notes |
 |---|---|---|
-| **Pentera** | Automated security validation | Enterprise, agentless, premium price |
-| **Horizon3 NodeZero** | Autonomous pentest | Enterprise SaaS, strong exploitation |
-| **Cobalt** | PTaaS (human + platform) | Marketplace of testers + console |
-| **BreachLock** | PTaaS | Hybrid human/automated, mid-market up |
-| **Astra, Intruder, Indusface** | Continuous scanning/pentest | SMB-friendly, mostly VA-led |
-| **Picus, Cymulate** | Breach & attack simulation | Adjacent (validation, not full VAPT) |
-| **Synack, Veracode, Rapid7** | Testing platforms / crowdsourced | Established incumbents |
+| **Automated security-validation platforms** | Automated, agentless validation | Enterprise, premium price |
+| **Autonomous pentest platforms** | Autonomous exploitation | Enterprise SaaS, strong exploitation |
+| **PTaaS marketplaces (human + platform)** | Human testers + console | Tester marketplace, hybrid human/automated, mid-market up |
+| **Continuous scanning/pentest tools** | Continuous scanning/pentest | SMB-friendly, mostly VA-led |
+| **Breach & attack simulation platforms** | Breach & attack simulation | Adjacent (validation, not full VAPT) |
+| **Established testing / crowdsourced platforms** | Testing platforms / crowdsourced | Established incumbents |
 
-**Gap Corvex exploits:** these are closed and enterprise-priced. None offers a
+**Gap Corvex-RedOps exploits:** these are closed and enterprise-priced. None offers a
 free, self-hostable, all-asset engine that a practitioner or SME can adopt
 bottom-up and grow into a paid console.
 
 ### 5.2 Open-source
 
-| Project | What it does | Corvex's difference |
+| Category | What it does | Corvex-RedOps's difference |
 |---|---|---|
-| **Faraday** | Vuln management / pentest IDE, aggregates tool output | Corvex adds active validation/exploitation + all-asset modules + reporting, not just aggregation |
-| **Nuclei** | Template-based vuln scanning | Corvex *orchestrates* Nuclei as one module among many |
-| **OpenVAS / Greenbone** | Network vuln scanning | One integration inside Corvex, not the whole product |
-| **Sn1per, AttackForge** | Recon automation / pentest management | Corvex spans the full VA→PT→report lifecycle across every asset type |
+| **Collaboration / aggregation platforms** | Vuln management / pentest IDE, aggregates tool output | Corvex-RedOps adds active validation/exploitation + all-asset modules + reporting, not just aggregation |
+| **Template-based scanners** | Template-based vuln scanning | Corvex-RedOps *orchestrates* template-based scanning as one module among many |
+| **Open-source VM scanners** | Network vuln scanning | One integration inside Corvex-RedOps, not the whole product |
+| **Recon automation / pentest-management tools** | Recon automation / pentest management | Corvex-RedOps spans the full VA→PT→report lifecycle across every asset type |
 
 **Moat over time:** the normalized cross-tool findings model, the safe
 exploit-validation layer, breadth of asset coverage, AI reporting quality, and
@@ -187,7 +188,7 @@ mobility goals.
 - Keep the OSS core genuinely useful — adoption is the funnel.
 - Charge for **convenience, collaboration, scale, and compliance**, never for
   basic security capability.
-- MSSP/white-label tier is the highest-value wedge (they resell Corvex-driven
+- MSSP/white-label tier is the highest-value wedge (they resell Corvex-RedOps-driven
   reports).
 
 ### 7.3 Revenue streams
@@ -257,7 +258,7 @@ every white-labeled MSSP report is a distribution channel.
 - **SaaS/enterprise features:** separate commercial license, closed.
 - **Contributor License Agreement (CLA):** adopt one so the commercial layer is
   legally clean.
-- **Trademark:** register the Corvex name/brand to protect the commercial
+- **Trademark:** register the Corvex-RedOps name/brand to protect the commercial
   offering while the code stays open.
 
 *Decision needed (see Open Questions):* final core license choice.
@@ -282,7 +283,7 @@ every white-labeled MSSP report is a distribution channel.
 
 1. **Final core license** — Apache-2.0 (max adoption) vs. source-available (max
    commercial protection)?
-2. **Brand & entity** — register Corvex trademark; decide founding entity/
+2. **Brand & entity** — register Corvex-RedOps trademark; decide founding entity/
    jurisdiction when SaaS revenue starts.
 3. **AI reporting dependency** — hosted LLM API vs. self-hostable model (affects
    cost, privacy positioning, and enterprise sales).
@@ -297,4 +298,6 @@ every white-labeled MSSP report is a distribution channel.
 - [Penetration Testing Market — Fortune Business Insights](https://www.fortunebusinessinsights.com/penetration-testing-market-108434)
 - [Penetration Testing as a Service (PTaaS) Market — MarketsandMarkets](https://www.marketsandmarkets.com/Market-Reports/penetration-testing-as-a-service-market-36245315.html)
 - [Best Automated Penetration Testing Platforms 2026 — General Analysis](https://generalanalysis.com/guides/best-automated-penetration-testing-tools)
-- [Faraday Review 2026 — AppSecSanta](https://appsecsanta.com/faraday)
+- Independent review of a collaboration/aggregation platform (2026).
+
+<!-- ANON: vendor-specific source URL removed during anonymization; original citation flagged to Sajid for relocation if verifiability is needed -->

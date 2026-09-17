@@ -38,7 +38,7 @@ def test_export_is_valid_sarif_shape():
     doc = findings_to_sarif(_sample_findings())
     assert doc["version"] == "2.1.0" and "sarif" in doc["$schema"].lower()
     run = doc["runs"][0]
-    assert run["tool"]["driver"]["name"] == "Corvex"
+    assert run["tool"]["driver"]["name"] == "Corvex-RedOps"
     assert len(run["tool"]["driver"]["rules"]) == 3
     assert len(run["results"]) == 3
     # GitHub reads severity from this property + the level

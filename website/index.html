@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Corvex — Self-hosted VAPT Platform</title>
+<title>Corvex-RedOps — Self-hosted VAPT Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -175,9 +175,9 @@
 
 <header>
   <div class="wrap nav">
-    <a class="brand" href="#top" aria-label="Corvex home">
+    <a class="brand" href="#top" aria-label="Corvex-RedOps home">
       <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><defs><linearGradient id="m" x1="6" y1="4" x2="34" y2="36"><stop stop-color="#4cc2ff"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient></defs><path d="M20 3.2 33.8 11.1 V26.9 L20 34.8 6.2 26.9 V11.1 Z" fill="url(#m)" fill-opacity=".14" stroke="url(#m)" stroke-width="1.9" stroke-linejoin="round"/><path d="M11.6 15 20 26 28.4 15" stroke="url(#m)" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="12.2" r="1.8" fill="#4cc2ff"/></svg>
-      <span>Corve<span class="x">x</span></span>
+      <span>Corve<span class="x">x</span>-RedOps</span>
     </a>
     <nav class="links">
       <a href="#coverage">Coverage</a>
@@ -187,7 +187,7 @@
     </nav>
     <div class="right">
       <a class="btn ghost" href="#pricing">Free &amp; Premium</a>
-      <a class="btn solid" href="#pricing">Deploy Corvex</a>
+      <a class="btn solid" href="#pricing">Deploy Corvex-RedOps</a>
     </div>
   </div>
 </header>
@@ -197,7 +197,7 @@
   <div class="wrap">
     <div class="ey">Self-hosted VAPT · Apache-2.0 · air-gappable</div>
     <h1 style="margin-top:16px">One engine for the <span class="b">whole assessment.</span></h1>
-    <p class="lede">Corvex collapses vulnerability assessment and penetration testing into a single
+    <p class="lede">Corvex-RedOps collapses vulnerability assessment and penetration testing into a single
       self-hosted platform: it discovers the attack surface, actively tests it, <em>safely</em>
       validates what's real, ranks by exploit pressure, and writes the client-ready report —
       across web, API, mobile, desktop, infrastructure and Active Directory.</p>
@@ -227,14 +227,14 @@
     <div class="cov">
       <div class="cell"><span class="k">01</span><div><h3>Web applications</h3><p>Crawl (incl. headless SPA), OWASP Top-10 active checks, injection fuzzing (SQLi/XSS/SSTI/XXE/…), safe exploit validation.</p></div></div>
       <div class="cell"><span class="k">02</span><div><h3>REST &amp; GraphQL APIs</h3><p>Two-identity BOLA/IDOR diffing, BFLA, mass-assignment, JWT <code class="mono">alg:none</code>, tenant confusion — the OWASP API Top 10.</p></div></div>
-      <div class="cell"><span class="k">03</span><div><h3>Mobile — APK &amp; IPA</h3><p>Native static analysis (no MobSF needed): manifest flags, exported components, ATS, secrets, debug-signing — mapped to MASVS/MASTG.</p></div></div>
-      <div class="cell"><span class="k">04</span><div><h3>Desktop binaries</h3><p>PE/ELF/Mach-O hardening, code-signing, Electron <code class="mono">.asar</code> misconfig, container unpacking — all without lief.</p></div></div>
+      <div class="cell"><span class="k">03</span><div><h3>Mobile — APK &amp; IPA</h3><p>Native static analysis (no external mobile-analysis engine needed): manifest flags, exported components, ATS, secrets, debug-signing — mapped to MASVS/MASTG.</p></div></div>
+      <div class="cell"><span class="k">04</span><div><h3>Desktop binaries</h3><p>PE/ELF/Mach-O hardening, code-signing, Electron <code class="mono">.asar</code> misconfig, container unpacking — all without external parsing libraries.</p></div></div>
       <div class="cell"><span class="k">05</span><div><h3>Infrastructure</h3><p>Host/service discovery with automatic service-banner → CVE mapping, ranked by exploit pressure.</p></div></div>
-      <div class="cell"><span class="k">06</span><div><h3>Active Directory</h3><p>BloodHound attack-surface analysis: Kerberoast, delegation, DCSync, and computed <em>paths to Domain Admin</em> — not just a config checklist.</p></div></div>
-      <div class="cell"><span class="k">07</span><div><h3>WordPress</h3><p>Native fingerprint, version &amp; user enumeration, exposed config/backup files; WPScan &amp; Nuclei layer on when present.</p></div></div>
+      <div class="cell"><span class="k">06</span><div><h3>Active Directory</h3><p>Directory attack-path analysis: Kerberoast, delegation, DCSync, and computed <em>paths to Domain Admin</em> — not just a config checklist.</p></div></div>
+      <div class="cell"><span class="k">07</span><div><h3>WordPress</h3><p>Native fingerprint, version &amp; user enumeration, exposed config/backup files; external WordPress &amp; template-based scanning engines layer on when present.</p></div></div>
       <div class="cell"><span class="k">08</span><div><h3>Network devices &amp; firewalls</h3><p>Config hygiene, insecure services and management-plane exposure against CIS-style baselines.</p></div></div>
       <div class="cell"><span class="k">09</span><div><h3>OS hardening</h3><p>CIS-style baseline review from a policy export — no live access required.</p></div></div>
-      <div class="cell"><span class="k">10</span><div><h3>Cloud, container &amp; IaC</h3><p>Trivy image/IaC scanning, kube-bench CIS, Prowler CSPM — mapped to CIS/PCI/NIST and prioritized.</p></div></div>
+      <div class="cell"><span class="k">10</span><div><h3>Cloud, container &amp; IaC</h3><p>Container/IaC image scanning, Kubernetes CIS checks, cloud-posture (CSPM) analysis — mapped to CIS/PCI/NIST and prioritized.</p></div></div>
     </div>
   </div>
 </section>
@@ -251,18 +251,18 @@
         <div class="tag">Active engine</div>
         <h3>Test, then prove it</h3>
         <p>A native active-testing engine — not a wrapper. Blind-injection fuzzer with boolean/time/out-of-band detection, a self-hosted OAST collaborator (HTTP + DNS), and non-destructive validation that flips findings from <em>detected</em> to <em>validated</em>.</p>
-        <ul><li>Self-hosted OAST for blind SSRF / XSS / RCE</li><li>Burp history → ready-to-run engagement</li><li>False positives cut by safe confirmation</li></ul>
+        <ul><li>Self-hosted OAST for blind SSRF / XSS / RCE</li><li>Proxy history → ready-to-run engagement</li><li>False positives cut by safe confirmation</li></ul>
       </div>
       <div class="card">
         <div class="tag">Prioritization</div>
         <h3>Ranked by exploit pressure</h3>
-        <p>Corvex Risk Priority blends CVSS with <b>FIRST EPSS</b> (exploit probability) and <b>CISA KEV</b> (known-exploited) into one transparent 0–100 score — every factor shown, with a remediation SLA and MTTR per finding. Offline-capable.</p>
+        <p>Corvex-RedOps Risk Priority blends CVSS with <b>FIRST EPSS</b> (exploit probability) and <b>CISA KEV</b> (known-exploited) into one transparent 0–100 score — every factor shown, with a remediation SLA and MTTR per finding. Offline-capable.</p>
         <ul><li>Transparent PRP — no black-box score</li><li>KEV / ransomware flags</li><li>Works air-gapped from a bundled feed</li></ul>
       </div>
       <div class="card">
         <div class="tag">Analysis</div>
         <h3>Real findings from binaries</h3>
-        <p>Upload an APK, IPA, Electron app or a BloodHound export and get findings with <em>no external services</em> — the gap most tools leave empty. Secrets are redacted; everything maps to MASVS / CWE / ATT&amp;CK.</p>
+        <p>Upload an APK, IPA, Electron app or a directory graph export (JSON) and get findings with <em>no external services</em> — the gap most tools leave empty. Secrets are redacted; everything maps to MASVS / CWE / ATT&amp;CK.</p>
         <ul><li>Native mobile &amp; desktop static analysis</li><li>AD paths to Domain Admin, computed offline</li><li>SCA + SBOM, SAST, secret scanning</li></ul>
       </div>
       <div class="card">
@@ -284,7 +284,7 @@
       <p>Every module runs the same contract, so a web app and a domain controller are assessed with one methodology and land in one model.</p>
     </div>
     <div class="pipe">
-      <div class="st"><div class="no">→ 01</div><h3>Discover</h3><p>Crawl, enumerate, import Burp/Nessus, register every asset.</p></div>
+      <div class="st"><div class="no">→ 01</div><h3>Discover</h3><p>Crawl, enumerate, import proxy history &amp; VM-scanner results, register every asset.</p></div>
       <div class="st"><div class="no">→ 02</div><h3>Assess</h3><p>Active OWASP checks, injection fuzzing, config &amp; binary analysis.</p></div>
       <div class="st"><div class="no">→ 03</div><h3>Validate</h3><p>Non-destructive confirmation — detected becomes validated.</p></div>
       <div class="st"><div class="no">→ 04</div><h3>Prioritize</h3><p>PRP = CVSS × EPSS × KEV, with SLAs and attack-chain correlation.</p></div>
@@ -312,7 +312,7 @@
         <ul class="feat">
           <li><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>All 10 asset modules &amp; the active-testing engine</li>
           <li><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Native mobile / desktop / AD analysis</li>
-          <li><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Self-hosted OAST, Burp import, SCA / SAST / secrets</li>
+          <li><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Self-hosted OAST, proxy-history import, SCA / SAST / secrets</li>
           <li><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Transparent EPSS + KEV prioritization</li>
           <li><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>HTML / PDF / DOCX reports, ATT&amp;CK &amp; compliance mapping</li>
           <li><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Web console + CLI, single workspace</li>
@@ -325,7 +325,7 @@
         <div class="pt"><h3>Premium</h3><span class="badge">Team &amp; enterprise</span></div>
         <div class="price">Custom<small> · talk to us</small></div>
         <div class="sub">Everything in Free, plus the managed, multi-client and at-scale layer for MSSPs, consultancies and security teams.</div>
-        <a class="btn gold" href="mailto:sajid@aurko.org?subject=Corvex%20Premium">Request access</a>
+        <a class="btn gold" href="mailto:sajid@aurko.org?subject=Corvex-RedOps%20Premium">Request access</a>
         <ul class="feat">
           <li><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 5 5.6.6-4.2 3.8 1.2 5.6L12 19.4 6.9 17l1.3-5.6L4 7.6 9.6 7z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Everything in Free</li>
           <li><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Multi-tenant workspaces, RBAC &amp; SSO / SAML</li>
@@ -344,10 +344,10 @@
 <!-- who -->
 <section id="who">
   <div class="wrap who">
-    <blockquote>Corvex isn't trying to beat Tenable. It's <span class="b">Faraday-grade orchestration, a native active-testing engine, PlexTrac-grade reporting and local AI</span> — air-gappable, at zero licence cost.</blockquote>
+    <blockquote>Corvex-RedOps isn't trying to beat the enterprise VM suites. It's <span class="b">enterprise-grade orchestration, a native active-testing engine, client-ready reporting and local AI</span> — air-gappable, at zero licence cost.</blockquote>
     <div class="side">
       <div class="row"><div class="h">Boutique &amp; MSSP</div><p>Run every client engagement on one methodology, with white-label reports and multi-workspace isolation.</p></div>
-      <div class="row"><div class="h">Regulated &amp; air-gapped</div><p>Government, banking, defence — where a cloud scanner is a non-starter. Corvex runs entirely on your own infrastructure.</p></div>
+      <div class="row"><div class="h">Regulated &amp; air-gapped</div><p>Government, banking, defence — where a cloud scanner is a non-starter. Corvex-RedOps runs entirely on your own infrastructure.</p></div>
       <div class="row"><div class="h">Security teams</div><p>Continuous, exploit-aware exposure validation between the annual human-led test.</p></div>
     </div>
   </div>
@@ -357,7 +357,7 @@
   <div class="wrap">
     <div class="foot">
       <div>
-        <a class="brand" href="#top" style="margin-bottom:12px"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><defs><linearGradient id="mf" x1="6" y1="4" x2="34" y2="36"><stop stop-color="#4cc2ff"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient></defs><path d="M20 3.2 33.8 11.1 V26.9 L20 34.8 6.2 26.9 V11.1 Z" fill="url(#mf)" fill-opacity=".14" stroke="url(#mf)" stroke-width="1.9" stroke-linejoin="round"/><path d="M11.6 15 20 26 28.4 15" stroke="url(#mf)" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="12.2" r="1.8" fill="#4cc2ff"/></svg><span>Corve<span class="x">x</span></span></a>
+        <a class="brand" href="#top" style="margin-bottom:12px"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><defs><linearGradient id="mf" x1="6" y1="4" x2="34" y2="36"><stop stop-color="#4cc2ff"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient></defs><path d="M20 3.2 33.8 11.1 V26.9 L20 34.8 6.2 26.9 V11.1 Z" fill="url(#mf)" fill-opacity=".14" stroke="url(#mf)" stroke-width="1.9" stroke-linejoin="round"/><path d="M11.6 15 20 26 28.4 15" stroke="url(#mf)" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="12.2" r="1.8" fill="#4cc2ff"/></svg><span>Corve<span class="x">x</span>-RedOps</span></a>
         <p class="note">The orchestration-driven VAPT platform — every asset, one engine, client-ready in minutes. Use only against systems you own or are authorized to test.</p>
       </div>
       <div class="links">
@@ -377,7 +377,7 @@
     </div>
     <div class="rule"></div>
     <div class="legal">
-      <span>© 2026 Corvex · Apache-2.0 (Free)</span>
+      <span>© 2026 Corvex-RedOps · Apache-2.0 (Free)</span>
       <span>Built by Sajid · EC-Council LPT (Master)</span>
     </div>
   </div>

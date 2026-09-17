@@ -1,6 +1,6 @@
-# Corvex — Manual QA Guide
+# Corvex-RedOps — Manual QA Guide
 
-A hands-on checklist to verify Corvex detection end-to-end, yourself. Every step
+A hands-on checklist to verify Corvex-RedOps detection end-to-end, yourself. Every step
 uses a **synthetic, safe** sample you generate locally — no real credentials, no
 real targets required (a couple of optional live-web steps use public deliberately
 vulnerable apps).
@@ -25,11 +25,11 @@ python qa/make_samples.py
 corvex serve            # http://127.0.0.1:8000  (console + /docs)
 ```
 
-On first run Corvex prints a **one-time admin password** to this terminal:
+On first run Corvex-RedOps prints a **one-time admin password** to this terminal:
 
 ```
 ==================================================================
-  Corvex first-run admin created.
+  Corvex-RedOps first-run admin created.
     username: admin
     password: <copy-this>
 ==================================================================
@@ -49,11 +49,11 @@ Open **http://127.0.0.1:8000**, sign in as `admin` with that password (or set
 | `bloodhound-sample.zip` | Active Directory module | **Active Directory** |
 | `secpol-weak.inf` | Active Directory (config) | **Active Directory** |
 | `leaky-source.zip` | Secret scan | **Secret scan** |
-| `Dockerfile` | IaC scan (Trivy) | **Container / IaC** |
+| `Dockerfile` | IaC scan (container/IaC scanner) | **Container / IaC** |
 
 ---
 
-## 1. Mobile — APK (native, no MobSF)
+## 1. Mobile — APK (native, no external mobile-analysis engine)
 
 **Do:** New scan → **Mobile / Desktop app** → upload `qa/samples/vulnerable.apk` → run.
 
@@ -68,7 +68,7 @@ Open **http://127.0.0.1:8000**, sign in as `admin` with that password (or set
 - [ ] **MEDIUM** — Cleartext (HTTP) endpoints in app
 - [ ] **HIGH** — APK signed with a debug certificate
 
-✅ **Key check:** you get findings **without** a MobSF server running. The old
+✅ **Key check:** you get findings **without** a mobile-analysis engine server running. The old
 build returned zero here.
 
 ## 2. Mobile — IPA
@@ -106,7 +106,7 @@ build returned zero here.
 **Expect:** **ELF has an executable stack (NX disabled)** · **not position-independent
 (no PIE)** · **no stack canary** — all without `lief` installed.
 
-## 5. Active Directory — BloodHound attack surface
+## 5. Active Directory — directory attack-path analysis
 
 **Do:** New scan → **Active Directory** → upload `qa/samples/bloodhound-sample.zip`.
 
@@ -133,15 +133,15 @@ config checklist. To try config review too, upload `secpol-weak.inf`.
 **Expect:** hardcoded **AWS key** and **Stripe live key** detected, mapped to
 CWE-798 / OWASP A07, values **redacted** in the report.
 
-## 7. Infra — service → CVE (optional, needs a target or nmap output)
+## 7. Infra — service → CVE (optional, needs a target or port-scan output)
 
 The infra module maps discovered service banners to CVEs automatically. Two ways
 to see it:
 
-- **With nmap installed**, scan a host you own that runs an older service; an
+- **With the port & service discovery engine installed**, scan a host you own that runs an older service; an
   `OpenSSH 7.6p1` / `vsftpd 2.3.4` banner becomes an **Outdated … — N known CVE(s)**
   finding ranked by PRP.
-- **Without a target**, import an existing Nessus/Nuclei file (**Import findings**)
+- **Without a target**, import an existing VM-scanner (XML) or template-scanner (JSON) export (**Import findings**)
   — banners in the import get the same enrichment.
 
 Expected for `vsftpd 2.3.4`: **CRITICAL — Outdated vsftpd 2.3.4** (CVE-2011-2523).

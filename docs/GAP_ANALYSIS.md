@@ -1,11 +1,11 @@
-# Corvex Gap Analysis & OWASP Top 10 Coverage
+# Corvex-RedOps Gap Analysis & OWASP Top 10 Coverage
 
 **Benchmark:** a real, completed VAPT of a **multi-tenant video-conferencing SaaS**. 52 test cases mapped to OWASP WSTG +
 API Security Top 10, ~35 confirmed findings across web, API, JWT, authorization,
 business logic, real-time/chat, and infrastructure.
 
 The question this answers: **what does a real VAPT of a modern SaaS require that a
-VA orchestrator does not do?** — and how Corvex now closes that gap.
+VA orchestrator does not do?** — and how Corvex-RedOps now closes that gap.
 
 ---
 
@@ -13,8 +13,8 @@ VA orchestrator does not do?** — and how Corvex now closes that gap.
 
 The engagement's confirmed findings were overwhelmingly **authorization,
 JWT, and business-logic** issues — the exact classes that automated VA scanners
-(ZAP/Nuclei/Nessus) structurally cannot find, because they need authenticated,
-multi-identity, active probing:
+(DAST, template, and VM scanners) structurally cannot find, because they need
+authenticated, multi-identity, active probing:
 
 | # | Confirmed finding | OWASP | Scanner can find? |
 |---|---|---|---|
@@ -37,18 +37,20 @@ multi-identity, active probing:
 | TC-L02/L03 | nginx CVEs; Consul/Kafka/RabbitMQ/Zabbix internet-facing | A06/A05 | Yes |
 
 **Roughly 70% of the real findings are logic/authz/JWT** — the differentiator of
-a true VAPT platform (Burp Suite Enterprise / Acunetix class), not a VA scanner.
+a true VAPT platform (commercial web-proxy / DAST class), not a VA scanner.
 
 ---
 
-## 2. Gap: Corvex *before* this upgrade
+## 2. Gap: Corvex-RedOps *before* this upgrade
 
-Corvex was a strong **VA orchestrator** — it wraps nmap, Nessus-class output,
-Nuclei, ZAP, WPScan, MobSF, and native analyzers for desktop/netdev/firewall/
-hardening, normalizes everything into one `Finding` model, dedupes, risk-scores,
-correlates, and reports. But for the *web/API* asset types it only ran ZAP +
-Nuclei + an OpenAPI enumerator, and had just two exploit validators (reflected
-XSS, SQLi).
+Corvex-RedOps was a strong **VA orchestrator** — it wraps the port & service
+discovery engine, VM-scanner output, the template-based scanning engine, the
+DAST web-scanning engine, the WordPress scanning engine, the mobile-analysis
+engine, and native analyzers for desktop/netdev/firewall/hardening, normalizes
+everything into one `Finding` model, dedupes, risk-scores, correlates, and
+reports. But for the *web/API* asset types it only ran the DAST web-scanning
+engine + the template-based scanning engine + an OpenAPI enumerator, and had
+just two exploit validators (reflected XSS, SQLi).
 
 That leaves the crown-jewel classes uncovered:
 
@@ -58,8 +60,8 @@ That leaves the crown-jewel classes uncovered:
 | BOLA / IDOR / tenant confusion (multi-identity diff) | TC-D01–D07 | ❌ none |
 | Broken function-level authz (BFLA) | TC-D05 | ❌ none |
 | Excessive data exposure / secrets-in-response | TC-J02, I05 | ❌ none |
-| CORS credential reflection | TC-G01 | ⚠️ ZAP-partial |
-| Security headers / clickjacking / cookies | TC-G02/G03/E01 | ⚠️ ZAP-partial |
+| CORS credential reflection | TC-G01 | ⚠️ DAST-partial |
+| Security headers / clickjacking / cookies | TC-G02/G03/E01 | ⚠️ DAST-partial |
 | Auth logic: account enumeration, login rate-limit | TC-B01/B03 | ❌ none |
 | Verbose errors / stack-trace leakage | TC-J04 | ❌ none |
 | HTTP methods / OPTIONS surface | TC-A04 | ❌ none |
@@ -97,7 +99,7 @@ matrix — the checklist that shows which categories a given engagement exercise
 and which are still gaps.
 
 **Wiring.** The `web` and `api` modules now run this engine in their `assess()`
-phase alongside ZAP/Nuclei/OpenAPI, so findings flow through the same dedup /
+phase alongside the DAST/template scanners and OpenAPI enumeration, so findings flow through the same dedup /
 risk-scoring / correlation / reporting pipeline. Authenticated testing is
 configured per-asset via `asset.metadata` (identities, object IDs, endpoints,
 login, JWT) — see `pentestiq/checks/engine.py`.
@@ -112,7 +114,7 @@ login, JWT) — see `pentestiq/checks/engine.py`.
 | A02 Cryptographic Failures | ⚠️ TLS via tools | ✅ + JWT weak-secret |
 | A03 Injection | ✅ XSS/SQLi validators | ✅ (unchanged) |
 | A05 / API8 Security Misconfiguration | ⚠️ partial | ✅ headers/CORS/cookies/methods/errors |
-| A06 Vulnerable Components | ✅ nmap/nuclei/nessus | ✅ (unchanged) |
+| A06 Vulnerable Components | ✅ port-scan / template / VM scanners | ✅ (unchanged) |
 | A07 Auth Failures | ⚠️ enum via tools | ✅ + enumeration, rate-limit |
 | API2 Broken Authentication | ❌ | ✅ full JWT analysis |
 | API3 Data Exposure | ❌ | ✅ secrets-in-response |
@@ -130,12 +132,12 @@ login, JWT) — see `pentestiq/checks/engine.py`.
   **13/13** planted vulnerabilities (`bench/`).
 - ✅ **Single-portal API VAPT** — upload an OpenAPI/Swagger spec + bearer token(s)
   like an APK; endpoints/identities are derived automatically.
-- ✅ **Frida dynamic-analysis kit** served from the portal.
+- ✅ **Dynamic instrumentation / runtime-analysis kit** served from the portal.
 - ✅ **Out-of-band detection (OAST)** — a self-hostable collaborator (`pentestiq.oast`)
   plus blind-SSRF and stored/blind-XSS checks that confirm blind vulns via callback.
   Benchmarked: blind SSRF confirmed out-of-band (**14/14** planted vulns detected).
 - ✅ **Headless-browser SPA crawler** (`pentestiq.crawler.SpaCrawler`, optional
-  Playwright) — renders JS, follows client-side routes, captures XHR/fetch API
+  headless-browser engine) — renders JS, follows client-side routes, captures XHR/fetch API
   endpoints a static crawler can't see; merges into discovery and feeds the checks.
 - ✅ **DNS-based OAST** (`pentestiq.oast.DnsServer`) — a stdlib UDP catcher confirms
   blind interactions that only resolve DNS (HTTP-filtered SSRF, subdomain exfil).
@@ -152,12 +154,13 @@ or are candidates for future native checks:
 
 - **Mass assignment (TC-F05), SSRF (TC-F04), host-header (TC-F06)** — active
   write/OOB probes; planned as `allow_active`-gated checks.
-- **Payment/business-logic (TC-I02)** — inherently app-specific; Corvex flags
+- **Payment/business-logic (TC-I02)** — inherently app-specific; Corvex-RedOps flags
   the surface, human confirms the write PoC (per rules-of-engagement).
 - **Real-time/chat (Matrix/LiveKit/Firebase, TC-K)** — protocol-specific probes;
   candidate native module.
-- **Infra service auth (Consul/Kafka/RabbitMQ guest, TC-L)** — nmap discovers the
-  ports; service-specific auth checks are a roadmap module.
+- **Infra service auth (Consul/Kafka/RabbitMQ guest, TC-L)** — the port &
+  service discovery engine discovers the ports; service-specific auth checks are
+  a roadmap module.
 - **File-upload execution (TC-H01)** — partially covered; a dedicated upload
   check is planned.
 
@@ -165,14 +168,14 @@ or are candidates for future native checks:
 
 ## 7. Asset-type coverage (as tested on the engagement's real assets)
 
-| Asset | File | Corvex module |
+| Asset | File | Corvex-RedOps module |
 |---|---|---|
 | Web app (`app.example.com` SPA) | JS bundles | `web` + native checks |
-| REST API (218 endpoints, JWT) | Burp capture | `api` + native checks (BOLA/JWT/authz) |
-| Mobile app | `target-android.apk` | `mobile` (MobSF) |
+| REST API (218 endpoints, JWT) | Proxy-history capture | `api` + native checks (BOLA/JWT/authz) |
+| Mobile app | `target-android.apk` | `mobile` (mobile-analysis engine) |
 | Desktop app | `target-desktop.exe` | `desktop` (native PE/ELF/Mach-O) |
-| Infrastructure | nmap + Nessus | `infra` (nmap/nuclei) |
+| Infrastructure | port-scan + VM scan | `infra` (port-scan/template scanners) |
 | Firewall / hardening / network device | configs | `firewall` / `hardening` / `netdev` |
 
-Every asset type in the real engagement maps to a Corvex module; the upgrade
+Every asset type in the real engagement maps to a Corvex-RedOps module; the upgrade
 closes the *depth* gap on the two hardest ones — web and API.

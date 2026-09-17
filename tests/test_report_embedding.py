@@ -95,6 +95,21 @@ def test_severity_methodology_badge_classes(ctx):
     assert 'b-crit"' not in html and 'b-medi"' not in html
 
 
+def test_report_never_leaks_raw_tool_names(ctx):
+    """Branding regression: the client deliverable must expose only neutral engine
+    labels, never raw third-party tool product names, even though findings carry
+    raw ``source_tools`` keys internally (zap / nuclei / trivy / prowler here)."""
+    eng, st, nar = ctx
+    html = render_html(eng, st, nar).lower()
+    for raw in ("zap", "nuclei", "trivy", "prowler", "nmap", "mobsf", "burp",
+                "nessus", "semgrep", "wpscan", "bloodhound"):
+        assert raw not in html, f"raw tool name {raw!r} leaked into the report"
+    # the generic labels are present instead (& is HTML-escaped to &amp;)
+    assert "dast web-scanning engine" in html
+    assert "iac scanner" in html
+    assert "cloud-posture (cspm) engine" in html
+
+
 # ---- PDF ----------------------------------------------------------------
 def test_pdf_builds_with_sections(ctx):
     pytest.importorskip("reportlab")

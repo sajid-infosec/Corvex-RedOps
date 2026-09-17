@@ -1,8 +1,8 @@
-# Corvex — Technical Architecture
+# Corvex-RedOps — Technical Architecture
 
 *Version 0.1 · Draft · August 2026*
 
-This document describes the system design for Corvex. Guiding principle:
+This document describes the system design for Corvex-RedOps. Guiding principle:
 **orchestrate best-in-class tools; build custom logic only where it
 differentiates** (correlation, safe exploit-validation, risk scoring, AI
 reporting, authorization/safety).
@@ -11,8 +11,10 @@ reporting, authorization/safety).
 
 ## 1. Design Principles
 
-1. **Orchestrate, don't reinvent.** Wrap proven tools (Nmap, Nuclei, OpenVAS,
-   ZAP, WPScan, MobSF, etc.) behind a uniform module interface.
+1. **Orchestrate, don't reinvent.** Wrap proven, industry-standard engines
+   (port & service discovery, template-based scanning, VM scanning, DAST web
+   scanning, WordPress scanning, mobile analysis, etc.) behind a uniform module
+   interface.
 2. **One normalized findings model.** Every tool's output maps to a shared
    schema so we dedupe, correlate, and score once.
 3. **Assessment and validation are distinct phases.** VA discovers; PT validates.
@@ -60,7 +62,7 @@ reporting, authorization/safety).
 ## 3. Core Components
 
 ### 3.1 Orchestration Engine
-The heart of Corvex. Responsibilities:
+The heart of Corvex-RedOps. Responsibilities:
 - **Scope Manager** — loads/validates the engagement scope (targets, exclusions,
   time windows, allowed actions). Nothing runs outside scope.
 - **Workflow Runner** — executes per-asset workflows (recon → assess → validate →
@@ -114,7 +116,7 @@ finding:
   cvss: { vector, base_score }
   confidence: low|medium|high # boosted when validated
   status: detected|validated|exploited|false_positive|remediated
-  source_tools: [nuclei, zap, ...]   # provenance for dedupe
+  source_tools: [engine-a, engine-b, ...]  # provenance for dedupe
   evidence: [ {type, ref} ]          # req/resp, screenshot, PoC log
   validation:
     attempted: bool
@@ -138,20 +140,20 @@ downstream (dedupe, scoring, reporting) reads it.
 
 | Module | Assessment (VA) | Validation/Exploitation (PT, safe-mode) | Candidate tools |
 |---|---|---|---|
-| **Infrastructure / network** | Host/port/service discovery, network vuln scan | Auth checks, service-exploit validation | Nmap, masscan, OpenVAS/Greenbone, Nuclei |
-| **Web application** | Crawl, active/passive scan, OWASP Top 10 | Injection/auth/access-control validation w/ evidence | OWASP ZAP, Nuclei, Nikto, sqlmap (gated), ffuf |
-| **WordPress** | Core/plugin/theme CVE + user enum + config audit | Known-vuln + weak-cred validation | WPScan, Nuclei WP templates |
-| **API (REST/GraphQL/SOAP)** | Spec-driven discovery, OWASP API Top 10 | BOLA/BFLA/auth/injection validation | ZAP API scan, schemathesis, Nuclei, custom |
-| **Mobile (APK & IPA)** | Static analysis, secrets, permissions, MASVS map | Dynamic checks where device/emulator available | MobSF, apktool, jadx, semgrep (mobile rules) |
+| **Infrastructure / network** | Host/port/service discovery, network vuln scan | Auth checks, service-exploit validation | port & service discovery engine, mass port scanner, open-source VM scanners, template-based scanning engine |
+| **Web application** | Crawl, active/passive scan, OWASP Top 10 | Injection/auth/access-control validation w/ evidence | DAST web-scanning engine, template-based scanning engine, web-server scanning engine, SQL-injection engine (gated), content-discovery engine |
+| **WordPress** | Core/plugin/theme CVE + user enum + config audit | Known-vuln + weak-cred validation | WordPress scanning engine, WordPress vuln templates |
+| **API (REST/GraphQL/SOAP)** | Spec-driven discovery, OWASP API Top 10 | BOLA/BFLA/auth/injection validation | DAST API scan, schemathesis, template-based scanning engine, custom |
+| **Mobile (APK & IPA)** | Static analysis, secrets, permissions, MASVS map | Dynamic checks where device/emulator available | mobile-analysis engine, apktool, jadx, SAST engine (mobile rules) |
 | **Desktop (Win/macOS/Linux)** | Binary/dependency analysis, config/secret exposure | Local privesc & misconfig validation | custom analyzers, dependency scanners, YARA |
-| **Network devices** | Config ingestion, firmware/CVE checks | Default-cred / exposure validation | custom parsers, Nuclei, CVE feeds |
+| **Network devices** | Config ingestion, firmware/CVE checks | Default-cred / exposure validation | custom parsers, template-based scanning engine, CVE feeds |
 | **Firewall / config audit** *(nipper-class)* | Policy analysis vs. benchmarks | Shadow/permissive-rule detection & scoring | custom rule engine, config parsers |
 | **Patching & hardening** | CIS/DISA-STIG gap analysis, missing-patch detection | Remediation verification re-scan | OpenSCAP, Lynis, CIS benchmarks |
 
 ### 5.1 Lab Automation (`lab/`)
 Docker/Vagrant/Terraform blueprints that stand up intentionally-vulnerable
-targets (e.g., DVWA, Juice Shop, Metasploitable-class, a vulnerable WP, a vuln
-API) for testing Corvex itself, demos, and training. **Isolated networks
+targets (e.g., DVWA, Juice Shop, a deliberately-vulnerable server VM, a vulnerable WP, a vuln
+API) for testing Corvex-RedOps itself, demos, and training. **Isolated networks
 only.**
 
 ---
@@ -200,7 +202,7 @@ one language to start.
 ## 8. Repository Layout
 
 ```
-Corvex/
+Corvex-RedOps/
 ├── core/              # orchestration engine, scope mgr, scheduler, safe-mode governor
 ├── modules/           # per-asset-type modules (infra, web, wordpress, api, mobile, ...)
 ├── integrations/      # adapters wrapping external tools into the findings model

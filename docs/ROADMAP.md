@@ -1,4 +1,4 @@
-# Corvex — 2-Month Build Roadmap
+# Corvex-RedOps — 2-Month Build Roadmap
 
 *Version 0.1 · Draft · Target window: ~8 weeks*
 
@@ -30,7 +30,7 @@ over breadth: a few asset modules that work *well* beat nine that half-work.
 ## MVP Scope (in) vs. Deferred (out)
 
 **In (v0.1):** engine + scope/safety + async jobs; normalized findings model;
-integrations for Nmap, Nuclei, OpenVAS or ZAP, WPScan; web + infra modules
+integrations for port & service discovery, template-based scanning, VM or DAST web scanning, and WordPress scanning; web + infra modules
 (WordPress + API in beta); safe-mode validation for a couple of finding classes;
 Markdown/HTML report + basic AI narrative; CLI; lab (Juice Shop + DVWA + a vuln
 WP); docs.
@@ -58,13 +58,13 @@ advanced AI reporting, PDF/DOCX polish. (These are sequenced in "Beyond Week 8".
 
 ### Week 3 — First Integrations (Infra)
 - Integration layer contract; adapter pattern.
-- Wrap **Nmap** (discovery/enum) and **Nuclei** (templated scanning).
+- Wrap **the port & service discovery engine** (discovery/enum) and **the template-based scanning engine** (templated scanning).
 - Normalize their output → findings model; dedupe across the two.
 - **Milestone:** infra module produces normalized, deduped findings from a lab
   network.
 
 ### Week 4 — Web Module + Correlation/Scoring
-- Wrap **OWASP ZAP** (or Nikto) for web scanning.
+- Wrap **the DAST web-scanning engine** (or the web-server scanning engine) for web scanning.
 - Build **correlation + risk scoring** (CVSS ingest + confidence + dedupe).
 - Web module workflow: crawl → scan → normalize.
 - **Milestone:** web app scan yields a single prioritized, correlated findings
@@ -85,8 +85,8 @@ advanced AI reporting, PDF/DOCX polish. (These are sequenced in "Beyond Week 8".
   report.
 
 ### Week 7 — WordPress + API (beta) & Hardening Pass
-- Wrap **WPScan** → WordPress module (versions, CVEs, user enum, weak creds).
-- API module beta (spec-driven discovery + OWASP API checks via ZAP/Nuclei).
+- Wrap **the WordPress scanning engine** → WordPress module (versions, CVEs, user enum, weak creds).
+- API module beta (spec-driven discovery + OWASP API checks via the DAST and template-based scanning engines).
 - Harden the engine: error handling, timeouts, tool-failure resilience, tests
   for parsers/safety gates.
 - **Milestone:** WordPress module usable end-to-end; API in beta; test suite green.
@@ -96,13 +96,13 @@ advanced AI reporting, PDF/DOCX polish. (These are sequenced in "Beyond Week 8".
 - README polish, CONTRIBUTING, security policy, issue templates.
 - Tag **v0.1.0**, publish repo, soft-launch (LinkedIn, r/netsec, relevant
   communities).
-- **Milestone:** Corvex is public, installable, and demoable.
+- **Milestone:** Corvex-RedOps is public, installable, and demoable.
 
 ---
 
 ## Beyond Week 8 (backlog, prioritized)
 
-1. **Mobile module** — MobSF integration (APK/IPA static), then dynamic.
+1. **Mobile module** — mobile-analysis engine integration (APK/IPA static), then dynamic.
 2. **Firewall / config audit** (nipper-class) + **network devices**.
 3. **Hardening/compliance** — OpenSCAP, Lynis, CIS benchmark reporting.
 4. **Desktop app** analysis module.

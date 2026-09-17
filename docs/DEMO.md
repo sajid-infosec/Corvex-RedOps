@@ -1,8 +1,9 @@
-# Corvex — Demo
+# Corvex-RedOps — Demo
 
-A walk-through of what Corvex produces. (Output below is from the bundled test
-fixtures — Nmap + OWASP ZAP + Nuclei results for one host — so you can see the
-pipeline without a live target. On Kali with real tools, the same flow runs live.)
+A walk-through of what Corvex-RedOps produces. (Output below is from the bundled test
+fixtures — port & service discovery, DAST web-scan, and template-based scan results
+for one host — so you can see the pipeline without a live target. On Kali with real
+tools, the same flow runs live.)
 
 ## 1. Cross-tool, scored, correlated findings
 
@@ -10,15 +11,15 @@ Three tools feed one normalized model. Findings are deduplicated, risk-scored
 (0–100), and correlated into attack chains by host:port:
 
 ```
-RISK  SEV       CHAIN         TOOLS    TITLE
-  90  critical  10.0.0.5:80   nuclei   Example RCE
-  82  high      10.0.0.5:80   zap      SQL Injection
-  50  medium    10.0.0.5:443  nuclei   Weak TLS
-  28  low       10.0.0.5:23   nmap     Open port 23/tcp — telnet
-  25  low       10.0.0.5:80   zap      X-Content-Type-Options Header Missing
-   6  info      10.0.0.5:80   nmap     Open port 80/tcp — http (nginx 1.18.0)
-   6  info      10.0.0.5:22   nmap     Open port 22/tcp — ssh (OpenSSH 8.2p1)
-   5  info      10.0.0.5:80   nuclei   nginx detected
+RISK  SEV       CHAIN         ENGINE      TITLE
+  90  critical  10.0.0.5:80   tmpl-scan   Example RCE
+  82  high      10.0.0.5:80   dast        SQL Injection
+  50  medium    10.0.0.5:443  tmpl-scan   Weak TLS
+  28  low       10.0.0.5:23   port-scan   Open port 23/tcp — telnet
+  25  low       10.0.0.5:80   dast        X-Content-Type-Options Header Missing
+   6  info      10.0.0.5:80   port-scan   Open port 80/tcp — http (nginx 1.18.0)
+   6  info      10.0.0.5:22   port-scan   Open port 22/tcp — ssh (OpenSSH 8.2p1)
+   5  info      10.0.0.5:80   tmpl-scan   nginx detected
 ```
 
 The `10.0.0.5:80` chain links the open HTTP service, the RCE, the SQLi, and the
@@ -26,7 +27,7 @@ missing header into one story.
 
 ## 2. Safe exploit validation
 
-Corvex doesn't just report — it **confirms**. Non-destructive validators turn
+Corvex-RedOps doesn't just report — it **confirms**. Non-destructive validators turn
 `detected` into `validated` (with evidence) or dismiss false positives:
 
 ```

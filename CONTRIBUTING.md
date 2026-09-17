@@ -1,4 +1,4 @@
-# Contributing to Corvex
+# Contributing to Corvex-RedOps
 
 Thanks for your interest! Contribution guidelines will expand as the project
 matures. For now:

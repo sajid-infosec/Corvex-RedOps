@@ -1,14 +1,14 @@
-# Corvex — Deployment
+# Corvex-RedOps — Deployment
 
 ## One-command install (recommended)
 
 `install.sh` detects your Linux distribution, installs **all prerequisites**
 (Docker Engine, Docker Compose, git/curl/openssl), generates secrets, and deploys
-the full stack (Corvex API + web console + MobSF).
+the full stack (Corvex-RedOps API + web console + the mobile-analysis engine).
 
 ```bash
 git clone https://github.com/sajid-infosec/PentestIQ.git
-cd Corvex
+cd Corvex-RedOps
 sudo ./install.sh
 ```
 
@@ -54,10 +54,10 @@ docker compose -f deploy/docker-compose.yml up -d --build
 ## How mobile scanning works
 
 1. A user uploads an APK/IPA through the console (`POST /engagements/upload`).
-2. Corvex saves the file server-side and creates a `mobile` engagement.
-3. On run, the mobile module hands the file to **MobSF** (co-located, reached via
-   `MOBSF_URL`) which performs the static analysis.
-4. MobSF's report is normalized into Corvex findings (with CWE / OWASP-Mobile /
+2. Corvex-RedOps saves the file server-side and creates a `mobile` engagement.
+3. On run, the mobile module hands the file to **the mobile-analysis engine**
+   (co-located, reached via `MOBSF_URL`) which performs the static analysis.
+4. The engine's report is normalized into Corvex-RedOps findings (with CWE / OWASP-Mobile /
    MASVS references), scored, and included in the report — same pipeline as every
    other asset type.
 
@@ -66,14 +66,15 @@ docker compose -f deploy/docker-compose.yml up -d --build
 | Variable | Purpose |
 |---|---|
 | `PENTESTIQ_SECRET_KEY` | Signs session tokens — **set in production** so logins survive restarts |
-| `MOBSF_URL` | MobSF base URL (default `http://localhost:8000`; compose sets `http://mobsf:8000`) |
-| `MOBSF_API_KEY` | MobSF REST API key (same value on both services) |
+| `MOBSF_URL` | Mobile-analysis engine base URL (default `http://localhost:8000`; compose sets `http://mobsf:8000`) |
+| `MOBSF_API_KEY` | Mobile-analysis engine REST API key (same value on both services) |
 
 ## Other scanners
 
-`nmap` is bundled in the Corvex image. `nuclei`, `zaproxy`, and `wpscan` (for
-web / WordPress modules) can be added to the image or run on a dedicated scanning
-host. Missing tools are skipped gracefully — the engine still runs.
+The port & service discovery engine is bundled in the Corvex-RedOps image. The
+template-based scanning engine, the DAST web-scanning engine, and the WordPress
+scanning engine (for web / WordPress modules) can be added to the image or run on a
+dedicated scanning host. Missing engines are skipped gracefully — the engine still runs.
 
 ## Data & scale
 

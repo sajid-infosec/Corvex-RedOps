@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛡️ Corvex
+# 🛡️ Corvex-RedOps
 
 ### One platform for Vulnerability Assessment **and** Penetration Testing — every asset, one engine, client-ready in minutes.
 
@@ -15,39 +15,39 @@
 ![Asset modules](https://img.shields.io/badge/asset%20modules-10-8a2be2.svg)
 <br/>
 ![Self-hosted](https://img.shields.io/badge/self--hosted-air--gappable-0aa.svg)
-![AI](https://img.shields.io/badge/AI-local%20%26%20private%20(Ollama)-6366f1.svg)
+![AI](https://img.shields.io/badge/AI-local%20%26%20private-6366f1.svg)
 ![Prioritization](https://img.shields.io/badge/prioritization-EPSS%20%2B%20CISA%20KEV-ff6633.svg)
 ![OWASP](https://img.shields.io/badge/OWASP-Top10%20%2F%20API%20%2F%20WSTG%20%2F%20MASVS-brightgreen.svg)
 ![Cost](https://img.shields.io/badge/licensing%20cost-%240-success.svg)
 
-[Why Corvex](#-why-corvex) · [vs Commercial Tools](#-how-corvex-compares) · [Features](#-features) · [Screens](#-screens--samples) · [Install](#-installation) · [Quick Start](#-quick-start) · [API](#-rest-api-reference)
+[Why Corvex-RedOps](#-why-corvex) · [vs Commercial Tools](#-how-corvex-compares) · [Features](#-features) · [Screens](#-screens--samples) · [Install](#-installation) · [Quick Start](#-quick-start) · [API](#-rest-api-reference)
 
 <br/>
 
-<img src="docs/img/overview.png" alt="Corvex console — Overview dashboard" width="90%"/>
+<img src="docs/img/overview.png" alt="Corvex-RedOps console — Overview dashboard" width="90%"/>
 
 </div>
 
 ---
 
-> **Replaces two product categories with one.** Vulnerability-management suites (Tenable, Rapid7) *find* but don't exploit; pentest tools (Metasploit, Core Impact) *exploit* but don't do continuous assessment, prioritization or reporting. Corvex does **both** — and adds transparent, exploit-aware prioritization (EPSS + CISA KEV) that the enterprise tools charge for and keep opaque. See the full [**comparison →**](docs/COMPETITIVE.md)
+> **Replaces two product categories with one.** Enterprise vulnerability-management suites *find* but don't exploit; exploitation frameworks *exploit* but don't do continuous assessment, prioritization or reporting. Corvex-RedOps does **both** — and adds transparent, exploit-aware prioritization (EPSS + CISA KEV) that the enterprise tools charge for and keep opaque. See the full [**comparison →**](docs/COMPETITIVE.md)
 
 ---
 
-> ⚠️ **Authorized use only.** Corvex performs active security testing, including safe, non-destructive exploit validation. Use it **only** against systems you own or are explicitly authorized to test. Scope enforcement, a safe-mode governor, and a full audit trail are **core, built-in features**. See [Legal & Ethics](docs/LEGAL_AND_ETHICS.md).
+> ⚠️ **Authorized use only.** Corvex-RedOps performs active security testing, including safe, non-destructive exploit validation. Use it **only** against systems you own or are explicitly authorized to test. Scope enforcement, a safe-mode governor, and a full audit trail are **core, built-in features**. See [Legal & Ethics](docs/LEGAL_AND_ETHICS.md).
 
 ---
 
 ## 📖 Table of Contents
 
-- [What is Corvex?](#-what-is-corvex)
-- [Why Corvex](#-why-corvex)
-- [How Corvex compares](#-how-corvex-compares)
+- [What is Corvex-RedOps?](#-what-is-corvex)
+- [Why Corvex-RedOps](#-why-corvex)
+- [How Corvex-RedOps compares](#-how-corvex-compares)
 - [Features](#-features)
 - [Threat-informed prioritization](#-threat-informed-prioritization)
 - [Asset Coverage](#-asset-coverage)
 - [Attack-surface crawler](#-attack-surface-crawler)
-- [Burp Suite import](#-burp-suite-import)
+- [Proxy-history import](#-proxy-history-import)
 - [Out-of-band detection (OAST)](#-out-of-band-detection-oast)
 - [Native OWASP active checks](#-native-owasp-active-checks-vapt-depth)
 - [OWASP coverage checklist](#-owasp-coverage-checklist)
@@ -75,11 +75,11 @@
 
 ---
 
-## 🔍 What is Corvex?
+## 🔍 What is Corvex-RedOps?
 
 Security teams run VAPT with a sprawl of disconnected point tools — each with its own output format and no shared model. The result is hours of glue work, false-positive overload, inconsistent methodology, and reporting that takes as long as the testing.
 
-**Corvex unifies the entire VAPT lifecycle into one workflow-driven platform.** It orchestrates best-in-class tools behind a single engine, normalizes their output into one findings model, **safely validates** whether findings are actually exploitable, prioritizes by risk, correlates issues into attack chains, and produces **client-ready reports** — HTML, Markdown, PDF, or DOCX, with compliance mapping and white-label branding.
+**Corvex-RedOps unifies the entire VAPT lifecycle into one workflow-driven platform.** It orchestrates best-in-class tools behind a single engine, normalizes their output into one findings model, **safely validates** whether findings are actually exploitable, prioritizes by risk, correlates issues into attack chains, and produces **client-ready reports** — HTML, Markdown, PDF, or DOCX, with compliance mapping and white-label branding.
 
 It does **both halves** of the job:
 
@@ -90,31 +90,31 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 
 ---
 
-## 💡 Why Corvex
+## 💡 Why Corvex-RedOps
 
-| | The problem with the status quo | What Corvex does |
+| | The problem with the status quo | What Corvex-RedOps does |
 |---|---|---|
 | **Two silos, two invoices** | VM tools scan; PT tools exploit. You buy and stitch together both. | **One platform** does assessment *and* safe exploit validation. |
-| **Opaque, paywalled prioritization** | Tenable VPR / Rapid7 Real Risk are black boxes on premium tiers. | **Transparent PRP** — CVSS × EPSS × CISA KEV, every factor shown, free & offline. |
-| **Cloud lock-in** | Insight/Tenable One are cloud-tethered — a non-starter when air-gapped. | **Fully self-hosted & air-gappable.** Your data never leaves your lab. |
-| **Narrow coverage** | Burp is web-only; Nessus is thin on web/mobile. | **10 asset classes** in one engine, incl. an AI-assisted mobile runtime kit. |
-| **Bolt-on, cloud AI** | AI features are per-seat cloud upsells. | **Local, private AI** (Ollama) for correlation, FP-reduction & a copilot. |
+| **Opaque, paywalled prioritization** | Enterprise VM suites' proprietary risk scores are black boxes on premium tiers. | **Transparent PRP** — CVSS × EPSS × CISA KEV, every factor shown, free & offline. |
+| **Cloud lock-in** | Enterprise cloud tiers are cloud-tethered — a non-starter when air-gapped. | **Fully self-hosted & air-gappable.** Your data never leaves your lab. |
+| **Narrow coverage** | Web proxies are web-only; VM scanners are thin on web/mobile. | **10 asset classes** in one engine, incl. an AI-assisted mobile runtime kit. |
+| **Bolt-on, cloud AI** | AI features are per-seat cloud upsells. | **Local, private AI** for correlation, FP-reduction & a copilot. |
 | **$$$$ licensing** | Enterprise suites run five to six figures a year. | **Apache-2.0, $0 licensing.** Open-core. |
 
-## 🥊 How Corvex compares
+## 🥊 How Corvex-RedOps compares
 
-| Capability | Corvex | Tenable | Rapid7 | Burp EE | Metasploit | Core Impact |
-|---|:--:|:--:|:--:|:--:|:--:|:--:|
-| Licensing cost | **Free** | 💰💰💰 | 💰💰💰 | 💰💰💰 | 💰💰 | 💰💰💰💰 |
-| Self-hosted / air-gap | ✅ | ✅¹ | 🟡 | ✅ | ✅ | ✅ |
-| VA + safe exploit validation | ✅ | ❌ | 🟡 | ❌ | ✅ | ✅ |
-| Web · API · Mobile · Desktop · Infra · AD | ✅ | 🟡 | 🟡 | web only | 🟡 | 🟡 |
-| Exploit-aware prioritization (EPSS + KEV) | ✅ transparent | 💰 opaque | 💰 opaque | ❌ | ❌ | ❌ |
-| Remediation SLA tracking | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Local, private AI | ✅ | 🟡 cloud | 🟡 cloud | ❌ | ❌ | ❌ |
-| Client-ready reports (exec + technical) | ✅ | ✅ | ✅ | 🟡 | ✅ | ✅ |
+| Capability | Corvex-RedOps | Enterprise VM suites | Web proxies | Exploitation frameworks |
+|---|:--:|:--:|:--:|:--:|
+| Licensing cost | **Free** | 💰💰💰 | 💰💰💰 | 💰💰–💰💰💰💰 |
+| Self-hosted / air-gap | ✅ | ✅¹ | ✅ | ✅ |
+| VA + safe exploit validation | ✅ | ❌ / 🟡 | ❌ | ✅ |
+| Web · API · Mobile · Desktop · Infra · AD | ✅ | 🟡 | web only | 🟡 |
+| Exploit-aware prioritization (EPSS + KEV) | ✅ transparent | 💰 opaque | ❌ | ❌ |
+| Remediation SLA tracking | ✅ | ✅ | ❌ | ❌ |
+| Local, private AI | ✅ | 🟡 cloud | ❌ | ❌ |
+| Client-ready reports (exec + technical) | ✅ | ✅ | 🟡 | ✅ |
 
-<sub>✅ full · 🟡 partial / add-on / roadmap · ❌ none · 💰 paid tier. ¹ Tenable ships fully on-prem products (Nessus, Tenable Security Center); Tenable One / Vulnerability Management are cloud. Full breakdown, tool-by-tool analysis and **honest gaps** (independent-benchmark results, single-maintainer status, Postgres/worker roadmap) in **[docs/COMPETITIVE.md](docs/COMPETITIVE.md)**.</sub>
+<sub>✅ full · 🟡 partial / add-on / roadmap · ❌ none · 💰 paid tier. ¹ Some enterprise VM suites ship fully on-prem editions; their cloud tiers are not air-gappable. Full breakdown, category-by-category analysis and **honest gaps** (independent-benchmark results, single-maintainer status, Postgres/worker roadmap) in **[docs/COMPETITIVE.md](docs/COMPETITIVE.md)**.</sub>
 
 ---
 
@@ -123,13 +123,13 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 ### Core engine
 - **One normalized findings model** across every tool and asset type — deduplicate, correlate, and risk-score once.
 - **10 asset modules** covering the complete attack surface (see [Asset Coverage](#-asset-coverage)).
-- **Burp Suite XML import** — turn a proxy/history export into a ready-to-run engagement: every captured endpoint, parameter and bearer-token identity is extracted and fed straight to the active engine (a 90 MB history parses in ~1s).
+- **Proxy-history XML import** — turn a captured proxy/history export into a ready-to-run engagement: every captured endpoint, parameter and bearer-token identity is extracted and fed straight to the active engine (a 90 MB history parses in ~1s).
 - **Safe exploit validation** — non-destructive reflected-XSS and boolean-based SQLi confirmation that flips findings from *detected* to *validated* (with evidence) or dismisses false positives.
 - **Risk scoring (0–100)** blending severity, CVSS, confidence, and validation state.
-- **Threat-informed prioritization — Corvex Risk Priority (PRP)** — blends CVSS with **FIRST EPSS** (exploit probability) and **CISA KEV** (known-exploited, incl. ransomware) into one transparent 0–100 score, with the SLA state for every finding. This is the exploit-aware ranking Tenable (VPR) and Rapid7 (Real Risk) charge for and keep opaque — here **explainable, free, and offline-capable** (bundled KEV seed; live refresh from CISA/FIRST). See [`pentestiq/intel/`](pentestiq/intel/).
-- **Remediation SLA tracking** — per-severity windows (Critical 7d / High 30d / Medium 90d …), due dates, overdue flags and MTTR — matching Rapid7 Remediation Projects.
+- **Threat-informed prioritization — Corvex-RedOps Risk Priority (PRP)** — blends CVSS with **FIRST EPSS** (exploit probability) and **CISA KEV** (known-exploited, incl. ransomware) into one transparent 0–100 score, with the SLA state for every finding. This is the exploit-aware ranking enterprise VM suites charge for and keep opaque behind proprietary scores — here **explainable, free, and offline-capable** (bundled KEV seed; live refresh from CISA/FIRST). See [`pentestiq/intel/`](pentestiq/intel/).
+- **Remediation SLA tracking** — per-severity windows (Critical 7d / High 30d / Medium 90d …), due dates, overdue flags and MTTR — matching the remediation-project workflows of enterprise VM suites.
 - **Attack-chain correlation** — links findings that share a host + service into one story.
-- **Optional local-AI layer (self-hosted, zero budget)** — a local open-source model via **Ollama** powers analyst-grade write-ups, **attack-chain correlation**, a **false-positive verifier**, and an in-console **copilot**; plus a **self-learning** confidence model that improves from analyst confirm/dismiss feedback. Fully optional and fail-safe: with no model present, Corvex runs exactly as before on its deterministic engine.
+- **Optional local-AI layer (self-hosted, zero budget)** — a local open-source model via **a local AI runtime** powers analyst-grade write-ups, **attack-chain correlation**, a **false-positive verifier**, and an in-console **copilot**; plus a **self-learning** confidence model that improves from analyst confirm/dismiss feedback. Fully optional and fail-safe: with no model present, Corvex-RedOps runs exactly as before on its deterministic engine.
 
 ### Safety & governance (built in, not bolted on)
 - **Scope enforcement** — every engagement runs against a validated scope; out-of-scope targets are blocked (or warned) by policy.
@@ -145,20 +145,20 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 - **Two report types, four formats** — a **Full Technical Report** (cover page, executive summary, scope, CVSS risk methodology, findings summary, per-finding detail with issue/impact/evidence/PoC/CVSS-vector/CWE/remediation, remediation roadmap, conclusion and OWASP appendices) and a management-facing **Executive Summary** (risk-posture gauge, severity donut, OWASP bar chart, top risks, attack chains, remediation priorities). Both export to **HTML / PDF / DOCX** (full report also Markdown), print-ready with running headers and page numbers, **compliance mapping** (OWASP / PCI-DSS / ISO 27001 / MITRE ATT&CK), and **per-tenant white-label branding**.
 
 ### Deployment
-- **Self-hostable** — `pip install` for the engine; **Docker Compose** for the full stack with the integrated mobile-analysis service. The image bundles the orchestrated tools (nmap, a headless browser for SPA crawling, and nuclei) so a container deploy has full capability out of the box.
+- **Self-hostable** — `pip install` for the engine; **Docker Compose** for the full stack with the integrated mobile-analysis service. The image bundles the orchestrated scanning engines (port & service discovery, a headless browser for SPA crawling, and template-based scanning) so a container deploy has full capability out of the box.
 - **Postgres-ready** — SQLite by default, swappable behind clean storage interfaces.
 
 ---
 
 ## 🎯 Asset Coverage
 
-Ten modules — the complete VAPT surface, driven by Corvex's own engines with additional deep-scan backends bundled in the platform (auto-detected; anything unavailable is skipped, never fatal).
+Ten modules — the complete VAPT surface, driven by Corvex-RedOps's own engines with additional deep-scan backends bundled in the platform (auto-detected; anything unavailable is skipped, never fatal).
 
-| # | Module | Asset type | What Corvex does |
+| # | Module | Asset type | What Corvex-RedOps does |
 |---|---|---|---|
 | 1 | `infra` | Infrastructure / network | Host & service discovery, port enumeration, network vulnerability scanning |
 | 2 | `web` | Web applications | Crawl (static + headless SPA), OWASP Top-10 active checks (headers/CORS/JWT/authz/errors/CSRF/outdated-JS), injection fuzzing (SQLi/NoSQLi/XSS/XXE/CRLF/open-redirect/SSTI/traversal/cmd-i), out-of-band detection, safe exploit validation |
-| 3 | `wordpress` | WordPress sites | **Native checks** (fingerprint/version, user enumeration, XML-RPC exposure, exposed config/backup/debug files, directory listing) with **no external tools**; WPScan CVE data + Nuclei layer on when installed |
+| 3 | `wordpress` | WordPress sites | **Native checks** (fingerprint/version, user enumeration, XML-RPC exposure, exposed config/backup/debug files, directory listing) with **no external tools**; the WordPress scanning engine's CVE data + the template-based scanning engine layer on when installed |
 | 4 | `api` | REST / OpenAPI | Endpoint mapping + **authenticated access-control (BOLA/IDOR), token analysis, tenant confusion, excessive-data-exposure** (OWASP API Top 10) |
 | 5 | `mobile` | Mobile apps (Android / iOS) | Static analysis of code, manifest, permissions, secrets & certificates (CWE/MASVS) + on-device dynamic kit |
 | 6 | `desktop` | Desktop binaries (PE / ELF / Mach-O) | Hardcoded secrets/keys, insecure URLs, missing binary hardening (NX/PIE/RELRO/canary/DEP/CFG) |
@@ -173,7 +173,7 @@ Plus **lab automation** — `lab/docker-compose.yml` stands up intentionally-vul
 
 ## 🕷️ Attack-surface crawler
 
-Corvex ships a native, dependency-free **crawler** (`pentestiq.crawler`) that
+Corvex-RedOps ships a native, dependency-free **crawler** (`pentestiq.crawler`) that
 discovers the app surface — like the commercial DAST engines — so the checks run
 across the whole application instead of only the endpoints you supply:
 
@@ -191,10 +191,10 @@ across the whole application instead of only the endpoints you supply:
 - Runs in the `web` module's discovery phase and feeds the check engine
   automatically; also available standalone: `corvex crawl https://app.example.com --token <jwt> --spa`.
 
-## 🐙 Burp Suite import
+## 🐙 Proxy-history import
 
-Already proxied the target through Burp? Import that history and skip the crawl —
-Corvex turns a **Burp "Save items" / proxy-history XML** export into a
+Already proxied the target through an intercepting proxy? Import that history and skip the crawl —
+Corvex-RedOps turns a **"Save items" / proxy-history XML** export into a
 ready-to-run engagement:
 
 - **Streams** the export (scales to large multi-hundred-MB histories), filtering
@@ -208,7 +208,7 @@ ready-to-run engagement:
   data-exposure checks run against the endpoints and parameters you actually
   captured — the surface a fresh crawl of a SPA would miss.
 
-Upload it from the console (**New scan → Upload → Burp Suite**, with an optional
+Upload it from the console (**New scan → Upload → Proxy history**, with an optional
 scope-hosts field), or wire it into automation via the upload API
 (`asset_type=burp`). Everything runs under `allow_active`, on by default for
 authorized targets.
@@ -216,8 +216,8 @@ authorized targets.
 ## 📡 Out-of-band detection (OAST)
 
 For **blind** vulnerabilities — where the only signal is the target's own server
-reaching back to infrastructure you control — Corvex ships a native,
-self-hostable **OAST collaborator** (the Burp-Collaborator / AcuMonitor model):
+reaching back to infrastructure you control — Corvex-RedOps ships a native,
+self-hostable **OAST collaborator** (the out-of-band interaction service model):
 
 - **`pentestiq oast-server --port 9099 [--dns-port 53 --domain oast.example.com]`**
   stands up a collaborator. HTTP mode records interactions by token from a Host
@@ -249,7 +249,7 @@ detected across the crawl → checks → OAST → fuzz pipeline.
 
 Generic scanners find *technical* web bugs; a real VAPT of a modern multi-tenant
 SaaS is ~70% **authorization, JWT, and business-logic** testing that needs
-authenticated, multi-identity, active probing. Corvex ships a native,
+authenticated, multi-identity, active probing. Corvex-RedOps ships a native,
 dependency-free checks engine (`pentestiq.checks`) that provides exactly that —
 run in the `web` and `api` `assess()` phase, feeding the same dedup / risk-scoring
 / reporting pipeline.
@@ -323,7 +323,7 @@ benchmark against a real SaaS engagement.
 
 ## 🧭 OWASP coverage checklist
 
-Corvex measures itself against the **OWASP standards a professional VAPT is
+Corvex-RedOps measures itself against the **OWASP standards a professional VAPT is
 judged by** — not a single vendor's scanner — so coverage is *measurable*, not a
 marketing claim:
 
@@ -333,10 +333,10 @@ marketing claim:
 - **OWASP MASVS / MASTG** — Mobile Application Security verification
 
 `GET /coverage/owasp` (and **Settings → OWASP coverage** in the console) returns
-the live matrix — every OWASP control mapped to a Corvex detector as
+the live matrix — every OWASP control mapped to a Corvex-RedOps detector as
 `covered`, `partial`, or `planned`, with per-standard progress. A vendor
 scan-check catalogue is also tracked separately at `GET /coverage/burp` for
-teams migrating from Burp Suite Professional.
+teams migrating from commercial web-testing proxies.
 
 Native detectors now include, in addition to the OWASP/API core:
 
@@ -360,7 +360,7 @@ Items still marked *planned* (e.g. request smuggling, web-cache poisoning, the
 DOM-based client-side family that needs a full JS taint engine) are tracked in
 the same catalogue as the roadmap — see `pentestiq/checks/burp_catalog.py`.
 
-> The goal is not to reproduce Burp but to **exceed a Burp-plus-extensions
+> The goal is not to reproduce a web proxy but to **exceed a proxy-plus-extensions
 > workflow**: one engine that also does authenticated BOLA/BFLA, OAST out-of-band
 > confirmation, AI attack-chain correlation, and client-ready reporting — in one
 > run, self-hosted, at zero licence cost.
@@ -369,10 +369,9 @@ the same catalogue as the roadmap — see `pentestiq/checks/burp_catalog.py`.
 
 Severity alone is noise. A "critical" with no public exploit can wait; a "high"
 that's being used in ransomware campaigns **right now** cannot. Enterprise
-suites solve this with proprietary scores — **Tenable VPR**, **Rapid7 Real
-Risk** — locked behind premium tiers and opaque by design.
+suites solve this with **opaque, paywalled risk scores** — locked behind premium tiers and opaque by design.
 
-Corvex computes an equivalent, **transparent** score for free:
+Corvex-RedOps computes an equivalent, **transparent** score for free:
 
 ```
 PRP = base(severity / CVSS)
@@ -391,20 +390,20 @@ Every factor is returned with the number, so an analyst — or a client — sees
 | **KEV** known-exploited + ransomware | [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) | Free | **bundled seed** + live refresh |
 
 Paired with **remediation SLA tracking** — per-severity windows, due dates,
-overdue flags and MTTR — this is the Tenable/Rapid7 prioritization-and-track
+overdue flags and MTTR — this is the enterprise prioritization-and-track
 workflow, self-hosted and transparent. Endpoints: `GET
 /engagements/{id}/prioritization`, `GET /intel/status`, `POST /intel/refresh`,
 `POST /intel/enrich`. Code: [`pentestiq/intel/`](pentestiq/intel/).
 
 ## 🤖 AI layer (optional, self-hosted)
 
-Corvex ships an **optional** AI layer that runs entirely on your own hardware
-via [Ollama](https://ollama.com) — **no cloud API, no API key, no data leaves the
+Corvex-RedOps ships an **optional** AI layer that runs entirely on your own hardware
+via a **local AI runtime** — **no cloud API, no API key, no data leaves the
 host**. Every capability degrades gracefully: with no model present the platform
 behaves exactly as its deterministic engine.
 
-- **Analyst-grade write-ups** — a local model (default `qwen2.5:7b-instruct`,
-  swappable) rewrites finding descriptions, business impact and phased remediation,
+- **Analyst-grade write-ups** — a local instruct model (small, swappable default)
+  rewrites finding descriptions, business impact and phased remediation,
   and the executive narrative.
 - **AI attack-chain correlation** — the model reasons over the whole finding set to
   assemble realistic multi-step chains (recon → foothold → escalation → impact),
@@ -424,7 +423,7 @@ behaves exactly as its deterministic engine.
 Do you want to install / integrate AI? [y/N]
 ```
 
-Answer **y** and the installer starts the bundled Ollama service, pulls the model
+Answer **y** and the installer starts the bundled local AI runtime, pulls the model
 (~5 GB, one-time) and turns the AI layer on; answer **n** for a lean install. You
 can also skip the prompt:
 
@@ -444,7 +443,7 @@ API: `GET /ai/status`, `POST /ai/ask`, `POST /engagements/{id}/ai/analyze`,
 
 > **On coverage:** the AI layer *augments* detection and analysis — it does not
 > replace an analyst. Business-logic flaws and bespoke exploitation still need
-> human judgement; no scanner (Corvex or otherwise) finds those autonomously.
+> human judgement; no scanner (Corvex-RedOps or otherwise) finds those autonomously.
 
 ## ⚙️ How It Works
 
@@ -477,7 +476,7 @@ Pipeline: **scope → scan → normalize → validate → prioritize & correlate
 </tr>
 <tr>
 <td width="50%"><img src="docs/img/owasp-coverage.png" alt="OWASP coverage"/><br/><sub><b>OWASP coverage</b> — measured against Top 10, API Top 10, WSTG and MASVS/MASTG with per-standard weighting.</sub></td>
-<td width="50%"><img src="docs/img/scan-gallery.png" alt="Scan template gallery"/><br/><sub><b>Scan templates</b> — one click per asset class; Corvex maps the target to the right engine automatically.</sub></td>
+<td width="50%"><img src="docs/img/scan-gallery.png" alt="Scan template gallery"/><br/><sub><b>Scan templates</b> — one click per asset class; Corvex-RedOps maps the target to the right engine automatically.</sub></td>
 </tr>
 <tr>
 <td width="50%"><img src="docs/img/overview-light.png" alt="Light theme"/><br/><sub><b>Light &amp; dark themes</b> — the whole console, either way.</sub></td>
@@ -489,14 +488,14 @@ Pipeline: **scope → scan → normalize → validate → prioritize & correlate
 
 ## 📦 Installation
 
-Corvex runs on **Linux, macOS, and Windows**. Pick the path that fits — all
+Corvex-RedOps runs on **Linux, macOS, and Windows**. Pick the path that fits — all
 three give you the same CLI (`corvex`) and the web console (`corvex serve`).
 See **[INSTALL.md](INSTALL.md)** for copy-paste quick-start blocks per OS.
 
 ### Requirements
 - **Python 3.10+** (for the pip/pipx and source paths), **or** Docker (for the
   container path), **or** just download a prebuilt binary (no Python needed).
-- Corvex's core (crawler, OWASP checks, out-of-band detection, injection fuzzer,
+- Corvex-RedOps's core (crawler, OWASP checks, out-of-band detection, injection fuzzer,
   reporting) needs **no external components**. The Docker image additionally bundles
   the deep-scan backend and the mobile-analysis service.
 
@@ -547,7 +546,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker
 ### Option D — Docker (any OS with Docker/Docker Desktop)
 ```bash
 cd deploy
-docker compose up -d --build          # Corvex console on :8080 (full backend bundled)
+docker compose up -d --build          # Corvex-RedOps console on :8080 (full backend bundled)
 ```
 
 ### Extras
@@ -611,12 +610,12 @@ corvex serve                                        # http://127.0.0.1:8000
 ```
 
 Then open **http://127.0.0.1:8000** for the console, or **/docs** for interactive API docs.
-On first run Corvex creates an **`admin`** workspace and prints a **one-time random password to
+On first run Corvex-RedOps creates an **`admin`** workspace and prints a **one-time random password to
 the server log** — copy it from the console output to sign in (or pin your own beforehand with
 `export CORVEX_ADMIN_PASSWORD=…`). Change it after first login. To bootstrap another tenant + owner from the CLI:
 
 ```bash
-corvex init-tenant --tenant "Corvex" --username sajid --password "s3cr3tpass"
+corvex init-tenant --tenant "Corvex-RedOps" --username sajid --password "s3cr3tpass"
 #  -> prints an API key you can use with  -H "X-API-Key: <key>"
 ```
 
@@ -628,7 +627,7 @@ corvex init-tenant --tenant "Corvex" --username sajid --password "s3cr3tpass"
 
 The installer **detects your Linux distribution**, installs **all prerequisites**
 (Docker Engine, Docker Compose, git/curl/openssl), generates secrets, and brings up
-the **entire stack** (Corvex API + web console + mobile-analysis service). No manual setup.
+the **entire stack** (Corvex-RedOps API + web console + mobile-analysis service). No manual setup.
 
 ```bash
 git clone https://github.com/sajid-infosec/PentestIQ.git
@@ -659,7 +658,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker -Down     # stop 
 | Service | Port | Purpose |
 |---|---|---|
 | `pentestiq` | 8080 | REST API + web console |
-| `mobile-analysis` | 8000 | Mobile static-analysis service (managed by Corvex) |
+| `mobile-analysis` | 8000 | Mobile static-analysis service (managed by Corvex-RedOps) |
 
 ### Manual (if you already run Docker)
 
@@ -679,7 +678,7 @@ Full deployment guide, environment variables, and production notes (Postgres, sc
 
 The console is the fastest way to run a full assessment — no CLI needed.
 
-**1 · Sign in.** Open `http://localhost:8080`. On first run Corvex provisions an
+**1 · Sign in.** Open `http://localhost:8080`. On first run Corvex-RedOps provisions an
 **`admin`** workspace and prints a one-time random password to the server log — sign in with
 that (or your pinned `CORVEX_ADMIN_PASSWORD`) and change it. Use **Create workspace** to set up a separate, isolated tenant.
 
@@ -695,9 +694,9 @@ token + object IDs** to unlock cross-tenant access-control (BOLA) testing, tick
 **Enable active testing** for injection & brute-force (authorised targets only), and
 **Upload & scan**. Endpoints, identities and injection points are derived automatically.
 
-**4 · Import a Burp Suite capture.** **New scan → Upload & scan**, asset type
-**Burp Suite**: choose your proxy/history **XML** export and (optionally) name the
-in-scope hosts. Corvex extracts every captured endpoint, parameter and bearer
+**4 · Import a proxy-history capture.** **New scan → Upload & scan**, asset type
+**Proxy history**: choose your proxy/history **XML** export and (optionally) name the
+in-scope hosts. Corvex-RedOps extracts every captured endpoint, parameter and bearer
 token, then runs the active engine against that real surface — ideal for SPAs a
 fresh crawl can't fully map.
 
@@ -724,7 +723,7 @@ Every engagement is defined by a **scope file** (YAML). It declares what to test
 
 ```yaml
 engagement:
-  name: "Corvex External Assessment"
+  name: "Corvex-RedOps External Assessment"
   authorized_by: "Sajid"                # who authorized this test
   window:                               # optional testing window
     start: "2026-01-01T00:00:00Z"
@@ -812,10 +811,10 @@ curl -XPOST http://localhost:8080/engagements/upload \
   -H "Authorization: Bearer $TOKEN" \
   -F "file=@router.cfg" -F "asset_type=network_device" -F "name=edge-router"
 
-# a Burp Suite proxy/history export — extract endpoints, params & tokens, then scan
+# a proxy/history export — extract endpoints, params & tokens, then scan
 curl -XPOST http://localhost:8080/engagements/upload \
   -H "Authorization: Bearer $TOKEN" \
-  -F "file=@burp-history.xml" -F "asset_type=burp" \
+  -F "file=@proxy-history.xml" -F "asset_type=burp" \
   -F "scope_hosts=app.example.com,example.com" -F "allow_active=true" -F "name=web-from-burp"
 ```
 
@@ -847,7 +846,7 @@ and object-ID fields dynamically.
 
 **Dynamic mobile & desktop analysis (AI-assisted).** Static analysis runs
 automatically on upload; then open the **Dynamic kit**, pick the engagement and
-click **Analyze**. Corvex infers the platform (Android / iOS / desktop),
+click **Analyze**. Corvex-RedOps infers the platform (Android / iOS / desktop),
 detects the app's **runtime protections** — TLS certificate pinning, root /
 jailbreak detection, debuggable / anti-tamper, exposed WebViews / JS bridges —
 from the static findings, hands you the **platform-tailored Frida scripts** to
@@ -877,18 +876,18 @@ Two report types via `GET /engagements/{id}/report?format=html|pdf|docx|md&varia
 ```bash
 curl -XPUT http://localhost:8080/settings -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"company_name":"Corvex","accent_color":"#1e3a8a","footer_note":"Confidential"}'
+  -d '{"company_name":"Corvex-RedOps","accent_color":"#1e3a8a","footer_note":"Confidential"}'
 ```
 
 ### 6. Continuous scanning & scheduling
 
-Create a schedule and Corvex re-runs it automatically, **diffing** each run against the last (new / fixed / persisting) and notifying a Slack/webhook URL.
+Create a schedule and Corvex-RedOps re-runs it automatically, **diffing** each run against the last (new / fixed / persisting) and notifying a Slack/webhook URL.
 
 ```bash
 # nightly scan with Slack notification
 curl -XPOST http://localhost:8080/schedules -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" -d '{
-    "name":"Nightly Corvex",
+    "name":"Nightly Corvex-RedOps",
     "interval_seconds": 86400,
     "webhook_url":"https://hooks.slack.com/services/XXX",
     "scope":{"in_scope":["web=https://app.example.com"]}
@@ -899,16 +898,16 @@ curl http://localhost:8080/schedules/<id>/diff          -H "Authorization: Beare
 curl http://localhost:8080/schedules/<id>/runs          -H "Authorization: Bearer $TOKEN"  # run history
 ```
 
-Notification payload is Slack-compatible: *"Corvex · Nightly Corvex: scan complete — 1 new, 1 fixed, 2 persisting."*
+Notification payload is Slack-compatible: *"Corvex-RedOps · Nightly Corvex-RedOps: scan complete — 1 new, 1 fixed, 2 persisting."*
 
 ### 7. Authentication, tenants & RBAC
 
-Corvex is multi-tenant. Authenticate with a **session token** (`Authorization: Bearer …`) or a **per-tenant API key** (`X-API-Key: …`).
+Corvex-RedOps is multi-tenant. Authenticate with a **session token** (`Authorization: Bearer …`) or a **per-tenant API key** (`X-API-Key: …`).
 
 ```bash
 # register a tenant + owner, get a token
 TOKEN=$(curl -s -XPOST http://localhost:8080/auth/register -H "Content-Type: application/json" \
-  -d '{"tenant_name":"Corvex","username":"sajid","password":"password123"}' | jq -r .token)
+  -d '{"tenant_name":"Corvex-RedOps","username":"sajid","password":"password123"}' | jq -r .token)
 
 # who am I
 curl http://localhost:8080/me -H "Authorization: Bearer $TOKEN"
@@ -936,7 +935,7 @@ Passwords are PBKDF2-hashed; API keys are stored only as a hash (shown once at c
 | Variable | Default | Purpose |
 |---|---|---|
 | `CORVEX_ADMIN_USER` | `admin` | Username for the first-run admin account |
-| `CORVEX_ADMIN_PASSWORD` | *(random, logged once)* | Pins the first-run admin password. If unset, Corvex generates a strong random one and prints it **once** to the server log — **no default password is shipped** |
+| `CORVEX_ADMIN_PASSWORD` | *(random, logged once)* | Pins the first-run admin password. If unset, Corvex-RedOps generates a strong random one and prints it **once** to the server log — **no default password is shipped** |
 | `PENTESTIQ_SECRET_KEY` | *(random per run)* | Signs session tokens — **set in production** so logins survive restarts |
 | `MOBSF_URL` | `http://localhost:8000` | Mobile-analysis service base URL |
 | `MOBSF_API_KEY` | *(empty)* | Mobile-analysis service API key |
@@ -991,7 +990,7 @@ Base URL: `http://<host>:<port>` · Auth: `Authorization: Bearer <token>` **or**
 |---|---|---|---|
 | `GET` | `/assets` | any | List inventory assets (filters: `kind`, `tag`, `criticality`, `q`) |
 | `POST` | `/assets` | member+ | Register an asset (deduped by canonical identifier) |
-| `POST` | `/discovery` | member+ | External discovery (EASM) for a root domain — crt.sh + subfinder + live-host probe → registry |
+| `POST` | `/discovery` | member+ | External discovery (EASM) for a root domain — certificate-transparency + subdomain enumeration + live-host probe → registry |
 | `GET` | `/assets/stats` | any | Counts by kind / criticality |
 | `GET` | `/assets/{id}` | any | Asset detail |
 | `PATCH` | `/assets/{id}` | member+ | Update tags / criticality / owner / label / notes |
@@ -1029,7 +1028,7 @@ Base URL: `http://<host>:<port>` · Auth: `Authorization: Bearer <token>` **or**
 
 ## 🔒 Safety, Authorization & Legal
 
-Corvex is an **offensive security tool**. These controls are enforced in code, not left to policy:
+Corvex-RedOps is an **offensive security tool**. These controls are enforced in code, not left to policy:
 
 - **Authorized use only** — test only what you own or are explicitly authorized to test.
 - **Scope enforcement** — every engagement requires a validated scope; `enforcement: block` hard-blocks out-of-scope targets.
@@ -1062,7 +1061,7 @@ CI runs the suite on Python 3.10–3.12 (workflow provided at [`docs/github-acti
 - **Phase 1 — open-source engine (v0.1.0):** ✅ complete — 10 asset modules, safe validation, reporting.
 - **Phase 2 — SaaS platform:** ✅ API, web console, auth/RBAC, scheduling, reporting at scale · ⏳ billing & tiers.
 - **Phase 3 — exceed the incumbents:** ✅ OWASP-aligned coverage · ✅ threat-informed prioritization (EPSS + CISA KEV) · ✅ remediation SLA tracking · ✅ AI-assisted mobile runtime kit · ✅ local private AI (correlation / FP-reduction / copilot).
-- **Next (to widen the lead over Tenable/Rapid7):** first-class **asset inventory & attack-surface management**; **trend/posture analytics** (MTTR over time); native **Jira / ServiceNow / Slack** remediation workflow; deeper exploit validation + optional Metasploit hand-off; agent-based & container scanning; PostgreSQL backend and distributed workers.
+- **Next (to widen the lead over enterprise VM suites):** first-class **asset inventory & attack-surface management**; **trend/posture analytics** (MTTR over time); native **Jira / ServiceNow / Slack** remediation workflow; deeper exploit validation + optional exploitation-framework hand-off; agent-based & container scanning; PostgreSQL backend and distributed workers.
 
 Detail: [docs/COMPETITIVE.md](docs/COMPETITIVE.md) · [docs/ROADMAP.md](docs/ROADMAP.md) · [docs/PHASE2_ROADMAP.md](docs/PHASE2_ROADMAP.md) · [CHANGELOG.md](CHANGELOG.md).
 
@@ -1087,22 +1086,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [CODE_OF
 
 ### Third-party tools & licensing
 
-Corvex **orchestrates** external scanners rather than embedding them — each stays under
-its own license and is invoked only when present on the host (auto-detected; absent tools
-are skipped, never fatal). A few carry redistribution terms that matter the moment there is
-a paid tier or a bundled image:
-
-| Tool | License | Note |
-|---|---|---|
-| **nmap** | NPSL | Redistribution/commercial-bundling restrictions — do **not** ship it inside a commercial image without review |
-| **WPScan** | Non-commercial (WPScan license) | Free for non-commercial use; a commercial WPScan license/API token is required otherwise |
-| **MobSF** | GPL-3.0 | Copyleft — bundling in a distributed image has GPL obligations |
-| nuclei, trivy, semgrep, prowler, kube-bench | Apache-2.0 / MIT | Permissive |
-
-The default Docker image installs only permissively-licensed tools; nmap/WPScan/MobSF are
-expected to be provided by the operator. Corvex's own SCA engine emits CycloneDX SBOMs for
-scanned targets; a signed project-level SBOM and a clean licence attestation are tracked on
-the roadmap. **Have licensing reviewed before any commercial distribution or paid tier.**
+Corvex-RedOps **orchestrates** external scanning engines rather than embedding them — each
+stays under its own license and is invoked only when present on the host (auto-detected;
+absent engines are skipped, never fatal). Some carry redistribution or copyleft terms that
+matter the moment there is a paid tier or a bundled image. Those attributions and their
+license notes are kept in **[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)** for license
+review. The default container image installs only permissively-licensed engines; the rest
+are expected to be provided by the operator. Corvex-RedOps's own SCA engine emits CycloneDX
+SBOMs for scanned targets. **Have licensing reviewed before any commercial distribution or
+paid tier.**
 
 ---
 
@@ -1110,6 +1102,6 @@ the roadmap. **Have licensing reviewed before any commercial distribution or pai
 
 **Built by [Sajid](https://github.com/sajid-infosec)** — Senior Cybersecurity Engineer · EC-Council LPT (Master)
 
-*If Corvex is useful to you, consider starring the repo. ⭐*
+*If Corvex-RedOps is useful to you, consider starring the repo. ⭐*
 
 </div>

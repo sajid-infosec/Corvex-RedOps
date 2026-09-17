@@ -1,10 +1,10 @@
-# Corvex — marketing website
+# Corvex-RedOps — marketing website
 
-A self-contained, single-file marketing site for Corvex with **Free** and
+A self-contained, single-file marketing site for Corvex-RedOps with **Free** and
 **Premium** tiers. No build step, no dependencies (fonts load from Google Fonts;
 everything else is inline).
 
-> **This is separate from the Corvex tool.** The SaaS/tool (console, scanning,
+> **This is separate from the Corvex-RedOps tool.** The SaaS/tool (console, scanning,
 > reports) is deployed from the repo root with `./install.sh` and runs on
 > **:8080** (Docker) or **:8000** (`corvex serve`). This website is just the
 > brochure — it lives in its own directory and runs on **:9090**, so the two
@@ -27,7 +27,7 @@ docker compose down        # stop
 ```
 
 Both are independent of `install.sh` — starting or stopping the website never
-touches the Corvex tool, and vice-versa.
+touches the Corvex-RedOps tool, and vice-versa.
 
 ## Deploy it publicly
 
@@ -40,7 +40,7 @@ reverse proxy.
 | | URL | What it is |
 |---|---|---|
 | **Website** (this folder) | http://localhost:9090 | The marketing brochure — hero, coverage, Free/Premium pricing |
-| **Tool console** (repo root) | http://localhost:8080 | The actual Corvex app — log in, run scans, get reports |
+| **Tool console** (repo root) | http://localhost:8080 | The actual Corvex-RedOps app — log in, run scans, get reports |
 
 ## Editing the tiers
 
