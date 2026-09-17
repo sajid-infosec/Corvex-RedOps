@@ -8,7 +8,7 @@
 
 <br/>
 
-![CI](https://github.com/sajid-infosec/PentestIQ/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/sajid-infosec/Corvex-RedOps/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 ![Tests](https://img.shields.io/badge/tests-450%2B%20passing-brightgreen.svg)
@@ -472,7 +472,7 @@ Pipeline: **scope → scan → normalize → validate → prioritize & correlate
 <table>
 <tr>
 <td width="50%"><img src="docs/img/prioritization.png" alt="Threat-informed prioritization"/><br/><sub><b>Threat-informed prioritization</b> — PRP (CVSS × EPSS × CISA KEV), KEV badges, SLA states. The exploit-aware ranking enterprises pay for.</sub></td>
-<td width="50%"><img src="docs/img/dynamic-kit.png" alt="AI-assisted Dynamic kit"/><br/><sub><b>AI-assisted Dynamic kit</b> — platform detection, runtime-protection analysis, tailored Frida scripts and a MASVS-aligned test plan.</sub></td>
+<td width="50%"><img src="docs/img/dynamic-kit.png" alt="AI-assisted Dynamic kit"/><br/><sub><b>AI-assisted Dynamic kit</b> — platform detection, runtime-protection analysis, tailored instrumentation scripts and a MASVS-aligned test plan.</sub></td>
 </tr>
 <tr>
 <td width="50%"><img src="docs/img/owasp-coverage.png" alt="OWASP coverage"/><br/><sub><b>OWASP coverage</b> — measured against Top 10, API Top 10, WSTG and MASVS/MASTG with per-standard weighting.</sub></td>
@@ -501,7 +501,7 @@ See **[INSTALL.md](INSTALL.md)** for copy-paste quick-start blocks per OS.
 
 ### Option A — prebuilt binary (no Python, no Docker)
 Download the single-file executable for your OS from the
-[**Releases**](https://github.com/sajid-infosec/PentestIQ/releases) page:
+[**Releases**](https://github.com/sajid-infosec/Corvex-RedOps/releases) page:
 
 | OS | Asset |
 |---|---|
@@ -519,12 +519,12 @@ chmod +x pentestiq-linux-x64 && ./pentestiq-linux-x64 serve
 ### Option B — pipx / pip (cross-platform, recommended for CLI users)
 ```bash
 # isolated global CLI (Linux/macOS/Windows)
-pipx install "git+https://github.com/sajid-infosec/PentestIQ.git#egg=pentestiq[all]"
+pipx install "git+https://github.com/sajid-infosec/Corvex-RedOps.git#egg=pentestiq[all]"
 pentestiq --help
 ```
 Or into a virtualenv:
 ```bash
-git clone https://github.com/sajid-infosec/PentestIQ.git && cd PentestIQ
+git clone https://github.com/sajid-infosec/Corvex-RedOps.git && cd Corvex-RedOps
 python3 -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\Activate.ps1
 pip install ".[api,reports,desktop]"                    # or ".[all]" for everything incl. SPA rendering
 corvex serve                                          # open http://localhost:8080
@@ -630,8 +630,8 @@ The installer **detects your Linux distribution**, installs **all prerequisites*
 the **entire stack** (Corvex-RedOps API + web console + mobile-analysis service). No manual setup.
 
 ```bash
-git clone https://github.com/sajid-infosec/PentestIQ.git
-cd PentestIQ
+git clone https://github.com/sajid-infosec/Corvex-RedOps.git
+cd Corvex-RedOps
 sudo ./install.sh
 ```
 
@@ -849,7 +849,7 @@ automatically on upload; then open the **Dynamic kit**, pick the engagement and
 click **Analyze**. Corvex-RedOps infers the platform (Android / iOS / desktop),
 detects the app's **runtime protections** — TLS certificate pinning, root /
 jailbreak detection, debuggable / anti-tamper, exposed WebViews / JS bridges —
-from the static findings, hands you the **platform-tailored Frida scripts** to
+from the static findings, hands you the **platform-tailored instrumentation scripts** to
 defeat them, and builds a **step-by-step, MASVS-aligned runtime test plan**
 enriched by the local AI model when one is available (`GET
 /engagements/{id}/kit/plan`). Grab the scripts from the console or

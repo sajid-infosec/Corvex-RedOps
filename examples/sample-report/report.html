@@ -32,10 +32,10 @@
   ul { margin:6px 0; }
 </style></head><body>
 <header><div class="wrap"><h1>VAPT Report — Example Corp — External Web &amp; Infra Assessment</h1>
-  <span class="sub">PentestIQ · 2026-08-31 09:59 UTC</span></div></header>
+  <span class="sub">Corvex-RedOps · 2026-08-31 09:59 UTC</span></div></header>
 <div class="wrap">
   <h2>Executive Summary</h2>
-  <p>PentestIQ assessed 2 assets for engagement &quot;Example Corp — External Web &amp; Infra Assessment&quot; and identified 8 findings (overall risk rating: Critical). By severity: 1 critical, 1 high, 1 medium, 2 low. 1 finding was safely validated as exploitable through non-destructive checks (including: SQL Injection), removing false-positive doubt. The highest-priority item is &quot;SQL Injection&quot; (high, risk 95) on web:http://10.0.0.5:80.</p>
+  <p>Corvex-RedOps assessed 2 assets for engagement &quot;Example Corp — External Web &amp; Infra Assessment&quot; and identified 8 findings (overall risk rating: Critical). By severity: 1 critical, 1 high, 1 medium, 2 low. 1 finding was safely validated as exploitable through non-destructive checks (including: SQL Injection), removing false-positive doubt. The highest-priority item is &quot;SQL Injection&quot; (high, risk 95) on web:http://10.0.0.5:80.</p>
   <p><span class="rating" style="background:#7f1d1d">
     Overall risk: Critical</span></p>
   <div class="cards"><div class="card"><div class="num" style="color:#7f1d1d">1</div><div class="lbl">Critical</div></div><div class="card"><div class="num" style="color:#b91c1c">1</div><div class="lbl">High</div></div><div class="card"><div class="num" style="color:#c2701c">1</div><div class="lbl">Medium</div></div><div class="card"><div class="num" style="color:#2563eb">2</div><div class="lbl">Low</div></div><div class="card"><div class="num" style="color:#4b5563">3</div><div class="lbl">Info</div></div></div>
@@ -46,7 +46,7 @@
   <h2>Scope</h2><p><b>Authorized by:</b> Example Corp CISO (demonstration data)</p><ul><li>10.0.0.5</li><li>http://10.0.0.5:80</li></ul>
 
   <h2>Methodology</h2>
-  <p>PentestIQ orchestrated industry-standard tools (Nmap, Nuclei, OWASP ZAP), normalized and
+  <p>Corvex-RedOps orchestrated its scanning engines, normalized and
   deduplicated results into one findings model, then applied non-destructive safe-mode
   validation to confirm exploitability and remove false positives. Findings are prioritized by
   a blended risk score and correlated into attack chains.</p>
@@ -60,7 +60,7 @@
         <span class="status">validated</span></div>
       <h3>SQL Injection</h3>
       <div class="meta">web:http://10.0.0.5:80 · CWE-89 · chain 10.0.0.5:80
-        · tools: zap</div>
+        · engine: DAST web scanning</div>
       <div class="val">Validation: safe → <b>confirmed</b></div><div class="ev"><b>Evidence</b><ul><li><code>http://10.0.0.5:80/login</code> — POST SQL error</li><li><code>http://10.0.0.5:80/login</code> — Boolean-based inference: TRUE matched baseline, FALSE diverged (base=(200, 160), true=(200, 160), false=(200, 7))</li></ul></div><div class="rem"><b>Remediation:</b> Use parameterized queries.</div><div class='refs'><b>References:</b> <a href="https://owasp.org/sqli">https://owasp.org/sqli</a>, <a href="https://cwe.mitre.org/data/definitions/89.html">https://cwe.mitre.org/data/definitions/89.html</a>, <a href="https://cwe.mitre.org/data/definitions/89.html">https://cwe.mitre.org/data/definitions/89.html</a></div>
     </div>
 <div class="finding" style="border-left:5px solid #7f1d1d">
@@ -69,7 +69,7 @@
         <span class="status">detected</span></div>
       <h3>Example RCE</h3>
       <div class="meta">infra:10.0.0.5 · CVE-2021-1234 · chain 10.0.0.5:80
-        · tools: nuclei</div>
+        · engine: template-based scanning</div>
       <div class="ev"><b>Evidence</b><ul><li><code>http://10.0.0.5:80/vuln</code> — Remote code execution</li></ul></div><div class='refs'><b>References:</b> <a href="https://nvd.nist.gov/vuln/detail/CVE-2021-1234">https://nvd.nist.gov/vuln/detail/CVE-2021-1234</a></div>
     </div>
 <div class="finding" style="border-left:5px solid #c2701c">
@@ -78,7 +78,7 @@
         <span class="status">detected</span></div>
       <h3>Weak TLS</h3>
       <div class="meta">infra:10.0.0.5 · weak-tls · chain 10.0.0.5:443
-        · tools: nuclei</div>
+        · engine: template-based scanning</div>
       <div class="ev"><b>Evidence</b><ul><li><code>https://10.0.0.5:443</code></li></ul></div><div class='refs'><b>References:</b> <a href="https://example.com/tls">https://example.com/tls</a></div>
     </div>
 <div class="finding" style="border-left:5px solid #2563eb">
@@ -87,7 +87,7 @@
         <span class="status">detected</span></div>
       <h3>Open port 23/tcp — telnet</h3>
       <div class="meta">infra:10.0.0.5 · open-port · chain 10.0.0.5:23
-        · tools: nmap</div>
+        · engine: port &amp; service discovery</div>
       <div class="ev"><b>Evidence</b><ul><li><code>10.0.0.5:23/tcp</code> — telnet</li></ul></div>
     </div>
 <div class="finding" style="border-left:5px solid #2563eb">
@@ -96,7 +96,7 @@
         <span class="status">detected</span></div>
       <h3>X-Content-Type-Options Header Missing</h3>
       <div class="meta">web:http://10.0.0.5:80 · CWE-16 · chain 10.0.0.5:80
-        · tools: zap</div>
+        · engine: DAST web scanning</div>
       <div class="ev"><b>Evidence</b><ul><li><code>http://10.0.0.5:80/</code> — GET</li></ul></div><div class="rem"><b>Remediation:</b> Set the header.</div><div class='refs'><b>References:</b> <a href="https://cwe.mitre.org/data/definitions/16.html">https://cwe.mitre.org/data/definitions/16.html</a></div>
     </div>
 <div class="finding" style="border-left:5px solid #4b5563">
@@ -105,7 +105,7 @@
         <span class="status">detected</span></div>
       <h3>Open port 22/tcp — ssh (OpenSSH 8.2p1)</h3>
       <div class="meta">infra:10.0.0.5 · open-port · chain 10.0.0.5:22
-        · tools: nmap</div>
+        · engine: port &amp; service discovery</div>
       <div class="ev"><b>Evidence</b><ul><li><code>10.0.0.5:22/tcp</code> — OpenSSH 8.2p1</li></ul></div>
     </div>
 <div class="finding" style="border-left:5px solid #4b5563">
@@ -114,7 +114,7 @@
         <span class="status">detected</span></div>
       <h3>Open port 80/tcp — http (nginx 1.18.0)</h3>
       <div class="meta">infra:10.0.0.5 · open-port · chain 10.0.0.5:80
-        · tools: nmap</div>
+        · engine: port &amp; service discovery</div>
       <div class="ev"><b>Evidence</b><ul><li><code>10.0.0.5:80/tcp</code> — nginx 1.18.0</li></ul></div>
     </div>
 <div class="finding" style="border-left:5px solid #4b5563">
@@ -123,10 +123,10 @@
         <span class="status">detected</span></div>
       <h3>nginx detected</h3>
       <div class="meta">infra:10.0.0.5 · tech-detect · chain 10.0.0.5:80
-        · tools: nuclei</div>
+        · engine: template-based scanning</div>
       <div class="ev"><b>Evidence</b><ul><li><code>http://10.0.0.5:80</code></li></ul></div>
     </div>
 
   <footer>Authorized use only. Testing performed under an agreed engagement scope. Findings are confidential.<br>
-    Prepared by PentestIQ.</footer>
+    Prepared by Corvex-RedOps.</footer>
 </div></body></html>

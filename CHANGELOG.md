@@ -6,7 +6,7 @@ All notable changes to Corvex-RedOps are documented here. This project adheres t
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
-- **One-command installer** (`install.sh`) — detects the Linux distribution (apt/dnf/pacman/zypper), installs all prerequisites (Docker Engine, Docker Compose, git/curl/openssl), generates secrets, and deploys the full SaaS stack (Corvex-RedOps + MobSF). Idempotent; `--port` / `--update` / `--down` options.
+- **One-command installer** (`install.sh`) — detects the Linux distribution (apt/dnf/pacman/zypper), installs all prerequisites (Docker Engine, Docker Compose, git/curl/openssl), generates secrets, and deploys the full SaaS stack (Corvex-RedOps + mobile-analysis engine). Idempotent; `--port` / `--update` / `--down` options.
 
 
 ### Added
@@ -31,10 +31,10 @@ All notable changes to Corvex-RedOps are documented here. This project adheres t
   stack canary, RELRO, DEP, CFG) via lief. Native — no external CLI. Six modules now.
   Uploaded through the same console button (`.exe`/`.dmg`/`.msi`/… auto-typed).
 - **APK/IPA upload in the console** — `POST /engagements/upload` (multipart) plus an
-  "Upload & scan" button; the server saves the app and runs it through MobSF.
+  "Upload & scan" button; the server saves the app and runs it through the mobile-analysis engine.
   No file paths for the user. Deployment compose (`deploy/docker-compose.yml`) runs
-  Corvex-RedOps + MobSF together; see docs/DEPLOYMENT.md.
-- **Mobile module** — APK/IPA static analysis via **MobSF** (code analysis, manifest
+  Corvex-RedOps + the mobile-analysis engine together; see docs/DEPLOYMENT.md.
+- **Mobile module** — APK/IPA static analysis via the **mobile-analysis engine** (code analysis, manifest
   issues, dangerous permissions, hardcoded secrets, certificate analysis) with
   CWE / OWASP-Mobile / MASVS references. Asset auto-typing for `.apk`/`.ipa`
   (and `.exe`/`.dmg`/… for desktop). Five asset modules now ship.
@@ -78,7 +78,7 @@ First open-source release. End-to-end VAPT pipeline: **scope → scan → normal
 - **Safety & ops core**: ScopeManager, SafeModeGovernor (safe-mode default;
   intrusive/exploit require explicit opt-in), append-only JSONL audit trail,
   bounded concurrent job queue, per-host rate limiting.
-- **Tool integrations**: Nmap, Nuclei, OWASP ZAP, WPScan, OpenAPI/Swagger.
+- **Scanning-engine integrations**: port & service discovery, template-based scanning, DAST web scanning, WordPress scanning, OpenAPI/Swagger.
 - **Asset modules**: infrastructure, web, WordPress, API (beta).
 - **Correlation & risk scoring**: 0–100 risk score (severity + CVSS + confidence
   + validation), host:port attack-chain correlation.
@@ -96,4 +96,4 @@ First open-source release. End-to-end VAPT pipeline: **scope → scan → normal
 - Safe-mode and scope enforcement are enabled by scaffolding but default to a
   permissive `warn` mode; set `enforcement: block` to hard-enforce.
 
-[0.1.0]: https://github.com/sajid-infosec/PentestIQ/releases/tag/v0.1.0
+[0.1.0]: https://github.com/sajid-infosec/Corvex-RedOps/releases/tag/v0.1.0

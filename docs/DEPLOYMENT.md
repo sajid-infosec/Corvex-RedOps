@@ -7,7 +7,7 @@
 the full stack (Corvex-RedOps API + web console + the mobile-analysis engine).
 
 ```bash
-git clone https://github.com/sajid-infosec/PentestIQ.git
+git clone https://github.com/sajid-infosec/Corvex-RedOps.git
 cd Corvex-RedOps
 sudo ./install.sh
 ```

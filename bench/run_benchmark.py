@@ -1,4 +1,4 @@
-"""Score PentestIQ's native engine against the local vulnerable target.
+"""Score Corvex-RedOps's native engine against the local vulnerable target.
 
 Run from the repo root:  python bench/run_benchmark.py
 """
@@ -82,7 +82,7 @@ def main():
         collab.stop()
 
     print("\n" + "=" * 74)
-    print(f" PentestIQ benchmark — target {BASE} ({len(findings)} findings)")
+    print(f" Corvex-RedOps benchmark — target {BASE} ({len(findings)} findings)")
     print("=" * 74)
     detected = 0
     for name, sig in PLANTED.items():

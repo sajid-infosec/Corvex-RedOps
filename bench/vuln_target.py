@@ -1,4 +1,4 @@
-"""Deliberately-vulnerable API for benchmarking PentestIQ (localhost only).
+"""Deliberately-vulnerable API for benchmarking Corvex-RedOps (localhost only).
 
 Serves an intentionally-broken API on 127.0.0.1:8099 with a set of *known*
 planted vulnerabilities. Used by run_benchmark.py to score detection.

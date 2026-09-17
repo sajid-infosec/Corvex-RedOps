@@ -9,13 +9,13 @@ Pick one.
 | [A. Prebuilt binary](#a-prebuilt-binary) | nothing | quickest — no Python/Docker |
 | [B. pipx / pip](#b-pipx--pip) | Python 3.10+ | CLI users, dev |
 | [C. Installer script](#c-installer-script) | Python **or** Docker | guided setup |
-| [D. Docker](#d-docker) | Docker | full SaaS stack (+ MobSF) |
+| [D. Docker](#d-docker) | Docker | full SaaS stack (+ mobile-analysis engine) |
 
 ---
 
 ## A. Prebuilt binary
 No Python, no Docker. Download your OS's single-file executable from the
-[Releases page](https://github.com/sajid-infosec/PentestIQ/releases).
+[Releases page](https://github.com/sajid-infosec/Corvex-RedOps/releases).
 
 **Linux / macOS**
 ```bash
@@ -35,13 +35,13 @@ Requires **Python 3.10+**.
 
 **Global CLI (isolated, all OSes)**
 ```bash
-pipx install "git+https://github.com/sajid-infosec/PentestIQ.git#egg=pentestiq[all]"
+pipx install "git+https://github.com/sajid-infosec/Corvex-RedOps.git#egg=pentestiq[all]"
 pentestiq --help
 ```
 
 **Virtualenv from source**
 ```bash
-git clone https://github.com/sajid-infosec/PentestIQ.git
+git clone https://github.com/sajid-infosec/Corvex-RedOps.git
 cd Corvex-RedOps
 python3 -m venv .venv
 source .venv/bin/activate            # Windows: .venv\Scripts\Activate.ps1
@@ -56,7 +56,7 @@ Extras: `api` (REST + console), `reports` (PDF/DOCX), `desktop` (binary hardenin
 
 ## C. Installer script
 
-**Linux** — deploys the Docker SaaS stack (Corvex-RedOps + MobSF):
+**Linux** — deploys the Docker SaaS stack (Corvex-RedOps + mobile-analysis engine):
 ```bash
 sudo ./install.sh
 ```
@@ -76,7 +76,7 @@ Flags — same actions on every OS:
 - macOS/Linux: `sudo ./install.sh --port 9090`, `sudo ./install.sh --update`, `sudo ./install.sh --down`
 - Windows: `... install.ps1 -Docker -Port 9090`, `... install.ps1 -Docker -Update`, `... install.ps1 -Docker -Down`
 
-During install/update you'll be asked **"Do you want to install / integrate AI? [y/N]"** — **y** adds the local self-hosted AI layer (Ollama, ~5 GB model; needs 8+ cores / 16 GB+ RAM), **n** installs lean. Skip the prompt with `--ai`/`--no-ai` (sh) or `-Ai`/`-NoAi` (ps1).
+During install/update you'll be asked **"Do you want to install / integrate AI? [y/N]"** — **y** adds the local self-hosted AI layer (a local AI runtime, ~5 GB model; needs 8+ cores / 16 GB+ RAM), **n** installs lean. Skip the prompt with `--ai`/`--no-ai` (sh) or `-Ai`/`-NoAi` (ps1).
 
 ## Troubleshooting
 
@@ -105,15 +105,18 @@ your user if you run it with `sudo`, but `./install.sh` (no sudo) is cleanest.
 Any OS with Docker or Docker Desktop:
 ```bash
 cd deploy
-docker compose up -d --build         # console :8080, MobSF :8000
+docker compose up -d --build         # console :8080, mobile-analysis :8000
 ```
 
 ---
 
 ## First run
 1. Open **http://localhost:8080**.
-2. Sign in with the default workspace — **`pentestiq`** / **`p3nt3st!q`** (change the
-   password after first login), or **Create workspace** for a separate tenant.
+2. Sign in as **`admin`**. No password ships — a strong one is generated on first run
+   and printed **once** to the API log (`docker logs pentestiq-api 2>&1 | grep -A3 'first-run admin'`,
+   or your console output for a non-Docker run). Change it after first login, or pin your
+   own with the `CORVEX_ADMIN_USER` / `CORVEX_ADMIN_PASSWORD` env vars. Use **Create workspace**
+   for a separate tenant.
 3. Add a target (New scan) or upload an app / OpenAPI spec, then **Run scan**.
 
 ## Deep-scan backend

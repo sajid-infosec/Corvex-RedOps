@@ -1,8 +1,8 @@
-# PentestIQ benchmark
+# Corvex-RedOps benchmark
 
-A reproducible, fully-local benchmark that scores PentestIQ's native check engine
+A reproducible, fully-local benchmark that scores Corvex-RedOps's native check engine
 against a deliberately-vulnerable target with **known planted vulnerabilities** —
-the same way you'd validate Acunetix / Tenable WAS / Burp Suite Enterprise against
+the same way you'd validate commercial DAST / enterprise VM / web-proxy suites against
 a test app (their public equivalents are `testphp.vulnweb.com`, `demo.testfire.net`).
 
 Everything runs on `127.0.0.1` — no external target, no authorization needed.

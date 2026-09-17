@@ -6,7 +6,7 @@
 ## 1. Install (Python 3.10+)
 
 ```bash
-git clone https://github.com/sajid-infosec/PentestIQ.git
+git clone https://github.com/sajid-infosec/Corvex-RedOps.git
 cd Corvex-RedOps
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"

@@ -1,4 +1,4 @@
-# PentestIQ + MobSF, co-located. The PentestIQ server orchestrates MobSF, which
+# Corvex-RedOps + MobSF, co-located. The Corvex-RedOps server orchestrates MobSF, which
 # performs the actual APK/IPA analysis. Users upload apps through the console —
 # no file paths, no direct MobSF access needed.
 #
@@ -31,7 +31,7 @@ services:
       - OLLAMA_URL=${OLLAMA_URL:-http://ollama:11434}
       - PENTESTIQ_AI_MODEL=${PENTESTIQ_AI_MODEL:-qwen2.5:7b-instruct}
     ports:
-      - "${PENTESTIQ_PORT:-8080}:8080"   # PentestIQ API + console
+      - "${PENTESTIQ_PORT:-8080}:8080"   # Corvex-RedOps API + console
     volumes:
       - pentestiq-data:/app/data
     restart: unless-stopped

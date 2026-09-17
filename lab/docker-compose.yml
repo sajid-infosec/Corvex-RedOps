@@ -1,4 +1,4 @@
-# PentestIQ lab — intentionally-vulnerable targets for testing the platform.
+# Corvex-RedOps lab — intentionally-vulnerable targets for testing the platform.
 # RUN ON AN ISOLATED NETWORK ONLY. Never expose these to the internet.
 #
 #   cd lab && docker compose up -d
