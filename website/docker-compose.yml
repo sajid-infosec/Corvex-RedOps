@@ -1,0 +1,19 @@
+# Corvex marketing website — standalone container deployment.
+#
+# SEPARATE from the SaaS stack (../deploy/docker-compose.yml). Serves only the
+# static site, on port 9090, so it can run alongside the Corvex console (8080)
+# without any conflict.
+#
+# Usage (from this directory):
+#   docker compose up -d          # → http://localhost:9090
+#   docker compose down           # stop
+#   WEBSITE_PORT=9091 docker compose up -d   # different port
+services:
+  corvex-website:
+    image: nginx:alpine
+    container_name: corvex-website
+    restart: unless-stopped
+    ports:
+      - "${WEBSITE_PORT:-9090}:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
