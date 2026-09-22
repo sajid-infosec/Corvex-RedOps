@@ -113,3 +113,18 @@ def test_frida_kit_list_and_download(client):
     assert r4.status_code == 200
     zf = zipfile.ZipFile(io.BytesIO(r4.content))
     assert any(n.endswith("ssl-pinning-bypass.js") for n in zf.namelist())
+
+
+def test_frida_kit_descriptions_are_complete_and_anonymized(client):
+    """Regression: the listing used to take the first header comment line that
+    did not mention the brand, which after the rebrand was a sentence cut off
+    mid-way and could surface third-party tool names in the console."""
+    from pentestiq.kit.dynamic import FRIDA_SCRIPTS
+    tok = _token(client)
+    listed = {s["name"]: s["description"]
+              for s in client.get("/kit/frida", headers={"Authorization": f"Bearer {tok}"}).json()}
+    for s in FRIDA_SCRIPTS:
+        assert listed[s["name"]] == s["purpose"]            # the curated one-liner
+        assert listed[s["name"]].rstrip().endswith(".")     # a complete sentence
+    banned = ("burp", "zap", "mitmproxy", "charles")
+    assert not any(b in d.lower() for d in listed.values() for b in banned)
