@@ -23,7 +23,7 @@ def test_normalize_url_to_host():
 def test_normalize_kinds():
     assert normalize("10.0.0.5")[1] == AssetKind.IP
     assert normalize("192.168.1.0/24")[1] == AssetKind.CIDR
-    assert normalize("/uploads/x/convay.apk", "mobile")[1] == AssetKind.APP
+    assert normalize("/uploads/x/sample-app.apk", "mobile")[1] == AssetKind.APP
     assert normalize("EXAMPLE.com")[0] == "example.com"
 
 

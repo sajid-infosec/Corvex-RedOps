@@ -2,7 +2,7 @@
 # injection fuzzer, OAST) needs no external tools and is always available. The
 # extras below make the orchestrated tools real in the container:
 #   - nmap        : network/service discovery
-#   - chromium    : headless SPA crawl (renders JS apps like crAPI/Convay)
+#   - chromium    : headless SPA crawl (renders JavaScript single-page apps)
 #   - nuclei      : templated vulnerability checks
 # nuclei + the browser download over the network at build time; both are
 # best-effort so the image still builds on locked-down networks — the native

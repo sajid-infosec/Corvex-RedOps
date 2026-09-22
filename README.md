@@ -4,23 +4,22 @@
 
 ### One platform for Vulnerability Assessment **and** Penetration Testing — every asset, one engine, client-ready in minutes.
 
-*Web · API · Mobile · Desktop · Infrastructure · Network devices · Firewalls · Hardening · WordPress · Active Directory — discovered, actively tested, **safely validated**, threat-prioritized, correlated, and reported. Self-hosted. AI-assisted. Zero licensing cost.*
+*Web · API · Mobile · Desktop · Infrastructure · Network devices · Firewalls · Hardening · WordPress · Active Directory · Code · Containers · Cloud — discovered, actively tested, **safely validated**, threat-prioritized, correlated, and reported. Self-hosted. AI-assisted. Zero licensing cost.*
 
 <br/>
 
-![CI](https://github.com/sajid-infosec/Corvex-RedOps/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
-![Tests](https://img.shields.io/badge/tests-450%2B%20passing-brightgreen.svg)
-![Asset modules](https://img.shields.io/badge/asset%20modules-10-8a2be2.svg)
+![Tests](https://img.shields.io/badge/tests-480%2B%20passing-brightgreen.svg)
+![Scan templates](https://img.shields.io/badge/scan%20templates-18-0ea5e9.svg)
 <br/>
 ![Self-hosted](https://img.shields.io/badge/self--hosted-air--gappable-0aa.svg)
-![AI](https://img.shields.io/badge/AI-local%20%26%20private-6366f1.svg)
+![AI](https://img.shields.io/badge/AI-local%20%26%20private-0ea5e9.svg)
 ![Prioritization](https://img.shields.io/badge/prioritization-EPSS%20%2B%20CISA%20KEV-ff6633.svg)
 ![OWASP](https://img.shields.io/badge/OWASP-Top10%20%2F%20API%20%2F%20WSTG%20%2F%20MASVS-brightgreen.svg)
 ![Cost](https://img.shields.io/badge/licensing%20cost-%240-success.svg)
 
-[Why Corvex-RedOps](#-why-corvex) · [vs Commercial Tools](#-how-corvex-compares) · [Features](#-features) · [Screens](#-screens--samples) · [Install](#-installation) · [Quick Start](#-quick-start) · [API](#-rest-api-reference)
+[Why Corvex-RedOps](#-why-corvex-redops) · [vs Commercial Tools](#-how-corvex-redops-compares) · [Features](#-features) · [Screens](#-screens--samples) · [Install](#-installation) · [Quick Start](#-quick-start) · [API](#-rest-api-reference)
 
 <br/>
 
@@ -40,9 +39,9 @@
 
 ## 📖 Table of Contents
 
-- [What is Corvex-RedOps?](#-what-is-corvex)
-- [Why Corvex-RedOps](#-why-corvex)
-- [How Corvex-RedOps compares](#-how-corvex-compares)
+- [What is Corvex-RedOps?](#-what-is-corvex-redops)
+- [Why Corvex-RedOps](#-why-corvex-redops)
+- [How Corvex-RedOps compares](#-how-corvex-redops-compares)
 - [Features](#-features)
 - [Threat-informed prioritization](#-threat-informed-prioritization)
 - [Asset Coverage](#-asset-coverage)
@@ -131,6 +130,31 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 - **Attack-chain correlation** — links findings that share a host + service into one story.
 - **Optional local-AI layer (self-hosted, zero budget)** — a local open-source model via **a local AI runtime** powers analyst-grade write-ups, **attack-chain correlation**, a **false-positive verifier**, and an in-console **copilot**; plus a **self-learning** confidence model that improves from analyst confirm/dismiss feedback. Fully optional and fail-safe: with no model present, Corvex-RedOps runs exactly as before on its deterministic engine.
 
+### Attack surface & continuous exposure (CTEM)
+- **Asset inventory** — one tenant-wide registry of everything you own (domains, IPs, CIDRs, apps, cloud resources), de-duplicated across every scan and import, with business criticality, owner and tags. Every finding rolls up to its asset.
+- **External discovery (EASM)** — give it a root domain and it expands the external surface from certificate-transparency logs and passive sources, resolves each host, fingerprints the live ones and files them in the inventory.
+- **Exposure scoring** — a per-asset 0–100 score from internet exposure × business criticality × open findings × CISA KEV, so the inventory is ranked by real risk.
+- **Posture trends & alerts** — a snapshot after every scan (open vs. fixed, new vs. resolved, MTTR, exposure, KEV pressure), plus a webhook alert when a new KEV or critical lands on an internet-facing asset.
+
+### Code, containers & cloud
+- **SCA + SBOM** — dependency CVEs from lockfiles and manifests via OSV.dev, with a CycloneDX 1.5 SBOM export.
+- **SAST & secret scanning** — source findings mapped to CWE/OWASP; committed credentials detected and **redacted** so a report never re-exposes them.
+- **Container image & IaC** — image CVEs and Dockerfile / Terraform / Kubernetes misconfigurations; a Kubernetes CIS benchmark.
+- **Cloud posture (CSPM)** — read-only AWS / Azure / GCP posture checks mapped to CIS, PCI-DSS, NIST and SOC 2, using the host's own credentials.
+- **Bring your own scanner** — import vulnerability-scanner XML, template-scanner JSONL, container-scanner JSON, DAST JSON, SARIF or generic JSON; findings are normalized, de-duplicated and prioritized with everything else. SARIF export for code-scanning pipelines.
+
+### Adversary view
+- **MITRE ATT&CK mapping** — every finding tagged with techniques, and an ATT&CK coverage matrix per engagement.
+- **Attack-path graph** — correlated findings chained entry → pivot → impact, with the shortest path to a crown-jewel asset.
+- **Control validation (BAS-lite)** — opt-in, benign technique checks that report whether your defenses actually fire. Refuses to run without explicit authorization.
+
+### Remediation workflow (PTaaS)
+- **Retest & diff** — re-run an engagement and every finding is marked new, persisting or fixed, with MTTR.
+- **Remediation projects** — group findings into owned, dated work that closes itself when its findings are fixed.
+- **Ticketing** — push findings to Jira, ServiceNow, Slack or any webhook.
+- **Client portal** — a tokenized, expiring, read-only link to an engagement's findings and reports. No login, no write access.
+- **Authenticated scanning** — credentialed SSH / WinRM / HTTP-auth checks from an encrypted credential vault (scrypt + Fernet); secrets are never returned by the API.
+
 ### Safety & governance (built in, not bolted on)
 - **Scope enforcement** — every engagement runs against a validated scope; out-of-scope targets are blocked (or warned) by policy.
 - **Safe-mode governor** — non-destructive by default; intrusive/exploit actions require explicit, logged opt-in.
@@ -163,9 +187,22 @@ Ten modules — the complete VAPT surface, driven by Corvex-RedOps's own engines
 | 5 | `mobile` | Mobile apps (Android / iOS) | Static analysis of code, manifest, permissions, secrets & certificates (CWE/MASVS) + on-device dynamic kit |
 | 6 | `desktop` | Desktop binaries (PE / ELF / Mach-O) | Hardcoded secrets/keys, insecure URLs, missing binary hardening (NX/PIE/RELRO/canary/DEP/CFG) |
 | 7 | `network-device` | Routers / switches | Device config audit: telnet, default/RW SNMP, weak passwords, cleartext management |
-| 8 | `firewall` | Firewall rulesets | *nipper-class* ruleset audit: any-any permits, exposed services, shadowed rules |
+| 8 | `firewall` | Firewall rulesets | Configuration-auditor-grade ruleset audit: any-any permits, exposed services, shadowed rules |
 | 9 | `hardening` | System hardening | Host hardening gaps (SSH/kernel/CIS) + hardening-report ingestion |
 | 10 | `active-directory` | Active Directory / domain | Domain security-posture review from a policy export: password policy, Kerberos (AS-REP roasting / Kerberoasting), unconstrained delegation, GPP cpassword, SMBv1/LLMNR, machine-account quota, privileged-group sprawl |
+
+Beyond the ten asset modules, eight more engines cover code, containers, cloud and the external surface:
+
+| Engine | Input | What Corvex-RedOps does |
+|---|---|---|
+| External discovery | A root domain | Certificate-transparency + passive subdomain sources, DNS resolution and live-host fingerprinting, filed into the inventory |
+| Dependencies (SCA) | Lockfile / manifest | Dependency CVEs via OSV.dev + CycloneDX 1.5 SBOM |
+| Source code (SAST) | Source archive | Code findings mapped to CWE / OWASP |
+| Secret scan | Source archive | Committed keys, tokens and private keys — redacted in every output |
+| Container image | Image reference | OS and library CVEs in the image |
+| IaC / config | Dockerfile / Terraform / Kubernetes | Misconfigurations, plus a Kubernetes CIS benchmark |
+| Cloud posture (CSPM) | Cloud account (read-only) | Posture failures mapped to CIS, PCI-DSS, NIST and SOC 2 |
+| Scan import | Third-party scanner output | Normalized, de-duplicated and prioritized with native findings |
 
 Plus **lab automation** — `lab/docker-compose.yml` stands up intentionally-vulnerable targets for testing and demos.
 
@@ -219,7 +256,7 @@ For **blind** vulnerabilities — where the only signal is the target's own serv
 reaching back to infrastructure you control — Corvex-RedOps ships a native,
 self-hostable **OAST collaborator** (the out-of-band interaction service model):
 
-- **`pentestiq oast-server --port 9099 [--dns-port 53 --domain oast.example.com]`**
+- **`corvex oast-server --port 9099 [--dns-port 53 --domain oast.example.com]`**
   stands up a collaborator. HTTP mode records interactions by token from a Host
   sub-domain (`<token>.oast.example.com`, needs wildcard DNS) or a path
   (`http://<ip>:<port>/<token>`, needs only a public IP). The optional **DNS catcher**
@@ -469,18 +506,27 @@ Pipeline: **scope → scan → normalize → validate → prioritize & correlate
 
 ## 🖼️ Screens & Samples
 
+> Every screenshot is from the current build, seeded with **fictional demo data** — "Acme Corp" and "Northwind Traders" on RFC 2606 `.example` domains and the RFC 5737 `203.0.113.0/24` test range. No real client, host or finding appears in this repository.
+
 <table>
 <tr>
-<td width="50%"><img src="docs/img/prioritization.png" alt="Threat-informed prioritization"/><br/><sub><b>Threat-informed prioritization</b> — PRP (CVSS × EPSS × CISA KEV), KEV badges, SLA states. The exploit-aware ranking enterprises pay for.</sub></td>
-<td width="50%"><img src="docs/img/dynamic-kit.png" alt="AI-assisted Dynamic kit"/><br/><sub><b>AI-assisted Dynamic kit</b> — platform detection, runtime-protection analysis, tailored instrumentation scripts and a MASVS-aligned test plan.</sub></td>
+<td width="50%"><img src="docs/img/prioritization.png" alt="Engagement dashboard and threat-informed prioritization"/><br/><sub><b>Engagement dashboard</b> — every finding risk-ranked with its OWASP category and ATT&amp;CK techniques, then threat-prioritized: PRP (CVSS × EPSS × CISA KEV), KEV badges and SLA state.</sub></td>
+<td width="50%"><img src="docs/img/inventory.png" alt="Asset inventory and external discovery"/><br/><sub><b>Asset inventory &amp; external discovery</b> — every asset you own, ranked by exposure. A root domain expands into its live external surface in one click.</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="docs/img/owasp-coverage.png" alt="OWASP coverage"/><br/><sub><b>OWASP coverage</b> — measured against Top 10, API Top 10, WSTG and MASVS/MASTG with per-standard weighting.</sub></td>
-<td width="50%"><img src="docs/img/scan-gallery.png" alt="Scan template gallery"/><br/><sub><b>Scan templates</b> — one click per asset class; Corvex-RedOps maps the target to the right engine automatically.</sub></td>
+<td width="50%"><img src="docs/img/attack-path.png" alt="Attack-path graph"/><br/><sub><b>Attack paths</b> — correlated findings chained entry → pivot → impact, with the shortest path to a crown-jewel asset.</sub></td>
+<td width="50%"><img src="docs/img/owasp-coverage.png" alt="OWASP and MITRE ATT&amp;CK coverage"/><br/><sub><b>OWASP &amp; ATT&amp;CK coverage</b> — Web and API Top 10 hit maps, plus the tactics and techniques the findings map to.</sub></td>
 </tr>
 <tr>
+<td width="50%"><img src="docs/img/posture-trend.png" alt="Posture trend"/><br/><sub><b>Continuous exposure</b> — a posture snapshot after every scan: open vs. fixed, new vs. resolved, exposure score and KEV pressure.</sub></td>
+<td width="50%"><img src="docs/img/scan-gallery.png" alt="Scan templates"/><br/><sub><b>18 scan templates</b> — one click per asset class; Corvex-RedOps maps each target to the right engine automatically.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/img/dynamic-kit.png" alt="Dynamic-analysis kit"/><br/><sub><b>Dynamic-analysis kit</b> — runtime-protection detection, instrumentation scripts and a MASVS-aligned test plan for mobile and desktop apps.</sub></td>
 <td width="50%"><img src="docs/img/overview-light.png" alt="Light theme"/><br/><sub><b>Light &amp; dark themes</b> — the whole console, either way.</sub></td>
-<td width="50%" valign="top"><br/><b>Also included</b><br/><br/>• <b>Web console</b> preview: <a href="examples/console-preview.html"><code>examples/console-preview.html</code></a><br/>• <b>Client report</b> sample (HTML / Markdown / <b>PDF</b> / DOCX): <a href="examples/sample-report/"><code>examples/sample-report/</code></a><br/>• Full-technical <b>and</b> executive-summary report types, white-label branded.</td>
+</tr>
+<tr>
+<td colspan="2"><b>Also included</b> — a static console preview in <a href="examples/console-preview.html"><code>examples/console-preview.html</code></a>, and a sample client report (HTML / Markdown / <b>PDF</b> / DOCX) in <a href="examples/sample-report/"><code>examples/sample-report/</code></a>. Full-technical <b>and</b> executive-summary report types, white-label branded.</td>
 </tr>
 </table>
 
@@ -520,7 +566,7 @@ chmod +x pentestiq-linux-x64 && ./pentestiq-linux-x64 serve
 ```bash
 # isolated global CLI (Linux/macOS/Windows)
 pipx install "git+https://github.com/sajid-infosec/Corvex-RedOps.git#egg=pentestiq[all]"
-pentestiq --help
+corvex --help
 ```
 Or into a virtualenv:
 ```bash
@@ -595,7 +641,7 @@ enforcement: warn            # 'block' to hard-enforce scope
 YAML
 
 # 4. run the engagement and generate a client-ready report
-pentestiq run -s myscope.yaml -o out/
+corvex run -s myscope.yaml -o out/
 #  -> out/report.html   (open in a browser)
 #  -> out/report.md
 #  -> out/engagement.json
@@ -764,18 +810,18 @@ Without a prefix, the type is inferred (URLs/hosts → web, IPs/CIDRs → infra,
 |---|---|
 | `corvex version` | Print the version |
 | `corvex modules` | List registered asset modules |
-| `pentestiq run -s <scope> [-c <config>] [-o <dir>]` | Run an engagement; `-o` writes report.html/.md + engagement.json |
+| `corvex run -s <scope> [-c <config>] [-o <dir>]` | Run an engagement; `-o` writes report.html/.md + engagement.json |
 | `corvex serve [--host H] [--port P]` | Start the REST API + web console |
 | `corvex init-tenant --tenant N --username U --password P` | Bootstrap a tenant + owner, print an API key |
 
 ```bash
-pentestiq run --scope engagement.yaml --config pentestiq.yaml --out reports/
+corvex run --scope engagement.yaml --config pentestiq.yaml --out reports/
 corvex serve --host 0.0.0.0 --port 8080
 ```
 
 ### 3. Scanning each asset type
 
-The **same command** runs any asset type — the module is chosen automatically from each target's type. Examples (put the targets in a scope file, then `pentestiq run -s scope.yaml -o out/`):
+The **same command** runs any asset type — the module is chosen automatically from each target's type. Examples (put the targets in a scope file, then `corvex run -s scope.yaml -o out/`):
 
 | Asset | Scope entry | Engine |
 |---|---|---|
@@ -815,7 +861,7 @@ curl -XPOST http://localhost:8080/engagements/upload \
 curl -XPOST http://localhost:8080/engagements/upload \
   -H "Authorization: Bearer $TOKEN" \
   -F "file=@proxy-history.xml" -F "asset_type=burp" \
-  -F "scope_hosts=app.example.com,example.com" -F "allow_active=true" -F "name=web-from-burp"
+  -F "scope_hosts=app.example.com,example.com" -F "allow_active=true" -F "name=web-from-proxy"
 ```
 
 Then run it: `POST /engagements/{id}/run`.
