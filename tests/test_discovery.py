@@ -83,3 +83,32 @@ def test_discovery_endpoint_validates_domain(client):
     vt = client.post("/auth/login", json={"username": "ro", "password": "readonly1"}).json()["token"]
     assert client.post("/discovery", json={"domain": "example.com"},
                        headers={"Authorization": "Bearer " + vt}).status_code == 403
+
+def test_root_survives_max_hosts_cap():
+    """Regression: sorted() is alphabetical, so a big candidate set must not
+    truncate the root domain out of the max_hosts window (that silently
+    produced "N candidates / 0 resolved")."""
+    # 500 junk subdomains that all sort BEFORE "example.com" alphabetically
+    junk = {f"a{i:03d}.example.com" for i in range(500)}
+
+    class BigHttp(MockHttp):
+        def get(self, url, headers=None):
+            if "crt.sh" in url:
+                import json as _j
+                return Response(status=200, headers={},
+                                text=_j.dumps([{"name_value": "\n".join(junk)}]),
+                                elapsed_ms=1, url=url)
+            return super().get(url, headers)
+
+    res = discover("example.com", http_client=BigHttp(), resolver=_resolver,
+                   use_subfinder=False, max_hosts=150, probe=False)
+    assert res.hosts[0].host == "example.com"          # root evaluated first
+    assert res.stats["candidates"] == 150              # cap still respected
+    assert res.stats["resolved"] == 1                  # the root resolved
+    assert res.stats["dns_ok"] is True
+
+
+def test_dns_ok_false_only_when_root_fails():
+    res = discover("example.com", http_client=MockHttp(), resolver=lambda h: [],
+                   use_subfinder=False, probe=False)
+    assert res.stats["resolved"] == 0 and res.stats["dns_ok"] is False
