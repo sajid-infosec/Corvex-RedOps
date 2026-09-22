@@ -69,3 +69,35 @@ def test_first_boot_empty_env_password_still_generates(tmp_path, monkeypatch):
     res = a.ensure_default_admin()
     assert res["created"] and res["password"]
     assert a.login("admin", res["password"])
+
+
+def test_reset_password_recovers_login(tmp_path):
+    import pytest
+    from pentestiq.auth.service import AuthService
+    from pentestiq.storage import SqliteAuthStore
+    st = SqliteAuthStore(str(tmp_path / "a.db"))
+    a = AuthService(st, secret_key="s", session_ttl=3600)
+    a.register("T", "alice", "old-password-1")
+    new = a.reset_password("alice")                      # generated
+    assert len(new) >= 12 and a.login("alice", new) and not a.login("alice", "old-password-1")
+    assert a.reset_password("alice", "chosen-pass-9") == "chosen-pass-9"
+    assert a.login("alice", "chosen-pass-9")
+    with pytest.raises(KeyError):
+        a.reset_password("nobody")
+    with pytest.raises(ValueError):
+        a.reset_password("alice", "short")
+    assert st.list_usernames() == ["alice"]
+
+
+def test_cli_reset_password_and_no_default_tenant_password(tmp_path, monkeypatch):
+    from typer.testing import CliRunner
+    from pentestiq.cli import app
+    monkeypatch.chdir(tmp_path)
+    r = CliRunner().invoke(app, ["init-tenant", "--username", "owner1"])
+    assert r.exit_code == 0 and "Owner login: owner1 / " in r.output and "p3nt3st" not in r.output
+    r = CliRunner().invoke(app, ["reset-password", "owner1", "--password", "brand-new-pw-1"])
+    assert r.exit_code == 0 and "Password reset" in r.output
+    r = CliRunner().invoke(app, ["reset-password"])
+    assert "owner1" in r.output
+    r = CliRunner().invoke(app, ["reset-password", "ghost"])
+    assert r.exit_code == 1 and "no such user" in r.output

@@ -812,7 +812,8 @@ Without a prefix, the type is inferred (URLs/hosts → web, IPs/CIDRs → infra,
 | `corvex modules` | List registered asset modules |
 | `corvex run -s <scope> [-c <config>] [-o <dir>]` | Run an engagement; `-o` writes report.html/.md + engagement.json |
 | `corvex serve [--host H] [--port P]` | Start the REST API + web console |
-| `corvex init-tenant --tenant N --username U --password P` | Bootstrap a tenant + owner, print an API key |
+| `corvex init-tenant --tenant N --username U [--password P]` | Bootstrap a tenant + owner, print an API key (password generated if omitted) |
+| `corvex reset-password [USER] [--password P]` | Recover a console login (no USER lists users) |
 
 ```bash
 corvex run --scope engagement.yaml --config pentestiq.yaml --out reports/

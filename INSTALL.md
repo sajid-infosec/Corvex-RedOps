@@ -117,6 +117,7 @@ docker compose up -d --build         # console :8080, mobile-analysis :8000
    or your console output for a non-Docker run). Change it after first login, or pin your
    own with the `CORVEX_ADMIN_USER` / `CORVEX_ADMIN_PASSWORD` env vars. Use **Create workspace**
    for a separate tenant.
+   Locked out? `docker exec -it pentestiq-api corvex reset-password admin` prints a new one.
 3. Add a target (New scan) or upload an app / OpenAPI spec, then **Run scan**.
 
 ## Deep-scan backend
