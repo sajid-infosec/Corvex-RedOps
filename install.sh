@@ -298,9 +298,12 @@ wait_healthy() {
 summary() {
   local ip="localhost"
   if [ "${OSKIND:-linux}" = "macos" ]; then
-    ip="$(ipconfig getifaddr en0 2>/dev/null)" || ip="localhost"
+    # `|| true` INSIDE the substitution: with `set -E` the ERR trap is inherited by
+    # $(...) subshells, and macOS bash 3.2 fires it there even though the outer
+    # `|| ip=...` handles the failure — printing a false "install aborted".
+    ip="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
   else
-    ip="$(hostname -I 2>/dev/null | awk '{print $1}')" || ip="localhost"
+    ip="$( { hostname -I 2>/dev/null || true; } | awk '{print $1}')"
   fi
   [ -n "$ip" ] || ip="localhost"
   printf "\n${c_grn}════════════════════════════════════════════════════════════${c_off}\n"

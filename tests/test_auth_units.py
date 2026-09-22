@@ -55,3 +55,17 @@ def test_first_boot_honours_env_credentials(tmp_path, monkeypatch):
     assert res["created"] and res["user"] == "root"
     assert res["password"] is None                              # env-pinned → not echoed
     assert a.login("root", "pinned-secret-123")
+
+
+def test_first_boot_empty_env_password_still_generates(tmp_path, monkeypatch):
+    """Compose passes CORVEX_ADMIN_PASSWORD="" when unset: treat it as unset,
+    generate a password and return it so it is printed once (never a silent,
+    unrecoverable random password)."""
+    from pentestiq.auth.service import AuthService
+    from pentestiq.storage import SqliteAuthStore
+    monkeypatch.setenv("CORVEX_ADMIN_PASSWORD", "")
+    monkeypatch.delenv("CORVEX_ADMIN_USER", raising=False)
+    a = AuthService(SqliteAuthStore(str(tmp_path / "a.db")), secret_key="s", session_ttl=3600)
+    res = a.ensure_default_admin()
+    assert res["created"] and res["password"]
+    assert a.login("admin", res["password"])
