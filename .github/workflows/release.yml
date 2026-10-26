@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  wheels:
+    name: Build sdist + wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: python -m pip install --upgrade pip build
+      - run: python -m build
+      - uses: actions/upload-artifact@v4
+        with: { name: dist, path: dist/* }
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with: { files: dist/* }
+
+  binaries:
+    name: Binary (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset: pentestiq-linux-x64
+          - os: macos-latest
+            asset: pentestiq-macos-arm64
+          - os: windows-latest
+            asset: pentestiq-windows-x64.exe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Install (with API + reports so the binary can serve)
+        run: |
+          python -m pip install --upgrade pip pyinstaller
+          pip install ".[api,reports,desktop]"
+      - name: Build onefile binary
+        run: pyinstaller --onefile --name pentestiq --collect-all pentestiq --collect-submodules fastapi --collect-submodules uvicorn packaging/pyinstaller_entry.py
+      - name: Smoke test (Unix)
+        if: runner.os != 'Windows'
+        run: ./dist/pentestiq version
+      - name: Smoke test (Windows)
+        if: runner.os == 'Windows'
+        run: .\dist\pentestiq.exe version
+      - name: Rename asset (Unix)
+        if: runner.os != 'Windows'
+        run: mv dist/pentestiq "dist/${{ matrix.asset }}"
+      - name: Rename asset (Windows)
+        if: runner.os == 'Windows'
+        run: Rename-Item dist/pentestiq.exe "${{ matrix.asset }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: dist/${{ matrix.asset }}
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with: { files: dist/${{ matrix.asset }} }
