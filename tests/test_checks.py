@@ -20,6 +20,7 @@ from pentestiq.checks.authz_checks import (
 )
 from pentestiq.checks.upload_check import FileUploadCheck
 from pentestiq.checks.inventory_checks import ShadowEndpointCheck
+from pentestiq.checks.integrity_checks import DeserializationSignalCheck
 from pentestiq.checks.engine import CheckEngine, build_context, ALL_CHECKS
 from urllib.parse import urlsplit as _urlsplit
 from pentestiq.checks.owasp import normalize, describe, coverage_report
@@ -487,3 +488,31 @@ def test_shadow_endpoint_requires_both_lists():
 
 def test_shadow_endpoint_registered_in_all_checks():
     assert ShadowEndpointCheck in ALL_CHECKS
+
+
+# --------------------------------------------------------------------------- deserialization signal (A08)
+def test_deser_java_cookie_flagged():
+    http = FakeHttp(lambda m, u, h, d: _resp(200, {"set-cookie": "sess=rO0ABXNyABZq; Path=/"}, "<html>ok</html>"))
+    f = DeserializationSignalCheck().run(_ctx(http))
+    assert f and f[0].category == "A08:2021" and "Java" in f[0].title and f[0].severity == Severity.MEDIUM
+
+
+def test_deser_php_body_flagged():
+    http = FakeHttp(lambda m, u, h, d: _resp(200, {}, 'profile=O:4:"User":1:{s:4:"role";s:5:"admin";}'))
+    f = DeserializationSignalCheck().run(_ctx(http))
+    assert f and "PHP" in f[0].title
+
+
+def test_deser_viewstate_flagged():
+    http = FakeHttp(lambda m, u, h, d: _resp(200, {}, '<input type="hidden" name="__VIEWSTATE" value="/wEPaA==">'))
+    f = DeserializationSignalCheck().run(_ctx(http))
+    assert f and "ViewState" in f[0].title
+
+
+def test_deser_clean_no_finding():
+    http = FakeHttp(lambda m, u, h, d: _resp(200, {"set-cookie": "sess=abc123; Path=/"}, '{"user":"alice","role":"user"}'))
+    assert DeserializationSignalCheck().run(_ctx(http)) == []
+
+
+def test_deser_registered_in_all_checks():
+    assert DeserializationSignalCheck in ALL_CHECKS

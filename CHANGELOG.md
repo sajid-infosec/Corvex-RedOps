@@ -6,6 +6,11 @@ All notable changes to Corvex-RedOps are documented here. This project adheres t
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
+- **Insecure-deserialization signal check** (native active-checks engine, OWASP
+  **A08:2021** / CWE-502). Passively flags language-native serialized objects
+  crossing the client boundary — Java (`rO0AB…`), PHP (`O:…`/`a:…`), .NET
+  `__VIEWSTATE`, Python pickle — in responses and `Set-Cookie` values; upgrades
+  the A08 deserialization row from *partial* to a real check.
 - **Shadow / undocumented API-endpoint check** (native active-checks engine,
   OWASP **API9:2023** Improper Inventory Management). Diffs the crawled/discovered
   endpoints against the documented OpenAPI surface (id-segments templatized) and
