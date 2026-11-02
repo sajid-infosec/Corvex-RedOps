@@ -6,6 +6,20 @@ All notable changes to Corvex-RedOps are documented here. This project adheres t
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
+- **Edition / tier gating (open-core)** — a central `pentestiq/edition.py`
+  (Community → Pro → Team → Enterprise) resolved from `CORVEX_EDITION` or the
+  repo-root `EDITION` file. The full security-testing engine stays free
+  (Community); premium tiers unlock the managed/scale surface — multi-tenant &
+  team management, client portal, ticketing, white-label, continuous scheduling,
+  exposure alerting (CTEM), SSO/SAML, distributed workers and managed hosting.
+  Gated API routes return **HTTP 402** below their tier; `GET /edition` reports the
+  edition, per-feature availability and limits. (Phase 2 Increment 6 — plan
+  enforcement; billing integration still to come.)
+- **Unrestricted file-upload check** (native active-checks engine, OWASP
+  A05:2021 / CWE-434). Authenticated and `allow_active`-gated: uploads inert
+  dangerous-type payloads (php/phtml/jsp/svg/html) and confirms acceptance plus
+  retrievability/execution via a served read-back (CRITICAL when a web shell is
+  served back executable). New OWASP-catalog row; maps to CWE-434.
 - **Mass-assignment / property-injection check** (native active-checks engine,
   OWASP API3:2023 BOPLA — write side). Authenticated and `allow_active`-gated: it
   injects server-controlled fields (`role`, `is_admin`, `verified`, `balance`) into a

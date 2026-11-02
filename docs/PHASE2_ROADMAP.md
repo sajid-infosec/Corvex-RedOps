@@ -41,8 +41,13 @@ engine stays the core; SaaS adds convenience, collaboration, scale, and complian
   compliance views (OWASP/PCI/ISO/SOC 2 mappings); trends over time.
 
 ### Increment 6 — Billing & tiers  ← current
-- Plan enforcement (Community/Pro/Team/Enterprise), usage metering, billing
-  integration. Gate the first paid feature (TBD — see business plan open questions).
+- **Plan enforcement (Community/Pro/Team/Enterprise) — shipped** (`pentestiq/edition.py`):
+  edition detection, per-feature flags, tier limits, HTTP-402 gating on the managed/scale
+  routes, and `GET /edition`. The free engine stays fully Community; premium unlocks
+  multi-tenant, portal, ticketing, white-label, scheduling, CTEM alerting, SSO/SAML,
+  distributed workers and managed hosting.
+- **Remaining:** usage metering and billing-provider integration; license-key signing
+  for Enterprise entitlements.
 
 ## Non-goals (early Phase 2)
 - Not a full enterprise IAM on day one (start with API keys + simple RBAC).

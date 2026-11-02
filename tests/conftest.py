@@ -14,3 +14,7 @@ os.environ.setdefault("PENTESTIQ_INTEL_OFFLINE", "1")
 # Never launch a headless browser in the test/CI environment (would hang or need
 # a full browser stack); the native BFS crawler still runs.
 os.environ.setdefault("CORVEX_SPA_CRAWL", "0")
+# Exercise the full feature surface by default so edition gating is transparent to
+# the rest of the suite; tests/test_edition.py overrides this per-test to assert the
+# Community gating behaviour explicitly.
+os.environ.setdefault("CORVEX_EDITION", "enterprise")
