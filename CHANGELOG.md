@@ -6,6 +6,16 @@ All notable changes to Corvex-RedOps are documented here. This project adheres t
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
+- **Mass-assignment / property-injection check** (native active-checks engine,
+  OWASP API3:2023 BOPLA — write side). Authenticated and `allow_active`-gated: it
+  injects server-controlled fields (`role`, `is_admin`, `verified`, `balance`) into a
+  write to the authenticated identity's **own** object and confirms real privilege
+  escalation via a **pre/post read-back diff** (high confidence) or a write-response
+  echo (medium) — the business-logic class generic DAST/VA scanners structurally
+  cannot find. Complements the read-side excessive-data-exposure check; findings map
+  to CWE-915 and flow through the normal dedup / risk / report pipeline.
+
+### Added
 - **One-command installer** (`install.sh`) — detects the Linux distribution (apt/dnf/pacman/zypper), installs all prerequisites (Docker Engine, Docker Compose, git/curl/openssl), generates secrets, and deploys the full SaaS stack (Corvex-RedOps + mobile-analysis engine). Idempotent; `--port` / `--update` / `--down` options.
 
 

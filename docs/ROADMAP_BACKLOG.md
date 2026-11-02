@@ -12,6 +12,15 @@
 > Legend: **S** ≤1 session · **M** 1–2 sessions · **L** 3+ sessions.
 > Do them top-to-bottom; each epic is ordered so earlier tasks unblock later ones.
 
+> **Status — reconciled 2026-11-02** (verified against the code and a full
+> green run of the non-live suite, 499 passed): **Epics A–H are all shipped.**
+> A–F were implemented after this backlog was first written but never re-marked
+> here; G, H and the cross-cutting report-embedding work were already ✅. The
+> live frontier is now the documented *honest gaps* in
+> [GAP_ANALYSIS.md](GAP_ANALYSIS.md) §6 and Phase-2 Increment 6 (billing/tiers).
+> Most recent capability shipped: **mass-assignment check** (native active-checks
+> engine, OWASP API3:2023 BOPLA — write side).
+
 ---
 
 ## 1. The 45 tools, by the category they compete in
@@ -46,7 +55,7 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
 
 ## 3. The backlog (do these in order)
 
-### EPIC A — Asset Inventory & Attack-Surface Management  *(closes C1; unblocks everything)*
+### EPIC A — Asset Inventory & Attack-Surface Management  *(closes C1; unblocks everything)*  ✅ shipped
 > Enterprises start from "what do I even own?" Corvex-RedOps has no asset register.
 > This is the foundation the rest of the roadmap plugs into.
 
@@ -68,7 +77,7 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
   and a console **Inventory** view (filter/sort/tag, drill to findings).
   *Accept:* Inventory tab lists assets ranked by exposure; matches enterprise ASM/exposure-management framing.
 
-### EPIC B — Unified Findings Ingestion & Risk Aggregation  *(closes part of C1/C2; risk-aggregation-platform class)*
+### EPIC B — Unified Findings Ingestion & Risk Aggregation  *(closes part of C1/C2; risk-aggregation-platform class)*  ✅ shipped
 > Turn Corvex-RedOps into the single pane that *aggregates* other scanners — a huge
 > differentiator and easy given the normalized findings model already exists.
 
@@ -80,7 +89,7 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
 - **B3 · SARIF in/out** — `S`
   Accept generic **SARIF** import and **export** Corvex-RedOps findings as SARIF (GitHub code-scanning / CI native). *Accept:* round-trip SARIF.
 
-### EPIC C — Application Security depth (SCA + SBOM + SAST)  *(closes C5; commercial AST-suite class)*
+### EPIC C — Application Security depth (SCA + SBOM + SAST)  *(closes C5; commercial AST-suite class)*  ✅ shipped
 - **C1t · SCA + SBOM** — `M`
   Dependency vulnerability scanning via **OSV.dev** + **the container/IaC scanner** on an uploaded
   repo/lockfile/image; generate a **CycloneDX SBOM**. New asset_type `codebase`.
@@ -91,7 +100,7 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
 - **C3t · Secret scanning** — `S`
   **Gitleaks/trufflehog**-class secret detection over uploaded code. *Accept:* planted secret is found.
 
-### EPIC D — MITRE ATT&CK + Attack-Path Graph  *(closes C3; automated-pentest / attack-path-analysis class)*
+### EPIC D — MITRE ATT&CK + Attack-Path Graph  *(closes C3; automated-pentest / attack-path-analysis class)*  ✅ shipped
 - **D1 · ATT&CK mapping** — `S`
   Tag findings/chains with ATT&CK tactics/techniques (map from category/CWE);
   add an ATT&CK coverage matrix + `GET /coverage/attack`. *Accept:* findings show technique IDs; matrix renders.
@@ -103,7 +112,7 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
   Safe, opt-in **atomic checks** (Atomic Red Team-style) that test whether a
   control/detection fires; report ATT&CK coverage of *defenses*. *Accept:* run a benign technique check → pass/fail.
 
-### EPIC E — Cloud & Container security  *(closes C6; CNAPP entry-level)*
+### EPIC E — Cloud & Container security  *(closes C6; CNAPP entry-level)*  ✅ shipped
 - **E1 · Container & IaC scanning** — `M`
   Scan an image / Dockerfile / Terraform / K8s manifest via **the container/IaC scanner**; new
   asset_types `container`, `iac`. *Accept:* scan an image → CVE + misconfig findings.
@@ -113,7 +122,7 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
 - **E3 · K8s CIS benchmark** — `S`
   CIS Kubernetes checks. *Accept:* run the Kubernetes CIS engine → normalized findings.
 
-### EPIC F — Workflow, Integrations & PTaaS polish  *(closes C4)*
+### EPIC F — Workflow, Integrations & PTaaS polish  *(closes C4)*  ✅ shipped
 - **F1 · Retest / diff workflow** — `S`
   Per-finding **retest** action → new/fixed/persisting across scans, with MTTR.
   (Schedules already diff; surface it per finding + on demand.) *Accept:* re-run → statuses update.

@@ -91,6 +91,7 @@ state-generating probe (e.g. login brute-force) is gated behind `allow_active`.
 | `CookieFlagsCheck` | HttpOnly/Secure/SameSite | A05 |
 | `HttpMethodsCheck` | dangerous methods via OPTIONS | A05 |
 | `ErrorHandlingCheck` | Java/Python/.NET/SQL stack-trace leakage | A05 |
+| `MassAssignmentCheck` (gated) | privileged-field injection on writes (role/is_admin/verified/balance), confirmed by pre/post read-back diff | API3 |
 
 **Coverage checklist.** `pentestiq.checks.owasp` is the canonical OWASP Top 10
 2021 (A01–A10) + API Top 10 2023 (API1–API10) catalogue. The compliance report
@@ -117,7 +118,7 @@ login, JWT) — see `pentestiq/checks/engine.py`.
 | A06 Vulnerable Components | ✅ port-scan / template / VM scanners | ✅ (unchanged) |
 | A07 Auth Failures | ⚠️ enum via tools | ✅ + enumeration, rate-limit |
 | API2 Broken Authentication | ❌ | ✅ full JWT analysis |
-| API3 Data Exposure | ❌ | ✅ secrets-in-response |
+| API3 Data Exposure / BOPLA | ❌ | ✅ secrets-in-response (read) + mass-assignment (write) |
 | API5 Broken Function-Level Authz | ⚠️ OpenAPI-only | ✅ + BFLA surface |
 | API4 Resource Consumption | ⚠️ | ✅ rate-limit (gated) |
 
@@ -146,14 +147,21 @@ login, JWT) — see `pentestiq/checks/engine.py`.
   (blind-OAST + time), path traversal/LFI and SSTI, run across the crawler surface.
   Benchmark now covers all classes — including NoSQLi, XXE, CRLF, open redirect,
   anti-CSRF and outdated-JS-library checks: **25/25** planted vulnerabilities detected.
+- ✅ **Mass assignment / property injection** (`MassAssignmentCheck`, OWASP API3:2023
+  BOPLA — write side) — authenticated and `allow_active`-gated. Injects
+  server-controlled fields (`role`, `is_admin`, `verified`, `balance`) into a write to
+  the tester's **own** object and confirms escalation via a pre/post read-back diff
+  (HIGH) or write-response echo (MEDIUM); maps to CWE-915. The write-side complement to
+  excessive-data-exposure, closing the last TC-F authorization-write gap.
 
 ## 6. Still orchestrated / roadmap (honest gaps)
 
 Some findings remain best served by external tools (already orchestrated)
 or are candidates for future native checks:
 
-- **Mass assignment (TC-F05), SSRF (TC-F04), host-header (TC-F06)** — active
-  write/OOB probes; planned as `allow_active`-gated checks.
+- **SSRF (TC-F04), host-header (TC-F06)** — active/OOB probe variants beyond the
+  shipped blind-SSRF (OAST) and host-header checks; remaining variants planned as
+  `allow_active`-gated checks. (**Mass assignment (TC-F05)** now shipped — see §5.)
 - **Payment/business-logic (TC-I02)** — inherently app-specific; Corvex-RedOps flags
   the surface, human confirms the write PoC (per rules-of-engagement).
 - **Real-time/chat (Matrix/LiveKit/Firebase, TC-K)** — protocol-specific probes;

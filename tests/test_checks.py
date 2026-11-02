@@ -4,7 +4,7 @@ import hashlib
 import hmac
 import json
 
-from pentestiq.models import Asset, AssetType, Severity
+from pentestiq.models import Asset, AssetType, Severity, Confidence
 from pentestiq.checks.base import HttpClient, Response, CheckContext, Identity
 from pentestiq.checks.config_checks import (
     SecurityHeadersCheck, ClickjackingCheck, CorsCheck, CookieFlagsCheck,
@@ -15,9 +15,9 @@ from pentestiq.checks.jwt_analyzer import (
 )
 from pentestiq.checks.authz_checks import (
     BolaIdorCheck, TenantConfusionCheck, ExcessiveDataExposureCheck,
-    AccountEnumerationCheck, LoginRateLimitCheck,
+    AccountEnumerationCheck, LoginRateLimitCheck, MassAssignmentCheck,
 )
-from pentestiq.checks.engine import CheckEngine, build_context
+from pentestiq.checks.engine import CheckEngine, build_context, ALL_CHECKS
 from pentestiq.checks.owasp import normalize, describe, coverage_report
 
 
@@ -251,3 +251,114 @@ def test_owasp_normalize_and_coverage():
     cov = coverage_report(fs)
     api1 = [c for c in cov["api-2023"] if c["id"] == "API1:2023"][0]
     assert api1["findings"] == 1 and api1["max_severity"] == "critical"
+
+
+# --------------------------------------------------------------------------- mass assignment
+def _low_priv():
+    return [Identity(name="low", headers={"Authorization": "Bearer low"})]
+
+
+def _ma_meta(**over):
+    t = {"url": "/api/profile", "method": "PATCH", "read_url": "/api/me",
+         "fields": {"role": "admin"}}
+    t.update(over)
+    return {"allow_active": True, "mass_assignment": [t]}
+
+
+def test_mass_assignment_confirmed_via_readback():
+    """Vulnerable server binds the client-supplied 'role' -> read-back diff confirms escalation."""
+    state = {"role": "user", "name": "low"}
+
+    def handler(m, u, h, d):
+        if m in ("PATCH", "PUT", "POST") and u.endswith("/api/profile"):
+            state.update(json.loads(d) if d else {})      # vulnerable: binds everything
+            return _resp(200, {}, json.dumps({"ok": True}))
+        if m == "GET" and u.endswith("/api/me"):
+            return _resp(200, {}, json.dumps(state))
+        return _resp(404, {}, "")
+
+    http = FakeHttp(handler)
+    findings = MassAssignmentCheck().run(_ctx(http, _ma_meta(), identities=_low_priv(), allow_active=True))
+    assert findings and findings[0].category == "API3:2023"
+    assert "role" in findings[0].title and findings[0].severity == Severity.HIGH
+    assert findings[0].confidence == Confidence.HIGH
+    assert "mass assignment" in findings[0].title.lower()
+
+
+def test_mass_assignment_not_flagged_when_server_ignores_field():
+    """Secure server ignores the privileged field -> read-back unchanged -> no finding."""
+    state = {"role": "user"}
+
+    def handler(m, u, h, d):
+        if m in ("PATCH", "PUT", "POST") and u.endswith("/api/profile"):
+            body = json.loads(d) if d else {}
+            if "name" in body:                             # only allow-listed fields bind
+                state["name"] = body["name"]
+            return _resp(200, {}, json.dumps({"ok": True}))
+        if m == "GET" and u.endswith("/api/me"):
+            return _resp(200, {}, json.dumps(state))
+        return _resp(404, {}, "")
+
+    http = FakeHttp(handler)
+    findings = MassAssignmentCheck().run(_ctx(http, _ma_meta(), identities=_low_priv(), allow_active=True))
+    assert findings == []
+
+
+def test_mass_assignment_not_flagged_when_already_privileged():
+    """Tester is already admin before the write -> before==injected -> not a FP."""
+    state = {"role": "admin"}
+
+    def handler(m, u, h, d):
+        if m in ("PATCH", "PUT", "POST"):
+            state.update(json.loads(d) if d else {})
+            return _resp(200, {}, json.dumps({"ok": True}))
+        if m == "GET" and u.endswith("/api/me"):
+            return _resp(200, {}, json.dumps(state))
+        return _resp(404, {}, "")
+
+    http = FakeHttp(handler)
+    findings = MassAssignmentCheck().run(_ctx(http, _ma_meta(), identities=_low_priv(), allow_active=True))
+    assert findings == []
+
+
+def test_mass_assignment_echo_confirmation_medium():
+    """No read_url: the write response echoes the injected value -> MEDIUM confidence."""
+    def handler(m, u, h, d):
+        if m == "PATCH":
+            body = json.loads(d) if d else {}
+            return _resp(200, {}, json.dumps({"id": 1, **body}))   # echoes injected role
+        return _resp(404, {}, "")
+
+    http = FakeHttp(handler)
+    meta = {"allow_active": True,
+            "mass_assignment": [{"url": "/api/profile", "method": "PATCH", "fields": {"role": "admin"}}]}
+    findings = MassAssignmentCheck().run(_ctx(http, meta, identities=_low_priv(), allow_active=True))
+    assert findings and findings[0].confidence == Confidence.MEDIUM
+    assert findings[0].category == "API3:2023"
+
+
+def test_mass_assignment_gated_without_allow_active():
+    """Writes must never fire without the active gate — applicable() False and run() no-ops."""
+    http = FakeHttp(lambda m, u, h, d: _resp(200, {}, "{}"))
+    ctx = build_context(_asset(_ma_meta_no_gate()), http=http)   # allow_active defaults off
+    ctx.identities = _low_priv()
+    assert MassAssignmentCheck().applicable(ctx) is False
+    assert MassAssignmentCheck().run(ctx) == []
+    assert all(m != "PATCH" for (m, *_rest) in http.calls)        # no write was attempted
+
+
+def _ma_meta_no_gate():
+    meta = _ma_meta()
+    meta["allow_active"] = False
+    return meta
+
+
+def test_mass_assignment_graceful_on_network_error():
+    """A write that errors (synthetic status 0) must not crash or flag."""
+    http = FakeHttp(lambda m, u, h, d: _resp(0, {}, "__error__: boom"))
+    findings = MassAssignmentCheck().run(_ctx(http, _ma_meta(), identities=_low_priv(), allow_active=True))
+    assert findings == []
+
+
+def test_mass_assignment_registered_in_all_checks():
+    assert MassAssignmentCheck in ALL_CHECKS
