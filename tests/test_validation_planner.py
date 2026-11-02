@@ -78,3 +78,30 @@ def test_planner_without_exploit_intel_degrades():
     pl = ValidationPlanner(validators=[_SafeV()], exploit_intel=None)
     p = pl.plan_one(_f("Outdated Apache", "A06:2021", references=["CVE-2021-41773"]))
     assert p.method == "none"       # no oracle → honestly cannot claim an exploit
+
+
+# ---- DirectoryListingValidator (safe, text-only confirmation) ----------
+class _FakeHttp:
+    def __init__(self, status, text):
+        self._s, self._t = status, text
+    def get(self, url, params=None):
+        from pentestiq.validators.base import HttpResponse
+        return HttpResponse(status=self._s, text=self._t, elapsed_ms=1.0, url=url)
+
+
+def test_directory_listing_confirmed():
+    from pentestiq.validators import DirectoryListingValidator
+    v = DirectoryListingValidator()
+    f = _f("Directory listing enabled", "A05:2021")
+    assert v.applies_to(f)
+    out = v.validate(f, _FakeHttp(200, "<html><title>Index of /uploads</title>"
+                                       "<a href='..'>Parent Directory</a>"))
+    assert out.result == ValidationResult.CONFIRMED and out.evidence_ref
+
+
+def test_directory_listing_inconclusive_without_markers():
+    from pentestiq.validators import DirectoryListingValidator
+    v = DirectoryListingValidator()
+    f = _f("Directory listing enabled", "A05:2021")
+    out = v.validate(f, _FakeHttp(200, "<html><body>Access denied</body></html>"))
+    assert out.result == ValidationResult.INCONCLUSIVE
