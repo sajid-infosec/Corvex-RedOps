@@ -10,7 +10,7 @@ from pentestiq.models import (
 
 def _engagement():
     a = Asset(type=AssetType.WEB, identifier="http://shop")
-    eng = Engagement(name="PentestIQ Web Test")
+    eng = Engagement(name="Corvex-RedOps Web Test")
     eng.add_findings([
         Finding(asset=a, title="SQL Injection", category="CWE-89", severity=Severity.HIGH,
                 status=FindingStatus.VALIDATED, confidence=Confidence.HIGH, source_tools=["zap"],
@@ -39,7 +39,7 @@ def test_stats_counts():
 def test_deterministic_summary_mentions_key_facts():
     eng = _engagement()
     txt = deterministic_summary(eng, compute_stats(eng))
-    assert "PentestIQ Web Test" in txt
+    assert "Corvex-RedOps Web Test" in txt
     assert "validated" in txt.lower()
     assert "false positive" in txt.lower()
 

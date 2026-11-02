@@ -12,7 +12,7 @@ from pentestiq.models import (
 
 def _eng():
     a = Asset(type=AssetType.WEB, identifier="http://shop")
-    e = Engagement(name="PentestIQ")
+    e = Engagement(name="Corvex-RedOps")
     e.add_findings([
         Finding(asset=a, title="SQL Injection", category="CWE-89", severity=Severity.HIGH,
                 status=FindingStatus.VALIDATED, source_tools=["zap"]),
@@ -41,8 +41,8 @@ def test_map_finding_cwe_and_category():
 
 def test_pdf_and_docx_bytes_valid():
     e = _eng(); st = compute_stats(e); nar = build_narrative(e, st); comp = compliance_summary(e)
-    pdf = render_pdf(e, st, nar, ReportBranding(company_name="PentestIQ"), comp)
-    docx = render_docx(e, st, nar, ReportBranding(company_name="PentestIQ"), comp)
+    pdf = render_pdf(e, st, nar, ReportBranding(company_name="Corvex-RedOps"), comp)
+    docx = render_docx(e, st, nar, ReportBranding(company_name="Corvex-RedOps"), comp)
     assert pdf[:4] == b"%PDF"
     assert docx[:2] == b"PK"                                 # docx is a zip
     assert len(pdf) > 1000 and len(docx) > 1000
@@ -50,15 +50,15 @@ def test_pdf_and_docx_bytes_valid():
 
 def test_branding_applied_to_text_reports():
     e = _eng(); st = compute_stats(e); nar = build_narrative(e, st); comp = compliance_summary(e)
-    b = ReportBranding(company_name="PentestIQ Security", accent_color="#6d28d9", footer_note="Confidential")
+    b = ReportBranding(company_name="Corvex-RedOps Security", accent_color="#6d28d9", footer_note="Confidential")
     md = render_markdown(e, st, nar, b, comp)
     html = render_html(e, st, nar, b, comp)
-    assert "PentestIQ Security" in md and "Detailed Findings" in md and "Confidential" in md
-    assert "PentestIQ Security" in html and "#6d28d9" in html and "Detailed Findings" in html
+    assert "Corvex-RedOps Security" in md and "Detailed Findings" in md and "Confidential" in md
+    assert "Corvex-RedOps Security" in html and "#6d28d9" in html and "Detailed Findings" in html
 
 
 def test_generator_writes_all_formats(tmp_path):
-    paths = ReportGenerator(branding=ReportBranding(company_name="PentestIQ")).generate(
+    paths = ReportGenerator(branding=ReportBranding(company_name="Corvex-RedOps")).generate(
         _eng(), tmp_path, formats=("md", "html", "json", "pdf", "docx"))
     assert set(paths) == {"md", "html", "json", "pdf", "docx"}
     assert (tmp_path / "report.pdf").read_bytes()[:4] == b"%PDF"

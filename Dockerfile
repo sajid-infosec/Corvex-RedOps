@@ -1,4 +1,4 @@
-# PentestIQ API + console. The native scanning engine (crawler, OWASP checks,
+# Corvex-RedOps API + console. The native scanning engine (crawler, OWASP checks,
 # injection fuzzer, OAST) needs no external tools and is always available. The
 # extras below make the orchestrated tools real in the container:
 #   - nmap        : network/service discovery
