@@ -164,7 +164,12 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
   finding honestly: **safe** (auto-confirmed by a non-destructive validator),
   **active** (gated behind allow_active), **manual** (no safe validator but a
   public exploit exists — cited for authorized manual validation), or **none**
-  (detection-only). *Accept:* CVE-2021-41773 → "exploit available: weaponized
+  (detection-only). Surfaced end-to-end: an Exploitability & Validation Coverage
+  section in every report format (HTML/MD/PDF/DOCX), a console "EXPLOIT" badge on
+  prioritized findings + a Settings → Threat intelligence refresh card, API
+  (`/intel/exploit`, admin `/intel/exploit/refresh`), and an optional interval
+  auto-refresh at startup (`intel_refresh_days`, off by default).
+  *Accept:* CVE-2021-41773 → "exploit available: weaponized
   (Exploit-DB EDB-50383 + module)", PRP gains the factor; A06 finding with that
   CVE → manual validation plan citing the exploit; all graceful offline. ✔
 

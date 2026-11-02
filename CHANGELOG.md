@@ -22,7 +22,14 @@ All notable changes to Corvex-RedOps are documented here. This project adheres t
   behind `allow_active`), **manual** (no safe validator but a public exploit
   exists — cited for authorized manual validation), or **none** (detection-only).
   No scanner detects or validates *everything*; this makes exactly what the engine
-  can and cannot auto-confirm explicit in the deliverable.
+  can and cannot auto-confirm explicit in the deliverable. Surfaced end-to-end: an
+  **Exploitability & Validation Coverage** section in every report format (HTML,
+  Markdown, **PDF, DOCX**); a console **"EXPLOIT" badge** on prioritized findings
+  plus a **Settings → Threat intelligence** card to refresh Exploit-DB / KEV on
+  demand; API `GET /intel/exploit` + admin `POST /intel/exploit/refresh`; a safe
+  `DirectoryListingValidator`; and an optional interval-based auto-refresh of the
+  KEV + Exploit-DB datasets at startup (`intel_refresh_days`, off by default,
+  offline-safe).
 - **Insecure-deserialization signal check** (native active-checks engine, OWASP
   **A08:2021** / CWE-502). Passively flags language-native serialized objects
   crossing the client boundary — Java (`rO0AB…`), PHP (`O:…`/`a:…`), .NET
