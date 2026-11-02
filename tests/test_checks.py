@@ -3,6 +3,7 @@ import base64
 import hashlib
 import hmac
 import json
+import re
 
 from pentestiq.models import Asset, AssetType, Severity, Confidence
 from pentestiq.checks.base import HttpClient, Response, CheckContext, Identity
@@ -17,6 +18,7 @@ from pentestiq.checks.authz_checks import (
     BolaIdorCheck, TenantConfusionCheck, ExcessiveDataExposureCheck,
     AccountEnumerationCheck, LoginRateLimitCheck, MassAssignmentCheck,
 )
+from pentestiq.checks.upload_check import FileUploadCheck
 from pentestiq.checks.engine import CheckEngine, build_context, ALL_CHECKS
 from pentestiq.checks.owasp import normalize, describe, coverage_report
 
@@ -362,3 +364,80 @@ def test_mass_assignment_graceful_on_network_error():
 
 def test_mass_assignment_registered_in_all_checks():
     assert MassAssignmentCheck in ALL_CHECKS
+
+
+# --------------------------------------------------------------------------- file upload
+def _mp_filename(d):
+    body = d.decode() if isinstance(d, (bytes, bytearray)) else (d or "")
+    m = re.search(r'filename="([^"]+)"', body)
+    return (m.group(1) if m else ""), body
+
+
+def test_file_upload_served_confirmed_critical():
+    """Vulnerable server stores the upload and serves it back live -> confirmed, CRITICAL."""
+    store = {}
+
+    def handler(m, u, h, d):
+        if m == "POST" and u.endswith("/api/avatar"):
+            fn, body = _mp_filename(d)
+            ctm = re.search(r"Content-Type: ([^\r\n]+)\r\n\r\n(.*?)\r\n--", body, re.S)
+            store[fn] = (ctm.group(1).strip() if ctm else "application/octet-stream",
+                         ctm.group(2) if ctm else "")
+            return _resp(200, {}, json.dumps({"stored": "/uploads/" + fn}))
+        if m == "GET" and "/uploads/" in u:
+            fn = u.rsplit("/", 1)[-1]
+            if fn in store:
+                ct, payload = store[fn]
+                return _resp(200, {"content-type": ct}, payload, url=u)
+        return _resp(404, {}, "")
+
+    meta = {"allow_active": True, "file_upload": [{"url": "/api/avatar", "read_base": "/uploads"}]}
+    findings = FileUploadCheck().run(_ctx(FakeHttp(handler), meta, allow_active=True))
+    assert findings
+    crit = [f for f in findings if f.severity == Severity.CRITICAL]
+    assert crit, [f.title for f in findings]
+    assert crit[0].category == "A05:2021"
+    assert crit[0].confidence == Confidence.HIGH
+    assert "file upload" in crit[0].title.lower()
+
+
+def test_file_upload_rejected_no_finding():
+    """Server rejects dangerous extensions -> no finding."""
+    def handler(m, u, h, d):
+        if m == "POST":
+            name, _ = _mp_filename(d)
+            if name.lower().endswith((".php", ".phtml", ".jsp", ".svg", ".html", ".htm")):
+                return _resp(400, {}, "blocked")
+            return _resp(200, {}, "ok")
+        return _resp(404, {}, "")
+
+    meta = {"allow_active": True, "file_upload": [{"url": "/api/avatar", "read_base": "/uploads"}]}
+    assert FileUploadCheck().run(_ctx(FakeHttp(handler), meta, allow_active=True)) == []
+
+
+def test_file_upload_accepted_unconfirmed_medium():
+    """Accepted (2xx) but not served back / no read_base -> MEDIUM confidence."""
+    http = FakeHttp(lambda m, u, h, d: _resp(200, {}, "ok") if m == "POST" else _resp(404, {}, ""))
+    meta = {"allow_active": True, "file_upload": [{"url": "/api/avatar"}]}
+    findings = FileUploadCheck().run(_ctx(http, meta, allow_active=True))
+    assert findings
+    assert all(f.confidence == Confidence.MEDIUM for f in findings)
+    assert all(f.category == "A05:2021" for f in findings)
+
+
+def test_file_upload_gated_without_allow_active():
+    http = FakeHttp(lambda m, u, h, d: _resp(200, {}, "ok"))
+    ctx = build_context(_asset({"file_upload": [{"url": "/api/avatar"}]}), http=http)
+    assert FileUploadCheck().applicable(ctx) is False
+    assert FileUploadCheck().run(ctx) == []
+    assert all(meth != "POST" for (meth, *_rest) in http.calls)
+
+
+def test_file_upload_graceful_on_network_error():
+    http = FakeHttp(lambda m, u, h, d: _resp(0, {}, "__error__: boom"))
+    meta = {"allow_active": True, "file_upload": [{"url": "/api/avatar", "read_base": "/uploads"}]}
+    assert FileUploadCheck().run(_ctx(http, meta, allow_active=True)) == []
+
+
+def test_file_upload_registered_in_all_checks():
+    assert FileUploadCheck in ALL_CHECKS
