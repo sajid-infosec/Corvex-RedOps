@@ -41,7 +41,8 @@ deploy/.env
 .ptiq-src*.tgz
 .ptiq-*.tgz
 
-# threat-intel runtime caches (refreshed from CISA/FIRST at runtime)
+# threat-intel runtime caches (refreshed from CISA/FIRST/Exploit-DB at runtime)
 pentestiq/intel/data/kev_catalog.json
 pentestiq/intel/data/epss_cache.json
+pentestiq/intel/data/exploitdb/
 qa/samples/

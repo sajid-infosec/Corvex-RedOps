@@ -42,7 +42,7 @@
 |---|---|---|
 | C1 ASM | ❌ no asset inventory, no external discovery | **Biggest strategic gap.** Asset register + EASM + exposure scoring |
 | C2 VM | 🟡 active scanning across 10 asset types; template-based + port-discovery scanning; **no** authenticated/agent scanning, thin CVE breadth | Authenticated scans, CVE/NVD enrichment, continuous discovery |
-| C3 Validation/BAS | 🟡 safe exploit validation + attack-chain correlation; **no** ATT&CK mapping, no attack-path graph, no control testing | ATT&CK mapping, attack-path graph, BAS-lite |
+| C3 Validation/BAS | 🟢 safe exploit validation + attack-chain correlation + ATT&CK mapping + attack-path graph + BAS-lite; **exploit-availability intelligence** (Exploit-DB/module presence) drives PRP + an honest safe/active/manual/none validation plan | control-testing breadth |
 | C4 PTaaS | 🟡 engagements, RBAC, scheduling, reports; **no** retest workflow, client portal, ticketing | Retest/diff workflow, read-only client portal, integrations |
 | C5 AST | 🟡 DAST (web active) + API + partial SCA (JS libs only); **no** SAST, no full SCA/SBOM | SCA (OSV / container-IaC scanner), SBOM, SAST (code engine), IAST-lite |
 | C6 Cloud | ❌ none | Container/image (container-IaC scanner), IaC, CSPM (cloud-posture engine), K8s (Kubernetes CIS engine) |
@@ -153,6 +153,20 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
   (NucleiTemplateManager, template_coverage); `POST /tools/nuclei/update`,
   `GET /tools/nuclei/coverage`; config `nuclei_tags`/`nuclei_severity`; Settings card.
   *Accept:* update command refreshes store; coverage returns total + per-pack count. ✔
+- **G4 · Exploit-availability intelligence + validation planner** — `M` ✅
+  Public-exploit oracle (Exploit-DB `files_exploits.csv` `codes`→CVE map — the
+  searchsploit dataset — + framework-module index; bundled seed, offline-first,
+  `refresh()` ingests the full CSV). Every finding is enriched with exploit
+  availability + a maturity tier (weaponized > public-exploit > poc > none), added
+  as a transparent factor to the PRP score alongside KEV/EPSS.
+  `pentestiq/intel/exploit_intel.py` (ExploitIntel), wired into `ThreatIntel`.
+  A `ValidationPlanner` (`pentestiq/validators/planner.py`) then classifies each
+  finding honestly: **safe** (auto-confirmed by a non-destructive validator),
+  **active** (gated behind allow_active), **manual** (no safe validator but a
+  public exploit exists — cited for authorized manual validation), or **none**
+  (detection-only). *Accept:* CVE-2021-41773 → "exploit available: weaponized
+  (Exploit-DB EDB-50383 + module)", PRP gains the factor; A06 finding with that
+  CVE → manual validation plan citing the exploit; all graceful offline. ✔
 
 ### EPIC H — Continuous Exposure & Analytics  *(cross-cutting; CTEM)*
 - **H1 · Posture trend analytics** — `M` ✅

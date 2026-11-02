@@ -6,6 +6,23 @@ All notable changes to Corvex-RedOps are documented here. This project adheres t
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
+- **Exploit-availability intelligence + validation planner** — a new open,
+  offline-first oracle (`pentestiq/intel/exploit_intel.py`) answers the question
+  KEV and EPSS don't: *does a public exploit actually exist for this CVE, and how
+  mature is it?* It ingests **Exploit-DB**'s `files_exploits.csv` (the dataset
+  `searchsploit` ships; the `codes` column maps EDB-IDs → CVEs) plus a
+  framework-module index, from a bundled seed (air-gapped) up to the full catalogue
+  via `ExploitIntel.refresh()`. Each CVE resolves to a maturity tier — *weaponized*
+  (framework module) › *public-exploit* (verified Exploit-DB entry) › *poc* ›
+  *none* — recorded as metadata only, never exploit code. This becomes a
+  **transparent factor in the Corvex-RedOps Risk Priority** score (shown with its
+  multiplier alongside CVSS/EPSS/KEV), and drives a new **`ValidationPlanner`**
+  (`pentestiq/validators/planner.py`) that classifies every finding honestly:
+  **safe** (auto-confirmed by a non-destructive validator), **active** (gated
+  behind `allow_active`), **manual** (no safe validator but a public exploit
+  exists — cited for authorized manual validation), or **none** (detection-only).
+  No scanner detects or validates *everything*; this makes exactly what the engine
+  can and cannot auto-confirm explicit in the deliverable.
 - **Insecure-deserialization signal check** (native active-checks engine, OWASP
   **A08:2021** / CWE-502). Passively flags language-native serialized objects
   crossing the client boundary — Java (`rO0AB…`), PHP (`O:…`/`a:…`), .NET
