@@ -6,6 +6,12 @@ All notable changes to Corvex-RedOps are documented here. This project adheres t
 ## [Unreleased] — Phase 2 (SaaS)
 
 ### Added
+- **Shadow / undocumented API-endpoint check** (native active-checks engine,
+  OWASP **API9:2023** Improper Inventory Management). Diffs the crawled/discovered
+  endpoints against the documented OpenAPI surface (id-segments templatized) and
+  flags endpoints that are reachable but absent from the spec — the shadow/zombie
+  routes attackers find. Read-only GET probes; upgrades the API9 shadow-endpoint
+  row from *partial* to a real check.
 - **Edition / tier gating (open-core)** — a central `pentestiq/edition.py`
   (Community → Pro → Team → Enterprise) resolved from `CORVEX_EDITION` or the
   repo-root `EDITION` file. The full security-testing engine stays free

@@ -19,7 +19,9 @@ from pentestiq.checks.authz_checks import (
     AccountEnumerationCheck, LoginRateLimitCheck, MassAssignmentCheck,
 )
 from pentestiq.checks.upload_check import FileUploadCheck
+from pentestiq.checks.inventory_checks import ShadowEndpointCheck
 from pentestiq.checks.engine import CheckEngine, build_context, ALL_CHECKS
+from urllib.parse import urlsplit as _urlsplit
 from pentestiq.checks.owasp import normalize, describe, coverage_report
 
 
@@ -441,3 +443,47 @@ def test_file_upload_graceful_on_network_error():
 
 def test_file_upload_registered_in_all_checks():
     assert FileUploadCheck in ALL_CHECKS
+
+
+# --------------------------------------------------------------------------- shadow endpoints (API9)
+def _shadow_http(live_status):
+    """live_status: {path: status}; any other path -> 404."""
+    def h(m, u, hh, d):
+        return _resp(live_status.get(_urlsplit(u).path, 404), {}, "ok")
+    return FakeHttp(h)
+
+
+def test_shadow_endpoint_flagged():
+    meta = {"documented_paths": ["/api/users/{id}", "/api/orgs"],
+            "discovered_paths": ["/api/users/42", "/api/debug"]}
+    http = _shadow_http({"/api/users/42": 200, "/api/debug": 200})
+    f = ShadowEndpointCheck().run(_ctx(http, meta))
+    assert len(f) == 1 and f[0].category == "API9:2023"      # /api/users/42 == documented {id}
+    assert "/api/debug" in f[0].title and f[0].severity == Severity.MEDIUM
+
+
+def test_shadow_endpoint_documented_not_flagged():
+    meta = {"documented_paths": ["/api/users/{id}"], "discovered_paths": ["/api/users/7"]}
+    assert ShadowEndpointCheck().run(_ctx(_shadow_http({"/api/users/7": 200}), meta)) == []
+
+
+def test_shadow_endpoint_404_not_flagged():
+    meta = {"documented_paths": ["/api/users/{id}"], "discovered_paths": ["/api/ghost"]}
+    assert ShadowEndpointCheck().run(_ctx(_shadow_http({}), meta)) == []
+
+
+def test_shadow_endpoint_exists_via_403():
+    meta = {"documented_paths": ["/api/users/{id}"], "discovered_paths": ["/admin"]}
+    f = ShadowEndpointCheck().run(_ctx(_shadow_http({"/admin": 403}), meta))
+    assert len(f) == 1 and "/admin" in f[0].title
+
+
+def test_shadow_endpoint_requires_both_lists():
+    c = ShadowEndpointCheck(); http = _shadow_http({})
+    assert c.applicable(_ctx(http, {"discovered_paths": ["/x"]})) is False
+    assert c.applicable(_ctx(http, {"documented_paths": ["/x"]})) is False
+    assert c.applicable(_ctx(http, {"documented_paths": ["/x"], "discovered_paths": ["/y"]})) is True
+
+
+def test_shadow_endpoint_registered_in_all_checks():
+    assert ShadowEndpointCheck in ALL_CHECKS
