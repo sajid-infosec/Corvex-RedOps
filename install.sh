@@ -14,7 +14,7 @@
 #
 #   sudo ./install.sh              # install everything + deploy (auto engine)
 #   sudo ./install.sh --port 9090  # custom console port
-#   sudo ./install.sh --ai         # also run the local AI model (Docker only, heavy)
+#   sudo ./install.sh --ai         # also run the local language model (Docker only, heavy)
 #   sudo ./install.sh --native     # force the native (no-Docker) install
 #   sudo ./install.sh --docker     # force the Docker install (no fallback)
 #   sudo ./install.sh --down       # stop whatever is running
@@ -56,7 +56,7 @@ if Docker is unavailable or can't reach the image registry — no prompts.
 Usage:
   sudo ./install.sh              install everything + deploy (auto engine)
   sudo ./install.sh --port 9090  deploy on a custom console port
-  sudo ./install.sh --ai         also run the local AI model (Docker only, heavy)
+  sudo ./install.sh --ai         also run the local language model (Docker only, heavy)
   sudo ./install.sh --native     force the native (no-Docker) install
   sudo ./install.sh --docker     force Docker (no native fallback)
   sudo ./install.sh --update     rebuild/reinstall & redeploy
@@ -251,15 +251,12 @@ set_ai_env() {
 }
 
 # ----------------------------------------------------------------------------- docker engine
-registry_reachable() { # can the daemon actually pull? also warms the base image cache.
-  log "Checking image-registry reachability…"
-  if timeout 90 $SUDO docker pull python:3.11-slim >/dev/null 2>&1; then ok "Registry reachable (base image ready)."; return 0; fi
-  warn "Docker cannot reach the image registry."; return 1
+registry_reachable() { # can the daemon actually pull? (also warms the base image cache) — silent probe
+  timeout 90 $SUDO docker pull python:3.11-slim >/dev/null 2>&1
 }
 
 dns_selfheal() { # best-effort: make the Docker daemon resolve the registry (Linux only)
   [ "${OSKIND:-linux}" = "linux" ] || return 1
-  log "Attempting to repair Docker DNS (public resolvers)…"
   # 1) container-side DNS
   $SUDO mkdir -p /etc/docker 2>/dev/null || true
   if [ ! -f /etc/docker/daemon.json ]; then
@@ -288,7 +285,7 @@ dns_selfheal() { # best-effort: make the Docker daemon resolve the registry (Lin
 deploy_docker() { # returns 0 on a started stack
   [ -f "$COMPOSE_FILE" ] || { warn "compose file not found: $COMPOSE_FILE"; return 1; }
   log "Building and starting the Docker stack (first run can take a few minutes)…"
-  local profile=""; [ "${AI_CHOICE:-0}" = "1" ] && profile="--profile ai" && log "AI layer enabled — the local AI runtime will start too."
+  local profile=""; [ "${AI_CHOICE:-0}" = "1" ] && profile="--profile ai" && log "Intelligence layer enabled — the local model runtime will start too."
   $SUDO env DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 ${DC_BIN:-docker compose} \
     --env-file "$ENV_FILE" -f "$COMPOSE_FILE" $profile up -d --build || { warn "docker compose failed."; return 1; }
   ok "Containers started."
@@ -300,9 +297,12 @@ try_docker() { # orchestrates the whole Docker path; 0 = success, 1 = fall back
   ensure_compose  || return 1
   write_env
   set_ai_env
-  if ! registry_reachable; then
+  if registry_reachable; then
+    ok "Image registry reachable."
+  else
+    log "Docker can't reach the image registry on this network — trying a quick DNS repair…"
     dns_selfheal
-    registry_reachable || { warn "Registry still unreachable after DNS repair."; return 1; }
+    if registry_reachable; then ok "Image registry reachable after DNS repair."; else return 1; fi
   fi
   deploy_docker   || return 1
   return 0
@@ -352,14 +352,17 @@ deploy_native() { # returns 0 on a running server
   fi
   local vpip="$VENV_DIR/bin/pip" vpy="$VENV_DIR/bin/python"
   log "Resolving & installing Python dependencies (from PyPI)…"
-  "$vpy" -m pip install -q --upgrade pip setuptools wheel >/dev/null 2>&1 || true
-  # core set (present in every edition). AI confidence model + SPA browser are
-  # added best-effort below so this never fails on an edition that lacks them.
-  if ! ( cd "$REPO_DIR" && "$vpip" install -q -e ".[api,reports]" ); then
-    warn "pip install failed — is PyPI reachable from this host?"; return 1
+  local blog="${TMPDIR:-/tmp}/corvex-pip-install.log"; : > "$blog" 2>/dev/null || blog=/dev/null
+  "$vpy" -m pip install -q --upgrade pip 'setuptools>=77' wheel >>"$blog" 2>&1 || true
+  # core set (present in every edition). Build output (pip/setuptools notes) is
+  # sent to the log so the console stays clean; the self-learning model + SPA
+  # browser are added best-effort so this never fails on an edition lacking them.
+  if ! ( cd "$REPO_DIR" && "$vpip" install -q -e ".[api,reports]" ) >>"$blog" 2>&1; then
+    warn "Dependency install failed — is PyPI reachable from this host? (details: $blog)"
+    tail -n 15 "$blog" 2>/dev/null; return 1
   fi
-  "$vpip" install -q scikit-learn >/dev/null 2>&1 || true                                   # self-learning model
-  "$vpip" install -q playwright >/dev/null 2>&1 && "$VENV_DIR/bin/playwright" install chromium >/dev/null 2>&1 || true  # SPA crawl
+  "$vpip" install -q scikit-learn >>"$blog" 2>&1 || true                                   # self-learning model
+  "$vpip" install -q playwright >>"$blog" 2>&1 && "$VENV_DIR/bin/playwright" install chromium >>"$blog" 2>&1 || true  # SPA crawl
   ok "Dependencies installed."
 
   write_env
@@ -415,12 +418,12 @@ summary() {
   printf "  API docs    : ${c_blue}http://localhost:%s/docs${c_off}\n" "$PORT"
   if [ "${ENGINE_USED:-docker}" = "docker" ]; then
     if [ "${AI_CHOICE:-0}" = "1" ]; then
-      printf "  AI layer    : ${c_grn}enabled${c_off} — model ${c_blue}%s${c_off} (http://localhost:11434)\n" "$AI_MODEL"
+      printf "  Intelligence: ${c_grn}enabled${c_off} — local model ${c_blue}%s${c_off} (http://localhost:11434)\n" "$AI_MODEL"
     else
-      printf "  AI layer    : ${c_dim}disabled (re-run with --ai to enable)${c_off}\n"
+      printf "  Intelligence: ${c_dim}self-learning model active; add --ai for the local language model${c_off}\n"
     fi
   else
-    printf "  AI layer    : ${c_dim}native mode — the self-learning model is installed; the local LLM needs Docker (--ai)${c_off}\n"
+    printf "  Intelligence: ${c_dim}self-learning model active; the local language model needs Docker (--ai)${c_off}\n"
   fi
   printf "\n  Sign in as ${c_blue}admin${c_off}:\n"
   admin_password_hint
@@ -484,7 +487,7 @@ BANNER
         wait_healthy || warn "health check timed out — the stack may still be warming up."
         summary; exit 0
       fi
-      warn "Docker path unavailable — automatically falling back to the native install (no Docker needed)."
+      log "Docker isn't usable on this network — installing with the built-in native runtime instead (no Docker needed)."
       if deploy_native; then
         wait_healthy || warn "health check timed out — check: tail -f $NATIVE_LOG"
         summary; exit 0
