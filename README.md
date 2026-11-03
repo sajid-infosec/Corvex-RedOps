@@ -10,7 +10,7 @@
 
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
-![Tests](https://img.shields.io/badge/tests-480%2B%20passing-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-570%2B%20passing-brightgreen.svg)
 ![Scan templates](https://img.shields.io/badge/scan%20templates-18-0ea5e9.svg)
 <br/>
 ![Self-hosted](https://img.shields.io/badge/self--hosted-air--gappable-0aa.svg)
@@ -19,7 +19,7 @@
 ![OWASP](https://img.shields.io/badge/OWASP-Top10%20%2F%20API%20%2F%20WSTG%20%2F%20MASVS-brightgreen.svg)
 ![Cost](https://img.shields.io/badge/licensing%20cost-%240-success.svg)
 
-[Why Corvex-RedOps](#-why-corvex-redops) · [vs Commercial Tools](#-how-corvex-redops-compares) · [Features](#-features) · [Screens](#-screens--samples) · [Install](#-installation) · [Quick Start](#-quick-start) · [API](#-rest-api-reference)
+[Why Corvex-RedOps](#-why-corvex-redops) · [vs Commercial Tools](#-how-corvex-redops-compares) · [Features](#-features) · [Editions](#-editions--premium) · [Screens](#-screens--samples) · [Install](#-installation) · [Quick Start](#-quick-start) · [API](#-rest-api-reference)
 
 <br/>
 
@@ -43,6 +43,7 @@
 - [Why Corvex-RedOps](#-why-corvex-redops)
 - [How Corvex-RedOps compares](#-how-corvex-redops-compares)
 - [Features](#-features)
+- [Editions & Premium](#-editions--premium)
 - [Threat-informed prioritization](#-threat-informed-prioritization)
 - [Asset Coverage](#-asset-coverage)
 - [Attack-surface crawler](#-attack-surface-crawler)
@@ -123,6 +124,7 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 - **One normalized findings model** across every tool and asset type — deduplicate, correlate, and risk-score once.
 - **10 asset modules** covering the complete attack surface (see [Asset Coverage](#-asset-coverage)).
 - **Proxy-history XML import** — turn a captured proxy/history export into a ready-to-run engagement: every captured endpoint, parameter and bearer-token identity is extracted and fed straight to the active engine (a 90 MB history parses in ~1s).
+- **Attack-surface Deep Scan** — ingest a HAR capture (or capture live traffic through the optional intercepting proxy), then passively map the site tree, parameter/reflection catalog, exposed secrets and tokens, and auth/session reconstruction — every finding normalized into the one findings model. Free in Community; the interactive operator tools (request Repeater, payload Intruder, authenticated-session replay, WinRM credentialed Windows audit) are a premium add-on — see [Editions](#-editions--premium).
 - **Safe exploit validation** — non-destructive reflected-XSS and boolean-based SQLi confirmation that flips findings from *detected* to *validated* (with evidence) or dismisses false positives.
 - **Risk scoring (0–100)** blending severity, CVSS, confidence, and validation state.
 - **Threat-informed prioritization — Corvex-RedOps Risk Priority (PRP)** — blends CVSS with **FIRST EPSS** (exploit probability) and **CISA KEV** (known-exploited, incl. ransomware) into one transparent 0–100 score, with the SLA state for every finding. This is the exploit-aware ranking enterprise VM suites charge for and keep opaque behind proprietary scores — here **explainable, free, and offline-capable** (bundled KEV seed; live refresh from CISA/FIRST). See [`pentestiq/intel/`](pentestiq/intel/).
@@ -164,13 +166,46 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 ### Platform (SaaS layer)
 - **REST API** (FastAPI) with auto-generated OpenAPI docs at `/docs`.
 - **Web console** — create engagements, upload apps/configs, run scans, watch findings, open reports — served at `/`.
-- **Authentication, multi-tenancy & RBAC** — user login (PBKDF2), session tokens, per-tenant API keys (hashed), and roles (`viewer` → `member` → `admin` → `owner`).
+- **Authentication, multi-tenancy & RBAC** — user login (PBKDF2), session tokens, per-tenant API keys (hashed), and four built-in hierarchical roles (`viewer` → `member` → `admin` → `owner`). Enterprise adds **fine-grained RBAC**: a permission catalog (`engagements:write`, `scan:run`, `deepscan:operate`, `users:manage`, …) and **custom, per-tenant roles** enforced per-endpoint, with a no-privilege-escalation guard.
 - **Continuous scanning** — recurring schedules with **diffing** (new / fixed / persisting) and **Slack/webhook notifications**.
 - **Two report types, four formats** — a **Full Technical Report** (cover page, executive summary, scope, CVSS risk methodology, findings summary, per-finding detail with issue/impact/evidence/PoC/CVSS-vector/CWE/remediation, remediation roadmap, conclusion and OWASP appendices) and a management-facing **Executive Summary** (risk-posture gauge, severity donut, OWASP bar chart, top risks, attack chains, remediation priorities). Both export to **HTML / PDF / DOCX** (full report also Markdown), print-ready with running headers and page numbers, **compliance mapping** (OWASP / PCI-DSS / ISO 27001 / MITRE ATT&CK), and **per-tenant white-label branding**.
 
 ### Deployment
 - **Self-hostable** — `pip install` for the engine; **Docker Compose** for the full stack with the integrated mobile-analysis service. The image bundles the orchestrated scanning engines (port & service discovery, a headless browser for SPA crawling, and template-based scanning) so a container deploy has full capability out of the box.
 - **Postgres-ready** — SQLite by default, swappable behind clean storage interfaces.
+
+---
+
+## 💎 Editions & Premium
+
+Corvex-RedOps is **open-core**. The **Community** edition in this repository is the *complete security-testing engine* — scanning, native active checks, injection fuzzing, safe exploit validation, threat-informed prioritization, the full asset inventory, and single-workspace reporting — **Apache-2.0, $0, self-hostable and air-gappable**, with no feature crippling of the engine itself. Premium tiers add the **team, scale, and managed** layer on top; nothing below gates the scanner.
+
+Edition is resolved from the `CORVEX_EDITION` environment variable (or a repo-root `EDITION` file), defaulting to Community. Premium-gated endpoints return **HTTP 402** with the required edition when called below their tier — the engine never degrades silently.
+
+| Capability | Community | Pro | Team | Enterprise |
+|---|:---:|:---:|:---:|:---:|
+| Full scanning engine · 10 asset modules · OWASP active checks + injection fuzzing | ✅ | ✅ | ✅ | ✅ |
+| Safe exploit validation · PRP prioritization (EPSS + CISA KEV) · SLA tracking | ✅ | ✅ | ✅ | ✅ |
+| Asset inventory · EASM discovery · exposure scoring · posture snapshots | ✅ | ✅ | ✅ | ✅ |
+| SCA/SBOM · SAST · container/IaC · cloud posture (CSPM) · ATT&CK + attack-path | ✅ | ✅ | ✅ | ✅ |
+| **Deep Scan** — HAR import, capture proxy, passive site/param/secret/auth analysis | ✅ | ✅ | ✅ | ✅ |
+| Reporting (HTML/PDF/DOCX/MD) · REST API · web console · 4 built-in roles · audit trail | ✅ | ✅ | ✅ | ✅ |
+| Client portal (tokenized read-only links) · Ticketing (Jira/ServiceNow/Slack/webhook) | — | ✅ | ✅ | ✅ |
+| White-label report branding · Remediation projects (owned, dated, SLA) | — | ✅ | ✅ | ✅ |
+| Multi-tenant workspaces · team management · continuous scheduling + diff | — | — | ✅ | ✅ |
+| CTEM exposure alerting · managed AI narratives at scale | — | — | ✅ | ✅ |
+| **Deep Scan operator tools** — Repeater, Intruder, auth-session replay, WinRM audit | — | — | ✅ | ✅ |
+| **Dark-web & exposure intelligence (DRP)** — breach/credential/ransomware/typosquat monitoring | — | — | — | ✅ |
+| **Fine-grained RBAC** — permission catalog + custom per-tenant roles | — | — | — | ✅ |
+| SSO / SAML · distributed workers · managed hosting | — | — | — | ✅ |
+
+### Premium capabilities in depth
+
+- **Deep Scan operator suite** *(Team+)* — turns a passive capture into an interactive assessment: a **Repeater** to edit and resend any request in scope, an **Intruder** fuzzer with `§`-marked payload positions and sniper/battering-ram/pitchfork/cluster-bomb modes, **authenticated-session** replay (token/form/macro login with CSRF handling and re-auth), and a read-only **WinRM credentialed Windows audit** (EOL OS, SMBv1, missing-patch findings). Every active send is double-gated by the engagement scope **and** a sender allow-list, with request/concurrency caps; results flow into the one findings model.
+- **Dark-web & exposure intelligence (DRP)** *(Enterprise)* — continuous monitoring across breach dumps, stealer logs, paste sites, ransomware leak sites, Telegram and typosquat domains, correlated to your assets and unified into the inventory and KEV-aware risk model. Observe-only and metadata-only (credential **values** are never stored).
+- **Fine-grained RBAC** *(Enterprise)* — beyond the four built-in roles, define **custom roles** mapping to a permission catalog (`engagements:read/write`, `scan:run`, `reports:export`, `deepscan:operate`, `darkweb:read`, `users:manage`, …), enforced per-endpoint with `require_permission`. Includes a **no-privilege-escalation** guard (you cannot grant a permission you do not hold) and a graceful fallback to the role hierarchy when disabled.
+
+> **Transparency:** the open-core split is about *team / scale / managed* operation, never about hobbling the scanner. Self-hosted Community runs the entire assessment engine offline, forever, at no cost. Premium tiers and hosted SaaS ship under a separate commercial license — see the [business plan](docs/BUSINESS_PLAN.md).
 
 ---
 
@@ -974,6 +1009,25 @@ curl -XPOST http://localhost:8080/apikeys -H "Authorization: Bearer $TOKEN" \
 | `owner` | Full control (created by `register`) |
 
 Passwords are PBKDF2-hashed; API keys are stored only as a hash (shown once at creation). Every record is scoped to its tenant.
+
+**Fine-grained RBAC (Enterprise).** Beyond the four built-in roles, the Enterprise edition unlocks a permission catalog and **custom, per-tenant roles** enforced per-endpoint:
+
+```bash
+# the permission catalog + built-in role defaults
+curl http://localhost:8080/rbac/permissions -H "Authorization: Bearer $TOKEN"
+
+# define a custom role (you can only grant permissions you hold)
+curl -XPOST http://localhost:8080/rbac/roles -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"auditor","permissions":["engagements:read","reports:export"],"description":"read + export"}'
+
+# assign it to a user (user_id from GET /users), then check effective permissions
+curl -XPOST http://localhost:8080/rbac/users/$UID/role -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" -d '{"role":"auditor"}'
+curl http://localhost:8080/rbac/me -H "Authorization: Bearer $TOKEN"
+```
+
+Permissions are keyed like `engagements:write`, `scan:run`, `reports:export`, `deepscan:operate`, `darkweb:read`, `users:manage`. A no-privilege-escalation guard prevents granting a permission you do not hold; with RBAC disabled the checks fall back to the role hierarchy above. Below Enterprise the `/rbac/*` management endpoints return HTTP 402.
 
 ### 8. Configuration
 
