@@ -56,7 +56,13 @@ Extras: `api` (REST + console), `reports` (PDF/DOCX), `desktop` (binary hardenin
 
 ## C. Installer script
 
-**Linux** — deploys the Docker SaaS stack (Corvex-RedOps + mobile-analysis engine):
+**One command. It installs everything, resolves its own dependencies, and brings
+up the console.** It prefers a Docker deployment and **automatically falls back to
+a native install** (Python venv + pip — needs only PyPI) if Docker is missing, not
+running, or can't reach the image registry. It even tries to repair Docker's DNS
+first. No prompts, no second command, nothing for you to fix.
+
+**Linux** — `sudo ./install.sh` (Docker stack + mobile-analysis engine, or native fallback):
 ```bash
 sudo ./install.sh
 ```
@@ -66,17 +72,19 @@ sudo ./install.sh
 ./install.sh
 ```
 
-**Windows (PowerShell)** — Python path (venv + serve); add `-Docker` for the stack:
+**Windows (PowerShell)** — one command, same auto-fallback (Docker Desktop → native):
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install.ps1
-powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker
 ```
 
 Flags — same actions on every OS:
-- macOS/Linux: `sudo ./install.sh --port 9090`, `sudo ./install.sh --update`, `sudo ./install.sh --down`
-- Windows: `... install.ps1 -Docker -Port 9090`, `... install.ps1 -Docker -Update`, `... install.ps1 -Docker -Down`
+- Force an engine: `--native` / `--docker` (sh), `-Native` / `-Docker` (ps1)
+- `--port 9090`, `--update`, `--down` (sh); `-Port 9090`, `-Update`, `-Down` (ps1)
 
-During install/update you'll be asked **"Do you want to install / integrate AI? [y/N]"** — **y** adds the local self-hosted AI layer (a local AI runtime, ~5 GB model; needs 8+ cores / 16 GB+ RAM), **n** installs lean. Skip the prompt with `--ai`/`--no-ai` (sh) or `-Ai`/`-NoAi` (ps1).
+The install is **non-interactive** — no questions. The optional local AI model
+(~5 GB; needs 8+ cores / 16 GB+ RAM and Docker) is **off by default**; add
+`--ai` (sh) / `-Ai` (ps1) to deploy it. The lightweight self-learning model is
+installed either way.
 
 ## Troubleshooting
 

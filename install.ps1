@@ -1,31 +1,31 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Corvex-RedOps installer for Windows  -  Docker SaaS stack or a local Python run.
+  Corvex-RedOps installer for Windows — one command, self-healing.
 
 .DESCRIPTION
-  Docker path (recommended, full parity with macOS/Linux install.sh):
-    powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker
-    powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker -Update
-    powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker -Down
-    powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker -Ai      # deploy WITH local AI
-    powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker -NoAi    # skip the AI prompt
+  ONE command installs everything and brings up the console:
 
-  Python path (no Docker; runs the API from a virtualenv):
     powershell -ExecutionPolicy Bypass -File .\install.ps1
-    powershell -ExecutionPolicy Bypass -File .\install.ps1 -Port 9090
 
-.NOTES
-  The Docker image is built from the same Debian base on every OS, so the
-  scanning engine (crawler, native OWASP checks, injection fuzzer, OAST) plus
-  the bundled scanning engines (port discovery, a headless browser for SPA
-  crawl, and template scanning) behave
-  identically on Windows, macOS and Linux.
+  It prefers a Docker deployment (Docker Desktop) and AUTOMATICALLY falls back to
+  a native Python install (venv + pip, needs only PyPI) if Docker is missing, not
+  running, or can't reach the image registry — with no prompts and no second
+  command.
+
+  Force an engine or manage the stack:
+    .\install.ps1 -Docker         # force Docker (no native fallback)
+    .\install.ps1 -Native         # force the native (no-Docker) install
+    .\install.ps1 -Ai             # also run the local AI model (Docker only, heavy)
+    .\install.ps1 -Port 9090      # custom console port
+    .\install.ps1 -Down           # stop whatever is running
+    .\install.ps1 -Update         # rebuild/reinstall & redeploy
 #>
 [CmdletBinding()]
 param(
   [int]$Port = 8080,
   [switch]$Docker,
+  [switch]$Native,
   [switch]$Update,
   [switch]$Down,
   [switch]$Ai,
@@ -35,12 +35,13 @@ param(
   [switch]$Help
 )
 
-$ErrorActionPreference = "Stop"
+# No hard stop-on-error: the installer must survive a failed step to fall back.
+$ErrorActionPreference = "Continue"
 $RepoDir     = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ComposeFile = Join-Path $RepoDir "deploy\docker-compose.yml"
 $EnvFile     = Join-Path $RepoDir "deploy\.env"
 $AiModel     = if ($env:PENTESTIQ_AI_MODEL) { $env:PENTESTIQ_AI_MODEL } else { "qwen2.5:7b-instruct" }
-$script:AiOn = $false
+$script:AiOn = [bool]$Ai   # default OFF — zero-touch; -Ai opts in (Docker only)
 
 function Info($m) { Write-Host "[Corvex-RedOps] $m" -ForegroundColor Cyan }
 function Ok($m)   { Write-Host "[ ok ] $m"     -ForegroundColor Green }
@@ -50,26 +51,30 @@ function Die($m)  { Write-Host "[fail] $m"     -ForegroundColor Red; exit 1 }
 if ($Help) { Get-Help $MyInvocation.MyCommand.Path -Detailed; exit 0 }
 
 Write-Host ""
-Write-Host "  Corvex-RedOps - Windows installer" -ForegroundColor Blue
+Write-Host "  ____ ___  ______     _________  __" -ForegroundColor Blue
+Write-Host " / ___/ _ \|  _ \ \   / / ____\ \/ /" -ForegroundColor Blue
+Write-Host "| |  | | | | |_) \ \ / /|  _|  \  /"  -ForegroundColor Blue
+Write-Host "| |__| |_| |  _ < \ V / | |___ /  \"  -ForegroundColor Blue
+Write-Host " \____\___/|_| \_\ \_/  |_____/_/\_\   RedOps - one-command deploy" -ForegroundColor Blue
 Write-Host ""
 
 function New-Secret([int]$n = 48) {
   -join ((48..57)+(97..122) | Get-Random -Count $n | ForEach-Object {[char]$_})
 }
 
-# Resolve the compose command: v2 "docker compose" (Docker Desktop) or v1 "docker-compose".
 function Get-Compose {
   try { docker compose version *> $null; if ($LASTEXITCODE -eq 0) { return @("docker","compose") } } catch {}
   if (Get-Command docker-compose -ErrorAction SilentlyContinue) { return @("docker-compose") }
-  Die "Docker Compose not found. Install/enable Docker Desktop (which bundles Compose v2)."
+  return $null
 }
 
 function Invoke-Compose([string[]]$Rest) {
   $dc = Get-Compose
-  $args = @()
-  if ($dc.Count -gt 1) { $args += $dc[1] }   # the "compose" subcommand for v2
-  $args += @("--env-file", $EnvFile, "-f", $ComposeFile) + $Rest
-  & $dc[0] @args
+  if (-not $dc) { $global:LASTEXITCODE = 1; return }
+  $a = @()
+  if ($dc.Count -gt 1) { $a += $dc[1] }
+  $a += @("--env-file", $EnvFile, "-f", $ComposeFile) + $Rest
+  & $dc[0] @a | Out-Host   # stream to console, keep it out of the function's return value
 }
 
 function Write-Env {
@@ -87,78 +92,20 @@ function Write-Env {
   Ok "Secrets generated."
 }
 
-function Ask-Ai {
-  if ($Ai)   { $script:AiOn = $true;  return }
-  if ($NoAi) { $script:AiOn = $false; return }
-  if ((Test-Path $EnvFile) -and (Select-String -Path $EnvFile -Pattern '^PENTESTIQ_AI=1' -Quiet)) { $script:AiOn = $true; return }
-  Write-Host ""
-  Info "Optional AI layer (local, self-hosted AI model)."
-  Write-Host "  It adds AI-written findings, attack-chain correlation, a false-positive" -ForegroundColor DarkGray
-  Write-Host "  verifier, an in-console copilot, and a self-learning confidence model." -ForegroundColor DarkGray
-  Write-Host "  Requires a high-spec workstation/lab: 8+ CPU cores, 16 GB+ RAM (GPU optional)," -ForegroundColor Yellow
-  Write-Host "  plus a ~5 GB one-time model download. Everything runs locally." -ForegroundColor Yellow
-  $ans = Read-Host "Do you want to install / integrate AI? [y/N]"
-  $script:AiOn = ($ans -match '^[Yy]')
-}
-
-function Set-AiEnv {
-  if (-not (Test-Path $EnvFile)) { return }
-  $val = if ($script:AiOn) {"1"} else {"0"}
-  $c = Get-Content $EnvFile
-  if ($c -match '^PENTESTIQ_AI=') {
-    ($c -replace '^PENTESTIQ_AI=.*', "PENTESTIQ_AI=$val") | Set-Content -Path $EnvFile -Encoding ASCII
-  } else {
-    Add-Content -Path $EnvFile -Value "PENTESTIQ_AI=$val`nOLLAMA_URL=http://ollama:11434`nPENTESTIQ_AI_MODEL=$AiModel"
-  }
-}
-
-function Wait-Ollama {
-  Info "Waiting for the local AI runtime to become ready..."
-  for ($i = 0; $i -lt 40; $i++) {
-    try { $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 4 "http://localhost:11434/api/tags"
-      if ($r.StatusCode -eq 200) { Ok "Local AI runtime is up."; return $true } } catch {}
-    Start-Sleep -Seconds 3
-  }
-  Warn "The local AI runtime is not ready yet - pull later with: docker exec -it pentestiq-ollama ollama pull $AiModel"
-  return $false
-}
-
-function Pull-Model {
-  Info "Pulling the AI model '$AiModel' (~5 GB, one-time)... this can take a while."
-  docker exec pentestiq-ollama ollama pull $AiModel
-  if ($LASTEXITCODE -eq 0) { Ok "AI model ready: $AiModel" }
-  else { Warn "Model pull failed - retry: docker exec -it pentestiq-ollama ollama pull $AiModel" }
-}
-
-function Deploy-Stack {
-  if (-not (Test-Path $ComposeFile)) { Die "compose file not found: $ComposeFile (run this from the Corvex-RedOps repo)." }
-  Info "Building and starting the stack (this can take a few minutes on first run)..."
-  # Pre-pull the base image via the daemon, then build with the LEGACY builder.
-  # BuildKit uses a separate DNS resolver that some corporate/VM DNS setups can't
-  # use to reach the registry (auth.docker.io) even when the daemon resolves fine;
-  # the legacy builder shares the daemon's networking. Same workaround as install.sh.
-  try { docker pull python:3.11-slim *> $null } catch {}
-  $env:DOCKER_BUILDKIT = "0"
-  $env:COMPOSE_DOCKER_CLI_BUILD = "0"
-  if ($script:AiOn) { Info "AI layer enabled - the local AI runtime will start too."; Invoke-Compose @("--profile","ai","up","-d","--build") }
-  else { Invoke-Compose @("up", "-d", "--build") }
-  if ($LASTEXITCODE -ne 0) { Die "Build/deploy failed. See the output above." }
-  Ok "Containers started."
-}
-
 function Wait-Healthy {
   Info "Waiting for the Corvex-RedOps API to become healthy..."
   for ($i = 0; $i -lt 40; $i++) {
     try {
       $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 4 "http://localhost:$Port/health"
-      if ($r.StatusCode -eq 200) { Ok "Corvex-RedOps is up."; return }
+      if ($r.StatusCode -eq 200) { Ok "Corvex-RedOps is up."; return $true }
     } catch {}
     Start-Sleep -Seconds 3
   }
-  Warn "API health check timed out - it may still be starting. Check: docker compose -f `"$ComposeFile`" logs -f pentestiq"
+  Warn "API health check timed out - it may still be starting."
+  return $false
 }
 
-function Show-Summary {
+function Show-Summary([string]$Engine) {
   $ip = "localhost"
   try {
     $a = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
@@ -168,143 +115,158 @@ function Show-Summary {
   } catch {}
   Write-Host ""
   Write-Host "============================================================" -ForegroundColor Green
-  Write-Host "  Corvex-RedOps is deployed." -ForegroundColor Green
+  Write-Host "  Corvex-RedOps is deployed.  (engine: $Engine)" -ForegroundColor Green
   Write-Host "============================================================" -ForegroundColor Green
   Write-Host "  Web console : http://localhost:$Port   (or http://$ip`:$Port)"
   Write-Host "  API docs    : http://localhost:$Port/docs"
-  Write-Host "  Mobile      : http://localhost:8000  (mobile analysis engine)"
-  if ($script:AiOn) { Write-Host "  AI layer    : enabled - local model $AiModel via the local AI runtime (http://localhost:11434)" -ForegroundColor Green }
-  else { Write-Host "  AI layer    : disabled (re-run with -Docker -Ai to enable)" -ForegroundColor DarkGray }
-  Write-Host ""
-  Write-Host "  Next steps:"
-  Write-Host "    1) Sign in as admin. A one-time password was generated on first run - read it from the API log:"
-  Write-Host "         docker logs pentestiq-api 2>&1 | Select-String -Context 0,3 'first-run admin'"
-  Write-Host "       (pin your own with CORVEX_ADMIN_USER / CORVEX_ADMIN_PASSWORD in deploy\.env). Change it after first login."
-  Write-Host "    2) Create a scan from New scan, or upload an app / API spec / proxy-history XML, then Run scan."
-  Write-Host ""
-  Write-Host "  Manage:"
-  Write-Host "    logs   : docker compose --env-file `"$EnvFile`" -f `"$ComposeFile`" logs -f"
-  Write-Host "    stop   : powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker -Down"
-  Write-Host "    secrets: $EnvFile"
+  if ($Engine -eq "docker") {
+    if ($script:AiOn) { Write-Host "  AI layer    : enabled - model $AiModel (http://localhost:11434)" -ForegroundColor Green }
+    else { Write-Host "  AI layer    : disabled (re-run with -Ai to enable)" -ForegroundColor DarkGray }
+    Write-Host ""
+    Write-Host "  Sign in as admin - one-time password in the API log:"
+    Write-Host "    docker logs pentestiq-api 2>&1 | Select-String -Context 0,3 'first-run admin'"
+    Write-Host "  Manage:  logs -> docker compose --env-file `"$EnvFile`" -f `"$ComposeFile`" logs -f"
+    Write-Host "           stop -> .\install.ps1 -Down"
+  }
   Write-Host "============================================================" -ForegroundColor Green
   Write-Host ""
 }
 
-# --------------------------------------------------------------- Docker path
-if ($Docker -or $Update -or $Down) {
-  if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
-    Die "Docker not found. Install Docker Desktop (https://www.docker.com/products/docker-desktop), start it, then re-run with -Docker."
-  }
-  try { docker info *> $null } catch { Die "Docker is installed but not running - start Docker Desktop and re-run." }
-
-  if ($Down) {
-    if (-not (Test-Path $EnvFile)) { "MOBSF_API_KEY=x`nPENTESTIQ_SECRET_KEY=x" | Set-Content -Path $EnvFile -Encoding ASCII }
-    Info "Stopping the stack..."
-    Invoke-Compose @("down")
-    Ok "Stopped."
-    exit 0
-  }
-
-  if ($Update) { Info "Update mode: rebuilding and redeploying (git pull yourself first)." }
-
-  Ask-Ai
-  Write-Env
-  Set-AiEnv
-  Deploy-Stack
-  Wait-Healthy
-  if ($script:AiOn) { if (Wait-Ollama) { Pull-Model } }
-  Show-Summary
-  exit 0
+# --------------------------------------------------------------- Docker engine
+function Test-DockerUsable {
+  if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { return $false }
+  try { docker info *> $null; if ($LASTEXITCODE -ne 0) { return $false } } catch { return $false }
+  if (-not (Get-Compose)) { return $false }
+  return $true
 }
 
-# --------------------------------------------------------------- Python path
-# Supported for the local (venv) path: 3.10 - 3.12. Newer (3.13/3.14) often has
-# no prebuilt wheels for compiled deps (pydantic-core, lxml, pillow, scipy),
-# so pip tries to BUILD them from source and hangs on a box without a toolchain.
+function Test-RegistryReachable {
+  Info "Checking image-registry reachability..."
+  try { docker pull python:3.11-slim *> $null } catch {}
+  if ($LASTEXITCODE -eq 0) { Ok "Registry reachable (base image ready)."; return $true }
+  Warn "Docker cannot reach the image registry."
+  return $false
+}
+
+function Deploy-Docker {
+  if (-not (Test-DockerUsable)) { Warn "Docker is not usable (not installed, not running, or no Compose)."; return $false }
+  if (-not (Test-RegistryReachable)) { return $false }
+  if (-not (Test-Path $ComposeFile)) { Warn "compose file not found: $ComposeFile"; return $false }
+  Write-Env
+  Info "Building and starting the Docker stack (first run can take a few minutes)..."
+  $env:DOCKER_BUILDKIT = "0"; $env:COMPOSE_DOCKER_CLI_BUILD = "0"
+  if ($script:AiOn) { Info "AI layer enabled - the local AI runtime will start too."; Invoke-Compose @("--profile","ai","up","-d","--build") }
+  else { Invoke-Compose @("up","-d","--build") }
+  if ($LASTEXITCODE -ne 0) { Warn "docker compose failed."; return $false }
+  Ok "Containers started."
+  return $true
+}
+
+function Stop-All {
+  if ((Test-DockerUsable) -and (Test-Path $ComposeFile)) {
+    if (-not (Test-Path $EnvFile)) { "MOBSF_API_KEY=x`nPENTESTIQ_SECRET_KEY=x" | Set-Content -Path $EnvFile -Encoding ASCII }
+    Info "Stopping Docker stack..."
+    Invoke-Compose @("down")
+    Ok "Docker stack stopped (native server, if any, stops with Ctrl-C in its window)."
+  } else {
+    Info "No Docker stack to stop. A native server stops with Ctrl-C in its window."
+  }
+}
+
+# --------------------------------------------------------------- native engine (no Docker)
+# Supported for the venv path: Python 3.10 - 3.12 (newer often lacks prebuilt
+# wheels for compiled deps, which would force a slow source build).
 $MaxMinor = 12
 function Get-PyInfo($exe, $pre) {
   $cmd = Get-Command $exe -ErrorAction SilentlyContinue
   if (-not $cmd) { return $null }
-  if ($cmd.Source -and $cmd.Source -like "*\WindowsApps\*") { return $null }  # Store alias stub
+  if ($cmd.Source -and $cmd.Source -like "*\WindowsApps\*") { return $null }
   try { $out = (& $cmd.Source @pre "--version" 2>&1 | Out-String) } catch { return $null }
   if ($out -match "Python\s+(\d+)\.(\d+)") {
     $maj = [int]$Matches[1]; $min = [int]$Matches[2]
     if ($maj -eq 3 -and $min -ge 10) {
-      $supported = ($min -le $MaxMinor)
-      return [pscustomobject]@{ Exe = $cmd.Source; Pre = $pre; Ver = "$maj.$min"; Min = $min; Supported = $supported }
+      return [pscustomobject]@{ Exe = $cmd.Source; Pre = $pre; Ver = "$maj.$min"; Min = $min; Supported = ($min -le $MaxMinor) }
     }
   }
   return $null
 }
 
-$Py = $null; $TooNew = $null
-# Prefer an explicitly supported interpreter (3.12 -> 3.11 -> 3.10) even when a
-# newer one is also installed, then fall back to generic launchers.
-$candidates = @(
-  ,@("py", @("-3.12")), ,@("py", @("-3.11")), ,@("py", @("-3.10")),
-  ,@("py", @("-3")),    ,@("python3", @()),    ,@("python", @())
-)
-foreach ($c in $candidates) {
-  $info = Get-PyInfo $c[0] $c[1]
-  if ($info) {
-    if ($info.Supported) { $Py = $info; break }
-    elseif (-not $TooNew) { $TooNew = $info }
+function Find-Python {
+  $candidates = @(
+    ,@("py", @("-3.12")), ,@("py", @("-3.11")), ,@("py", @("-3.10")),
+    ,@("py", @("-3")),    ,@("python3", @()),    ,@("python", @())
+  )
+  $tooNew = $null
+  foreach ($c in $candidates) {
+    $info = Get-PyInfo $c[0] $c[1]
+    if ($info) { if ($info.Supported) { return $info } elseif (-not $tooNew) { $tooNew = $info } }
   }
+  return $tooNew  # may be $null, or a too-new interpreter we warn about
 }
 
-if (-not $Py) {
-  if ($TooNew) {
-    Warn "Python $($TooNew.Ver) is newer than Corvex-RedOps's supported range (3.10-3.12)."
-    Warn "Its compiled dependencies have no prebuilt wheels yet, so pip would try to build them from source (this is the 'stuck installing' hang)."
-  } else {
-    Warn "Python 3.10-3.12 was not found. (The 'python' Windows may offer is a Microsoft Store placeholder.)"
-  }
-  if (Get-Command winget -ErrorAction SilentlyContinue) {
-    Info "Installing Python 3.12 via winget..."
-    try {
-      winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements
-      Write-Host ""
-      Warn "Python 3.12 installed. Close this window, open a NEW PowerShell, and run install.ps1 again (it will now prefer 3.12)."
-      exit 0
-    } catch {
-      Die "Automatic install failed. Get Python 3.12 from https://python.org (tick 'Add python.exe to PATH'), then re-run  -  or use -Docker with Docker Desktop."
+function Deploy-Native {
+  Info "Using the native install (Python venv + pip) - no Docker required."
+  $Py = Find-Python
+  if (-not $Py -or -not $Py.Supported) {
+    if ($Py -and -not $Py.Supported) {
+      Warn "Python $($Py.Ver) is newer than the supported range (3.10-3.12); its compiled deps may lack wheels."
+    } else {
+      Warn "Python 3.10-3.12 not found (the 'python' Windows offers may be a Store placeholder)."
     }
+    if (Get-Command winget -ErrorAction SilentlyContinue) {
+      Info "Installing Python 3.12 via winget..."
+      winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements
+      Warn "Python 3.12 installed. Open a NEW PowerShell and run .\install.ps1 again."
+      exit 0
+    }
+    Die "Install Python 3.12 from https://python.org (tick 'Add python.exe to PATH') and re-run, or install Docker Desktop and re-run."
   }
-  Die "Install Python 3.12 from https://python.org (tick 'Add python.exe to PATH') and re-run, or use -Docker with Docker Desktop."
-}
-Ok "Python $($Py.Ver) detected."
+  Ok "Python $($Py.Ver) detected."
 
-$venv = Join-Path $RepoDir ".venv"
-if (-not (Test-Path $venv)) {
-  Info "Creating virtual environment (.venv)..."
-  & $Py.Exe @($Py.Pre) -m venv "$venv"
-}
-$vpy = Join-Path $venv "Scripts\python.exe"
-if (-not (Test-Path $vpy)) { Die "venv creation failed (no $vpy)." }
+  $venv = Join-Path $RepoDir ".venv"
+  if (-not (Test-Path $venv)) { Info "Creating virtual environment (.venv)..."; & $Py.Exe @($Py.Pre) -m venv "$venv" }
+  $vpy = Join-Path $venv "Scripts\python.exe"
+  if (-not (Test-Path $vpy)) { Die "venv creation failed (no $vpy)." }
 
-Info "Installing Corvex-RedOps and dependencies (this may take a minute)..."
-& $vpy -m pip install --upgrade pip --quiet
-$extras = if ($All) { ".[all]" } else { ".[api,reports]" }
-# --prefer-binary: use prebuilt wheels rather than compiling from source, so a
-# missing toolchain fails fast with a clear error instead of hanging for hours.
-& $vpy -m pip install --prefer-binary $extras
-if ($LASTEXITCODE -ne 0) {
-  Die "Dependency install failed. Most often this is an unsupported Python (use 3.10-3.12) or a package with no wheel for your platform. Try -Docker (Docker Desktop), or reinstall with Python 3.12."
-}
-Ok "Corvex-RedOps installed."
+  Info "Resolving & installing Python dependencies (from PyPI)..."
+  & $vpy -m pip install --upgrade pip setuptools wheel --quiet
+  $extras = if ($All) { ".[all]" } else { ".[api,reports]" }   # present in every edition
+  Push-Location $RepoDir
+  & $vpy -m pip install --prefer-binary -e $extras
+  $rc = $LASTEXITCODE
+  if ($rc -eq 0) { & $vpy -m pip install --prefer-binary scikit-learn | Out-Host }  # self-learning model, best-effort
+  Pop-Location
+  if ($rc -ne 0) { Die "Dependency install failed. Use Python 3.10-3.12, or install Docker Desktop and re-run." }
+  Ok "Dependencies installed."
 
-$pentestiq = Join-Path $venv "Scripts\pentestiq.exe"
-& $pentestiq version
-
-if ($NoServe) {
+  Write-Env
+  $pentestiq = Join-Path $venv "Scripts\pentestiq.exe"
+  if ($NoServe) { Info "Skipping server start (-NoServe). Run later:  `"$pentestiq`" serve --host 0.0.0.0 --port $Port"; exit 0 }
+  if (-not $env:PENTESTIQ_SECRET_KEY) { $env:PENTESTIQ_SECRET_KEY = New-Secret 48 }
   Write-Host ""
-  Info "Skipping server start (-NoServe). To run later:  `"$pentestiq`" serve --host 0.0.0.0 --port $Port"
+  Ok "Starting the console on http://localhost:$Port   (engine: native)"
+  Info "Sign in as admin - a one-time password is printed below on first run. Ctrl-C to stop."
+  Write-Host ""
+  Push-Location $RepoDir
+  & $pentestiq serve --host 0.0.0.0 --port $Port
+  Pop-Location
+}
+
+# --------------------------------------------------------------- main
+if ($Down) { Stop-All; exit 0 }
+
+if ($Native) { Deploy-Native; exit 0 }
+
+if ($Docker) {
+  if (Deploy-Docker) { Wait-Healthy | Out-Null; Show-Summary "docker"; exit 0 }
+  Die "Docker install failed and -Docker was forced (no fallback). Re-run without -Docker to use the native fallback."
+}
+
+# default: auto — try Docker, fall back to native automatically
+if (Deploy-Docker) {
+  Wait-Healthy | Out-Null
+  Show-Summary "docker"
   exit 0
 }
-
-if (-not $env:PENTESTIQ_SECRET_KEY) { $env:PENTESTIQ_SECRET_KEY = New-Secret 48 }
-Write-Host ""
-Ok "Starting the API + web console on http://localhost:$Port"
-Info "Sign in as admin - a one-time password is printed in this window's log on first run (change it after first login). Ctrl-C to stop."
-Write-Host ""
-& $pentestiq serve --host 0.0.0.0 --port $Port
+Warn "Docker path unavailable - automatically falling back to the native install (no Docker needed)."
+Deploy-Native
