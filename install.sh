@@ -286,8 +286,12 @@ deploy_docker() { # returns 0 on a started stack
   [ -f "$COMPOSE_FILE" ] || { warn "compose file not found: $COMPOSE_FILE"; return 1; }
   log "Building and starting the Docker stack (first run can take a few minutes)…"
   local profile=""; [ "${AI_CHOICE:-0}" = "1" ] && profile="--profile ai" && log "Intelligence layer enabled — the local model runtime will start too."
-  $SUDO env DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 ${DC_BIN:-docker compose} \
-    --env-file "$ENV_FILE" -f "$COMPOSE_FILE" $profile up -d --build || { warn "docker compose failed."; return 1; }
+  if ! $SUDO env DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 ${DC_BIN:-docker compose} \
+       --env-file "$ENV_FILE" -f "$COMPOSE_FILE" $profile up -d --build; then
+    warn "Docker stack didn't come up — cleaning up partial containers."
+    $SUDO ${DC_BIN:-docker compose} --env-file "$ENV_FILE" -f "$COMPOSE_FILE" $profile down >/dev/null 2>&1 || true
+    return 1
+  fi
   ok "Containers started."
 }
 
@@ -437,6 +441,34 @@ summary() {
   printf "${c_grn}════════════════════════════════════════════════════════════${c_off}\n\n"
 }
 
+free_port() { # stop a corvex/uvicorn server WE started that is holding $PORT (never unrelated processes)
+  local pids p
+  pids="$( lsof -tiTCP:"$PORT" -sTCP:LISTEN 2>/dev/null || true )"
+  [ -n "$pids" ] || pids="$( fuser "$PORT"/tcp 2>/dev/null | tr -s ' ' '\n' | grep -E '^[0-9]+$' || true )"
+  [ -n "$pids" ] || pids="$( { ss -lptnH "sport = :$PORT" 2>/dev/null || true; } | grep -oE 'pid=[0-9]+' | cut -d= -f2 )"
+  for p in $(printf '%s\n' $pids | sort -u); do
+    if grep -qaE 'corvex|pentestiq|uvicorn' "/proc/$p/cmdline" 2>/dev/null; then kill "$p" 2>/dev/null || true; fi
+  done
+}
+
+stop_previous() { # make a re-run idempotent: free the console port + bring down a prior Docker stack
+  local pid; pid="$(cat "$NATIVE_PID" 2>/dev/null)"
+  if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+    log "Stopping the previous instance to free port ${PORT}…"
+    pkill -P "$pid" 2>/dev/null || true          # uvicorn worker child, if any
+    kill "$pid" 2>/dev/null || true
+    rm -f "$NATIVE_PID"
+  fi
+  # mop up any stray corvex server still bound to our console port (stale pid file)
+  pkill -f "corvex serve .*--port[ =]${PORT}\b" 2>/dev/null || true
+  free_port
+  sleep 1
+  if command -v docker >/dev/null 2>&1 && [ -f "$COMPOSE_FILE" ] && [ -f "$ENV_FILE" ]; then
+    $SUDO docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" down >/dev/null 2>&1 \
+      || $SUDO docker-compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" down >/dev/null 2>&1 || true
+  fi
+}
+
 stop_all() {
   # native
   if [ -f "$NATIVE_PID" ] && kill -0 "$(cat "$NATIVE_PID" 2>/dev/null)" 2>/dev/null; then
@@ -470,6 +502,7 @@ BANNER
   if [ "$ACTION" = "down" ]; then stop_all; exit 0; fi
 
   install_base
+  stop_previous    # free the port / bring down a prior deployment so a re-run is clean
 
   case "$ENGINE" in
     docker)
