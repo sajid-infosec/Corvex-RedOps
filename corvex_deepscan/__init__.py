@@ -16,6 +16,7 @@ from __future__ import annotations
 from .analysis import deepscan as _deepscan
 from .importer import import_har as _import_har
 from .models import CapturedRequest, CapturedResponse, Flow
+from .proxy import PROXY_INSTALL_HINT, proxy_available, run_proxy
 from .store import FlowStore
 
 __version__ = "1.8.0"
@@ -26,6 +27,9 @@ __all__ = [
     "CapturedRequest",
     "CapturedResponse",
     "import_har",
+    "run_proxy",
+    "proxy_available",
+    "PROXY_INSTALL_HINT",
     "__version__",
 ]
 

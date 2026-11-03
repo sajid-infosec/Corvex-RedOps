@@ -19,6 +19,12 @@
 | MobSF | GPL-3.0 | Copyleft — bundling in a distributed image carries GPL obligations. |
 | nuclei, trivy, semgrep, prowler, kube-bench | Apache-2.0 / MIT | Permissive. |
 
+## Optional Python dependencies (bundled via pip extras)
+
+| Package | License | Extra | Note |
+|---|---|---|---|
+| mitmproxy | MIT | `proxy` | TLS/HTTP substrate for the Deep Scan live capture proxy. Optional — HAR import and passive analysis work without it. Permissive. |
+
 The default container image installs only permissively-licensed tools; nmap,
 WPScan and MobSF are expected to be provided by the operator. Corvex-RedOps's own
 SCA engine emits CycloneDX SBOMs for scanned targets; a signed project-level SBOM
