@@ -716,7 +716,7 @@ cd Corvex-RedOps
 sudo ./install.sh
 ```
 
-That's it — open **http://localhost:8080**, sign in as **`admin`** with the one-time password from the server log (or your pinned `CORVEX_ADMIN_PASSWORD`), change it, then start scanning.
+That's it — open **http://localhost:8080** and sign in with the installer's default login **`corvex` / `corvex`**. **Change the password immediately** in **Settings → Change password**, then start scanning. To use your own credentials from the start, set `CORVEX_ADMIN_USER` / `CORVEX_ADMIN_PASSWORD` in `deploy/.env` before the first boot.
 
 > Works on Debian / Ubuntu / Kali / Parrot / Mint, RHEL / CentOS / Fedora / Rocky /
 > AlmaLinux, Arch / Manjaro, and openSUSE / SLES. Idempotent — safe to re-run.
@@ -759,9 +759,11 @@ Full deployment guide, environment variables, and production notes (Postgres, sc
 
 The console is the fastest way to run a full assessment — no CLI needed.
 
-**1 · Sign in.** Open `http://localhost:8080`. On first run Corvex-RedOps provisions an
-**`admin`** workspace and prints a one-time random password to the server log — sign in with
-that (or your pinned `CORVEX_ADMIN_PASSWORD`) and change it. Use **Create workspace** to set up a separate, isolated tenant.
+**1 · Sign in.** Open `http://localhost:8080`. After an `install.sh` deployment the default
+login is **`corvex` / `corvex`** — sign in and **change the password right away** in
+**Settings → Change password**. (Run the app directly instead of via the installer and it
+generates a strong random admin password, printed once to the server log.) Use **Create
+workspace** to set up a separate, isolated tenant.
 
 **2 · Scan live targets (web / API / infra).** Go to **New scan → Scan targets**:
 name the engagement, record who authorised it, enter targets one per line (optionally
@@ -1036,7 +1038,7 @@ Permissions are keyed like `engagements:write`, `scan:run`, `reports:export`, `d
 | Variable | Default | Purpose |
 |---|---|---|
 | `CORVEX_ADMIN_USER` | `admin` | Username for the first-run admin account |
-| `CORVEX_ADMIN_PASSWORD` | *(random, logged once)* | Pins the first-run admin password. If unset, Corvex-RedOps generates a strong random one and prints it **once** to the server log — **no default password is shipped** |
+| `CORVEX_ADMIN_PASSWORD` | `corvex` via `install.sh` *(else random, logged once)* | Pins the first-run admin password. `install.sh` writes `corvex` into `deploy/.env` by default — **change it after first login**. Run the app without this var set and a strong random password is generated and printed **once** to the server log; the app itself ships no hardcoded default |
 | `PENTESTIQ_SECRET_KEY` | *(random per run)* | Signs session tokens — **set in production** so logins survive restarts |
 | `MOBSF_URL` | `http://localhost:8000` | Mobile-analysis service base URL |
 | `MOBSF_API_KEY` | *(empty)* | Mobile-analysis service API key |

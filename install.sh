@@ -236,6 +236,11 @@ PENTESTIQ_PORT=${PORT}
 PENTESTIQ_AI=${AI_CHOICE:-0}
 OLLAMA_URL=http://ollama:11434
 PENTESTIQ_AI_MODEL=${AI_MODEL}
+# First-run admin login — user: corvex / password: corvex.
+# Only the FIRST boot reads these. CHANGE the password right after signing in
+# (Settings -> Change password), or set your own values here before first boot.
+CORVEX_ADMIN_USER=corvex
+CORVEX_ADMIN_PASSWORD=corvex
 ENV
   chmod 600 "$ENV_FILE" 2>/dev/null || true
   ok "Secrets generated."
@@ -373,13 +378,20 @@ deploy_native() { # returns 0 on a running server
   # the app keeps its DB under ./data relative to its working dir — launch from
   # REPO_DIR so that is deterministic (REPO_DIR/data, which is gitignored).
   local secret; secret="$(grep -E '^PENTESTIQ_SECRET_KEY=' "$ENV_FILE" 2>/dev/null | cut -d= -f2-)"
+  # pass pinned first-run admin creds through when the env file sets them; left
+  # empty on an existing install so its already-seeded admin is never disturbed.
+  local admin_env="" adu adp
+  adu="$(grep -E '^CORVEX_ADMIN_USER=' "$ENV_FILE" 2>/dev/null | cut -d= -f2-)"
+  adp="$(grep -E '^CORVEX_ADMIN_PASSWORD=' "$ENV_FILE" 2>/dev/null | cut -d= -f2-)"
+  [ -n "$adu" ] && admin_env="CORVEX_ADMIN_USER=$adu"
+  [ -n "$adp" ] && admin_env="$admin_env CORVEX_ADMIN_PASSWORD=$adp"
 
   # stop a previous native instance, if any
   if [ -f "$NATIVE_PID" ] && kill -0 "$(cat "$NATIVE_PID" 2>/dev/null)" 2>/dev/null; then
     kill "$(cat "$NATIVE_PID")" 2>/dev/null || true; sleep 1
   fi
   log "Starting the console on port ${PORT}…"
-  ( cd "$REPO_DIR" && PENTESTIQ_SECRET_KEY="$secret" PENTESTIQ_AI="${AI_CHOICE:-0}" \
+  ( cd "$REPO_DIR" && env PENTESTIQ_SECRET_KEY="$secret" PENTESTIQ_AI="${AI_CHOICE:-0}" $admin_env \
       nohup "$VENV_DIR/bin/corvex" serve --host 0.0.0.0 --port "$PORT" >"$NATIVE_LOG" 2>&1 &
     echo $! > "$NATIVE_PID" )
   ENGINE_USED="native"
@@ -397,7 +409,17 @@ wait_healthy() { # polls /health; returns 0 if up, 1 on timeout (non-fatal)
 }
 
 admin_password_hint() {
-  # both engines log a one-time admin password on first boot
+  # when the first-run admin password is pinned in the env file (the default is
+  # corvex / corvex), show it with a loud reminder to change it.
+  local eu ep
+  eu="$(grep -E '^CORVEX_ADMIN_USER=' "$ENV_FILE" 2>/dev/null | cut -d= -f2-)"
+  ep="$(grep -E '^CORVEX_ADMIN_PASSWORD=' "$ENV_FILE" 2>/dev/null | cut -d= -f2-)"
+  if [ -n "$ep" ]; then
+    printf "  Admin login : ${c_grn}%s${c_off} / ${c_grn}%s${c_off}\n" "${eu:-corvex}" "$ep"
+    printf "  ${c_yel}⚠ Change this password now${c_off} — sign in, then Settings → Change password.\n"
+    return
+  fi
+  # otherwise a one-time random password was printed to the log on first boot
   if [ "${ENGINE_USED:-docker}" = "native" ]; then
     local p; p="$(grep -aoiE 'password:[[:space:]]*[^[:space:]]+' "$NATIVE_LOG" 2>/dev/null | tail -1)"
     [ -n "$p" ] && printf "  Admin login : ${c_dim}user 'admin' — %s${c_off}\n" "$p" \
