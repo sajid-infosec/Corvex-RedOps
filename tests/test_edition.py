@@ -1,6 +1,7 @@
-"""Edition / tier gating (open-core) — Community is free; Pro/Team/Enterprise unlock
-the managed/scale surface. The rest of the suite runs under CORVEX_EDITION=enterprise
-(conftest), so these tests set the edition explicitly to assert gating behaviour."""
+"""Edition gating (open-core) — two plans: Community is free (core engine only);
+Premium unlocks everything else. Legacy tier names (pro/team/enterprise) are aliases
+of Premium. The rest of the suite runs under CORVEX_EDITION=enterprise (conftest,
+also an alias of Premium), so these tests set the edition explicitly."""
 import pytest
 from fastapi.testclient import TestClient
 
@@ -15,22 +16,22 @@ from pentestiq.auth.service import AuthService
 def test_detect_edition_from_env(monkeypatch):
     monkeypatch.setenv("CORVEX_EDITION", "community")
     assert ed.current_edition() is Edition.COMMUNITY
-    monkeypatch.setenv("CORVEX_EDITION", "premium")      # alias -> enterprise
-    assert ed.current_edition() is Edition.ENTERPRISE
-    monkeypatch.setenv("CORVEX_EDITION", "team")
-    assert ed.current_edition() is Edition.TEAM
+    monkeypatch.setenv("CORVEX_EDITION", "premium")
+    assert ed.current_edition() is Edition.PREMIUM
+    # legacy tier names all collapse into Premium
+    for legacy in ("pro", "team", "enterprise"):
+        monkeypatch.setenv("CORVEX_EDITION", legacy)
+        assert ed.current_edition() is Edition.PREMIUM
 
 
 def test_is_enabled_matrix(monkeypatch):
     monkeypatch.setenv("CORVEX_EDITION", "community")
     assert not ed.is_enabled("client_portal")
     assert not ed.is_enabled("continuous_scheduling")
+    assert not ed.is_enabled("darkweb_intel")
     assert ed.is_enabled("some_core_capability")          # unknown key -> free/core
-    monkeypatch.setenv("CORVEX_EDITION", "pro")
-    assert ed.is_enabled("client_portal") and ed.is_enabled("ticketing")
-    assert not ed.is_enabled("continuous_scheduling")     # Team
-    assert not ed.is_enabled("sso_saml")                  # Enterprise
-    monkeypatch.setenv("CORVEX_EDITION", "enterprise")
+    # Premium unlocks every gated feature
+    monkeypatch.setenv("CORVEX_EDITION", "premium")
     assert all(ed.is_enabled(f) for f in FEATURES)
 
 
@@ -38,15 +39,15 @@ def test_require_raises_feature_locked(monkeypatch):
     monkeypatch.setenv("CORVEX_EDITION", "community")
     with pytest.raises(FeatureLocked):
         ed.require("client_portal")
-    monkeypatch.setenv("CORVEX_EDITION", "enterprise")
+    monkeypatch.setenv("CORVEX_EDITION", "premium")
     ed.require("client_portal")                           # no raise
 
 
 def test_limits_per_edition(monkeypatch):
     monkeypatch.setenv("CORVEX_EDITION", "community")
     assert ed.limit("max_workspaces") == 1 and ed.limit("max_schedules") == 0
-    monkeypatch.setenv("CORVEX_EDITION", "enterprise")
-    assert ed.limit("max_workspaces") is None
+    monkeypatch.setenv("CORVEX_EDITION", "premium")
+    assert ed.limit("max_workspaces") is None and ed.limit("max_schedules") is None
 
 
 # ----------------------------------------------------------------- API
@@ -77,17 +78,18 @@ def test_community_gates_premium_routes(monkeypatch, mkclient):
     assert r.status_code == 402 and r.json()["detail"]["feature"] == "client_portal"
 
 
-def test_enterprise_allows_premium_routes(monkeypatch, mkclient):
-    monkeypatch.setenv("CORVEX_EDITION", "enterprise")
+def test_premium_allows_premium_routes(monkeypatch, mkclient):
+    monkeypatch.setenv("CORVEX_EDITION", "premium")
     c = mkclient()
     H = {"Authorization": f"Bearer {_tok(c)}"}
     assert c.post("/projects", headers=H, json={"name": "p"}).status_code == 201
 
 
 def test_edition_endpoint(monkeypatch, mkclient):
-    monkeypatch.setenv("CORVEX_EDITION", "pro")
+    monkeypatch.setenv("CORVEX_EDITION", "premium")
     j = mkclient().get("/edition").json()
-    assert j["edition"] == "Pro"
+    assert j["edition"] == "Premium"
     assert j["features"]["client_portal"] is True
-    assert j["features"]["continuous_scheduling"] is False
-    assert j["limits"]["max_schedules"] == 10
+    assert j["features"]["continuous_scheduling"] is True
+    assert j["features"]["darkweb_intel"] is True
+    assert j["limits"]["max_schedules"] is None
