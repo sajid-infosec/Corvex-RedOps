@@ -19,7 +19,7 @@
 ![OWASP](https://img.shields.io/badge/OWASP-Top10%20%2F%20API%20%2F%20WSTG%20%2F%20MASVS-brightgreen.svg)
 ![Cost](https://img.shields.io/badge/licensing%20cost-%240-success.svg)
 
-[Why Corvex-RedOps](#-why-corvex-redops) · [vs Commercial Tools](#-how-corvex-redops-compares) · [Features](#-features) · [Editions](#-editions--premium) · [Screens](#-screens--samples) · [Install](#-installation) · [Quick Start](#-quick-start) · [API](#-rest-api-reference)
+[Why Corvex-RedOps](#-why-corvex-redops) · [vs Commercial Tools](#-how-corvex-redops-compares) · [Features](#-features) · [Editions](#-editions--community-vs-premium) · [Screens](#-screens--samples) · [Install](#-installation) · [Quick Start](#-quick-start) · [API](#-rest-api-reference)
 
 <br/>
 
@@ -43,7 +43,7 @@
 - [Why Corvex-RedOps](#-why-corvex-redops)
 - [How Corvex-RedOps compares](#-how-corvex-redops-compares)
 - [Features](#-features)
-- [Editions & Premium](#-editions--premium)
+- [Editions & Premium](#-editions--community-vs-premium)
 - [Threat-informed prioritization](#-threat-informed-prioritization)
 - [Asset Coverage](#-asset-coverage)
 - [Attack-surface crawler](#-attack-surface-crawler)
@@ -122,9 +122,9 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 
 ### Core engine
 - **One normalized findings model** across every tool and asset type — deduplicate, correlate, and risk-score once.
-- **10 asset modules** covering the complete attack surface (see [Asset Coverage](#-asset-coverage)).
+- **10 Community scan types** covering the app-layer attack surface; **Premium adds 8** advanced scan types (see [Asset Coverage](#-asset-coverage)).
 - **Proxy-history XML import** — turn a captured proxy/history export into a ready-to-run engagement: every captured endpoint, parameter and bearer-token identity is extracted and fed straight to the active engine (a 90 MB history parses in ~1s).
-- **Attack-surface Deep Scan** — ingest a HAR capture (or capture live traffic through the optional intercepting proxy), then passively map the site tree, parameter/reflection catalog, exposed secrets and tokens, and auth/session reconstruction — every finding normalized into the one findings model. Free in Community; the interactive operator tools (request Repeater, payload Intruder, authenticated-session replay, WinRM credentialed Windows audit) are a premium add-on — see [Editions](#-editions--premium).
+- **Attack-surface Deep Scan** — ingest a HAR capture and passively map the site tree, parameter/reflection catalog, exposed secrets and tokens, and auth/session reconstruction — every finding normalized into the one findings model (Community). The interactive **Deep Scan operator** workspace — capture proxy with **live intercept** (Forward/Drop), **Repeater**, **Intruder**, authenticated-session replay and WinRM credentialed audit — is **Premium** (see [Editions](#-editions--community-vs-premium)).
 - **Safe exploit validation** — non-destructive reflected-XSS and boolean-based SQLi confirmation that flips findings from *detected* to *validated* (with evidence) or dismisses false positives.
 - **Risk scoring (0–100)** blending severity, CVSS, confidence, and validation state.
 - **Threat-informed prioritization — Corvex-RedOps Risk Priority (PRP)** — blends CVSS with **FIRST EPSS** (exploit probability) and **CISA KEV** (known-exploited, incl. ransomware) into one transparent 0–100 score, with the SLA state for every finding. This is the exploit-aware ranking enterprise VM suites charge for and keep opaque behind proprietary scores — here **explainable, free, and offline-capable** (bundled KEV seed; live refresh from CISA/FIRST). See [`pentestiq/intel/`](pentestiq/intel/).
@@ -141,8 +141,8 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 ### Code, containers & cloud
 - **SCA + SBOM** — dependency CVEs from lockfiles and manifests via OSV.dev, with a CycloneDX 1.5 SBOM export.
 - **SAST & secret scanning** — source findings mapped to CWE/OWASP; committed credentials detected and **redacted** so a report never re-exposes them.
-- **Container image & IaC** — image CVEs and Dockerfile / Terraform / Kubernetes misconfigurations; a Kubernetes CIS benchmark.
-- **Cloud posture (CSPM)** — read-only AWS / Azure / GCP posture checks mapped to CIS, PCI-DSS, NIST and SOC 2, using the host's own credentials.
+- **Container image & IaC** *(Premium)* — image CVEs and Dockerfile / Terraform / Kubernetes misconfigurations; a Kubernetes CIS benchmark.
+- **Cloud posture (CSPM)** *(Premium)* — read-only AWS / Azure / GCP posture checks mapped to CIS, PCI-DSS, NIST and SOC 2, using the host's own credentials.
 - **Bring your own scanner** — import vulnerability-scanner XML, template-scanner JSONL, container-scanner JSON, DAST JSON, SARIF or generic JSON; findings are normalized, de-duplicated and prioritized with everything else. SARIF export for code-scanning pipelines.
 
 ### Adversary view
@@ -152,10 +152,10 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 
 ### Remediation workflow (PTaaS)
 - **Retest & diff** — re-run an engagement and every finding is marked new, persisting or fixed, with MTTR.
-- **Remediation projects** — group findings into owned, dated work that closes itself when its findings are fixed.
-- **Ticketing** — push findings to Jira, ServiceNow, Slack or any webhook.
-- **Client portal** — a tokenized, expiring, read-only link to an engagement's findings and reports. No login, no write access.
-- **Authenticated scanning** — credentialed SSH / WinRM / HTTP-auth checks from an encrypted credential vault (scrypt + Fernet); secrets are never returned by the API.
+- **Remediation projects** *(Premium)* — group findings into owned, dated work that closes itself when its findings are fixed.
+- **Ticketing** *(Premium)* — push findings to Jira, ServiceNow, Slack or any webhook.
+- **Client portal** *(Premium)* — a tokenized, expiring, read-only link to an engagement's findings and reports. No login, no write access.
+- **Authenticated scanning** *(Premium)* — credentialed SSH / WinRM / HTTP-auth checks from an encrypted credential vault (scrypt + Fernet); secrets are never returned by the API.
 
 ### Safety & governance (built in, not bolted on)
 - **Scope enforcement** — every engagement runs against a validated scope; out-of-scope targets are blocked (or warned) by policy.
@@ -166,9 +166,9 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 ### Platform (SaaS layer)
 - **REST API** (FastAPI) with auto-generated OpenAPI docs at `/docs`.
 - **Web console** — create engagements, upload apps/configs, run scans, watch findings, open reports — served at `/`.
-- **Authentication, multi-tenancy & RBAC** — user login (PBKDF2), session tokens, per-tenant API keys (hashed), and four built-in hierarchical roles (`viewer` → `member` → `admin` → `owner`). Enterprise adds **fine-grained RBAC**: a permission catalog (`engagements:write`, `scan:run`, `deepscan:operate`, `users:manage`, …) and **custom, per-tenant roles** enforced per-endpoint, with a no-privilege-escalation guard.
-- **Continuous scanning** — recurring schedules with **diffing** (new / fixed / persisting) and **Slack/webhook notifications**.
-- **Two report types, four formats** — a **Full Technical Report** (cover page, executive summary, scope, CVSS risk methodology, findings summary, per-finding detail with issue/impact/evidence/PoC/CVSS-vector/CWE/remediation, remediation roadmap, conclusion and OWASP appendices) and a management-facing **Executive Summary** (risk-posture gauge, severity donut, OWASP bar chart, top risks, attack chains, remediation priorities). Both export to **HTML / PDF / DOCX** (full report also Markdown), print-ready with running headers and page numbers, **compliance mapping** (OWASP / PCI-DSS / ISO 27001 / MITRE ATT&CK), and **per-tenant white-label branding**.
+- **Authentication, multi-tenancy & RBAC** — user login (PBKDF2), session tokens, per-tenant API keys (hashed), and four built-in hierarchical roles (`viewer` → `member` → `admin` → `owner`) in Community. **Premium** adds **multi-tenant workspaces** and **fine-grained RBAC**: a permission catalog (`engagements:write`, `scan:run`, `deepscan:operate`, `users:manage`, …) and **custom, per-tenant roles** enforced per-endpoint, with a no-privilege-escalation guard.
+- **Continuous scanning** *(Premium)* — recurring schedules with **diffing** (new / fixed / persisting) and **Slack/webhook notifications**.
+- **Two report types, four formats** — a **Full Technical Report** (cover page, executive summary, scope, CVSS risk methodology, findings summary, per-finding detail with issue/impact/evidence/PoC/CVSS-vector/CWE/remediation, remediation roadmap, conclusion and OWASP appendices) and a management-facing **Executive Summary** (risk-posture gauge, severity donut, OWASP bar chart, top risks, attack chains, remediation priorities). Both export to **HTML / PDF / DOCX** (full report also Markdown), print-ready with running headers and page numbers, and **compliance mapping** (OWASP / PCI-DSS / ISO 27001 / MITRE ATT&CK). **Per-tenant white-label branding** is **Premium**.
 
 ### Deployment
 - **Self-hostable** — `pip install` for the engine; **Docker Compose** for the full stack with the integrated mobile-analysis service. The image bundles the orchestrated scanning engines (port & service discovery, a headless browser for SPA crawling, and template-based scanning) so a container deploy has full capability out of the box.
@@ -176,68 +176,76 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 
 ---
 
-## 💎 Editions & Premium
+## 💎 Editions — Community vs Premium
 
-Corvex-RedOps is **open-core**. The **Community** edition in this repository is the *complete security-testing engine* — scanning, native active checks, injection fuzzing, safe exploit validation, threat-informed prioritization, the full asset inventory, and single-workspace reporting — **Apache-2.0, $0, self-hostable and air-gappable**, with no feature crippling of the engine itself. Premium tiers add the **team, scale, and managed** layer on top; nothing below gates the scanner.
+Corvex-RedOps ships as **two packages**:
 
-Edition is resolved from the `CORVEX_EDITION` environment variable (or a repo-root `EDITION` file), defaulting to Community. Premium-gated endpoints return **HTTP 402** with the required edition when called below their tier — the engine never degrades silently.
+- **Community** *(this repository)* — free, **Apache-2.0**, self-hostable and air-gappable. The complete **app-layer VAPT engine**: **10 scan types**, OWASP active checks + injection fuzzing, safe exploit validation, threat-informed prioritization (EPSS + CISA KEV), the full asset inventory and external discovery, ATT&CK mapping, and single-workspace reporting (HTML/PDF/DOCX/MD).
+- **Premium** — **everything in Community, plus** the **8 advanced scan types**, the **Deep Scan operator** workspace, **dark-web intelligence**, **team / RBAC / multi-tenant**, the **PTaaS** remediation workflow, **continuous scheduling**, and the **managed & scale** layer. Ships under a separate commercial license.
 
-| Capability | Community | Pro | Team | Enterprise |
-|---|:---:|:---:|:---:|:---:|
-| Full scanning engine · 10 asset modules · OWASP active checks + injection fuzzing | ✅ | ✅ | ✅ | ✅ |
-| Safe exploit validation · PRP prioritization (EPSS + CISA KEV) · SLA tracking | ✅ | ✅ | ✅ | ✅ |
-| Asset inventory · EASM discovery · exposure scoring · posture snapshots | ✅ | ✅ | ✅ | ✅ |
-| SCA/SBOM · SAST · container/IaC · cloud posture (CSPM) · ATT&CK + attack-path | ✅ | ✅ | ✅ | ✅ |
-| **Deep Scan** — HAR import, capture proxy, passive site/param/secret/auth analysis | ✅ | ✅ | ✅ | ✅ |
-| Reporting (HTML/PDF/DOCX/MD) · REST API · web console · 4 built-in roles · audit trail | ✅ | ✅ | ✅ | ✅ |
-| Client portal (tokenized read-only links) · Ticketing (Jira/ServiceNow/Slack/webhook) | — | ✅ | ✅ | ✅ |
-| White-label report branding · Remediation projects (owned, dated, SLA) | — | ✅ | ✅ | ✅ |
-| Multi-tenant workspaces · team management · continuous scheduling + diff | — | — | ✅ | ✅ |
-| CTEM exposure alerting · managed AI narratives at scale | — | — | ✅ | ✅ |
-| **Deep Scan operator tools** — Repeater, Intruder, auth-session replay, WinRM audit | — | — | ✅ | ✅ |
-| **Dark-web & exposure intelligence (DRP)** — breach/credential/ransomware/typosquat monitoring | — | — | — | ✅ |
-| **Fine-grained RBAC** — permission catalog + custom per-tenant roles | — | — | — | ✅ |
-| SSO / SAML · distributed workers · managed hosting | — | — | — | ✅ |
+Edition is resolved from the `CORVEX_EDITION` environment variable (or a repo-root `EDITION` file), defaulting to Community. Premium-only endpoints return **HTTP 402** in Community — the engine never degrades silently. **The Premium scan engines are not present in this repository**; they ship only in the Premium distribution.
+
+| Capability | Community | Premium |
+|---|:---:|:---:|
+| **Scan types** — Web · REST/API · Infrastructure · WordPress · Mobile · Dependencies (SCA) · Source code (SAST) · Secret scan · Proxy-history import · Import scan results | ✅ **(10)** | ✅ |
+| **Advanced scan types** — Desktop binary · Container image · IaC / config · Cloud posture (CSPM) · Network device · Firewall ruleset · System hardening · Active Directory | — | ✅ **(+8)** |
+| OWASP active checks + injection fuzzing · out-of-band (OAST) · safe exploit validation | ✅ | ✅ |
+| PRP prioritization (EPSS + CISA KEV) · SLA tracking · attack-chain correlation | ✅ | ✅ |
+| Asset inventory · EASM discovery · exposure scoring · posture snapshots | ✅ | ✅ |
+| MITRE ATT&CK mapping · attack-path graph · BAS-lite control validation | ✅ | ✅ |
+| Reporting (HTML / PDF / DOCX / MD) · REST API · web console · 4 built-in roles · audit trail | ✅ | ✅ |
+| Local-AI layer (self-hosted, optional) · capture/HAR import for passive analysis | ✅ | ✅ |
+| Workspaces | 1 | unlimited |
+| **Deep Scan operator** — capture proxy, live intercept (Forward / Drop), **Repeater**, **Intruder**, authenticated-session replay, WinRM credentialed audit | — | ✅ |
+| **Dark-web & exposure intelligence (DRP)** — breach / credential / stealer-log / ransomware-leak / typosquat monitoring | — | ✅ |
+| **Team & RBAC** — multi-tenant workspaces · team management · fine-grained custom roles | — | ✅ |
+| **PTaaS workflow** — remediation projects · ticketing (Jira / ServiceNow / Slack / webhook) · client portal | — | ✅ |
+| Continuous scheduling + diff · CTEM exposure alerting · white-label report branding | — | ✅ |
+| Managed AI narratives at scale · SSO / SAML · distributed workers · managed hosting | — | ✅ |
 
 ### Premium capabilities in depth
 
-- **Deep Scan operator suite** *(Team+)* — turns a passive capture into an interactive assessment: a **Repeater** to edit and resend any request in scope, an **Intruder** fuzzer with `§`-marked payload positions and sniper/battering-ram/pitchfork/cluster-bomb modes, **authenticated-session** replay (token/form/macro login with CSRF handling and re-auth), and a read-only **WinRM credentialed Windows audit** (EOL OS, SMBv1, missing-patch findings). Every active send is double-gated by the engagement scope **and** a sender allow-list, with request/concurrency caps; results flow into the one findings model.
-- **Dark-web & exposure intelligence (DRP)** *(Enterprise)* — continuous monitoring across breach dumps, stealer logs, paste sites, ransomware leak sites, Telegram and typosquat domains, correlated to your assets and unified into the inventory and KEV-aware risk model. Observe-only and metadata-only (credential **values** are never stored).
-- **Fine-grained RBAC** *(Enterprise)* — beyond the four built-in roles, define **custom roles** mapping to a permission catalog (`engagements:read/write`, `scan:run`, `reports:export`, `deepscan:operate`, `darkweb:read`, `users:manage`, …), enforced per-endpoint with `require_permission`. Includes a **no-privilege-escalation** guard (you cannot grant a permission you do not hold) and a graceful fallback to the role hierarchy when disabled.
+- **Deep Scan operator suite** — an interception-proxy workspace that turns a capture into an interactive assessment: a **capture proxy** with **live intercept** (hold a request in-flight, edit it, then Forward or Drop), a **Repeater** to resend any in-scope request, an **Intruder** fuzzer with `§`-marked payload positions, **authenticated-session** replay (token/form/macro login with CSRF handling), and a read-only **WinRM credentialed Windows audit** (EOL OS, SMBv1, missing-patch findings). Every active send is double-gated by the engagement scope **and** a sender allow-list.
+- **Dark-web & exposure intelligence (DRP)** — continuous monitoring across breach dumps, stealer logs, paste sites, ransomware leak sites and typosquat domains, correlated to your assets and unified into the inventory and KEV-aware risk model. Observe-only and metadata-only (credential **values** are never stored).
+- **Fine-grained RBAC** — beyond the four built-in roles, define **custom roles** over a permission catalog (`engagements:read/write`, `scan:run`, `reports:export`, `deepscan:operate`, `darkweb:read`, `users:manage`, …), enforced per-endpoint with a **no-privilege-escalation** guard.
 
-> **Transparency:** the open-core split is about *team / scale / managed* operation, never about hobbling the scanner. Self-hosted Community runs the entire assessment engine offline, forever, at no cost. Premium tiers and hosted SaaS ship under a separate commercial license — see the [business plan](docs/BUSINESS_PLAN.md).
+> **Transparency:** the Community edition is a complete, self-hostable app-layer VAPT platform — free forever, offline-capable, no scanner crippling. Premium adds advanced scanners, operator tooling, intelligence, team/scale and managed hosting under a separate commercial license.
 
 ---
 
 ## 🎯 Asset Coverage
 
-Ten modules — the complete VAPT surface, driven by Corvex-RedOps's own engines with additional deep-scan backends bundled in the platform (auto-detected; anything unavailable is skipped, never fatal).
+**Community ships 10 scan types** — the app-layer VAPT surface, driven by Corvex-RedOps's own engines (auto-detected; anything unavailable is skipped, never fatal). **Premium adds 8 advanced scan types** (desktop, container, IaC, cloud, network device, firewall, hardening, Active Directory) whose engines ship only in the Premium distribution.
 
-| # | Module | Asset type | What Corvex-RedOps does |
+### Community — 10 scan types
+
+| # | Scan type | Input | What Corvex-RedOps does |
 |---|---|---|---|
-| 1 | `infra` | Infrastructure / network | Host & service discovery, port enumeration, network vulnerability scanning |
-| 2 | `web` | Web applications | Crawl (static + headless SPA), OWASP Top-10 active checks (headers/CORS/JWT/authz/errors/CSRF/outdated-JS), injection fuzzing (SQLi/NoSQLi/XSS/XXE/CRLF/open-redirect/SSTI/traversal/cmd-i), out-of-band detection, safe exploit validation |
-| 3 | `wordpress` | WordPress sites | **Native checks** (fingerprint/version, user enumeration, XML-RPC exposure, exposed config/backup/debug files, directory listing) with **no external tools**; the WordPress scanning engine's CVE data + the template-based scanning engine layer on when installed |
-| 4 | `api` | REST / OpenAPI | Endpoint mapping + **authenticated access-control (BOLA/IDOR), token analysis, tenant confusion, excessive-data-exposure** (OWASP API Top 10) |
-| 5 | `mobile` | Mobile apps (Android / iOS) | Static analysis of code, manifest, permissions, secrets & certificates (CWE/MASVS) + on-device dynamic kit |
-| 6 | `desktop` | Desktop binaries (PE / ELF / Mach-O) | Hardcoded secrets/keys, insecure URLs, missing binary hardening (NX/PIE/RELRO/canary/DEP/CFG) |
-| 7 | `network-device` | Routers / switches | Device config audit: telnet, default/RW SNMP, weak passwords, cleartext management |
-| 8 | `firewall` | Firewall rulesets | Configuration-auditor-grade ruleset audit: any-any permits, exposed services, shadowed rules |
-| 9 | `hardening` | System hardening | Host hardening gaps (SSH/kernel/CIS) + hardening-report ingestion |
-| 10 | `active-directory` | Active Directory / domain | Domain security-posture review from a policy export: password policy, Kerberos (AS-REP roasting / Kerberoasting), unconstrained delegation, GPP cpassword, SMBv1/LLMNR, machine-account quota, privileged-group sprawl |
+| 1 | **Web application** | URL | Crawl (static + headless SPA), OWASP Top-10 active checks (headers/CORS/JWT/authz/errors/CSRF/outdated-JS), injection fuzzing (SQLi/NoSQLi/XSS/XXE/CRLF/open-redirect/SSTI/traversal/cmd-i), out-of-band detection, safe exploit validation |
+| 2 | **REST / API** | OpenAPI spec + token | Endpoint mapping + **authenticated access-control (BOLA/BFLA/IDOR), token analysis, tenant confusion, excessive-data-exposure** (OWASP API Top 10) |
+| 3 | **Infrastructure** | Host / CIDR | Host & service discovery, port enumeration, network vulnerability scanning |
+| 4 | **WordPress** | URL | **Native checks** (fingerprint/version, user enumeration, XML-RPC exposure, exposed config/backup/debug files, directory listing) with **no external tools** |
+| 5 | **Mobile app** | APK / IPA | Static analysis of code, manifest, permissions, secrets & certificates (CWE/MASVS) + on-device dynamic kit |
+| 6 | **Dependencies (SCA)** | Lockfile / manifest | Dependency CVEs via OSV.dev + CycloneDX 1.5 SBOM |
+| 7 | **Source code (SAST)** | Source archive | Code findings mapped to CWE / OWASP |
+| 8 | **Secret scan** | Source archive | Committed keys, tokens and private keys — redacted in every output |
+| 9 | **Proxy-history import** | Proxy / history XML | Extracts every captured endpoint, parameter and bearer-token identity → a ready-to-run engagement |
+| 10 | **Import scan results** | Third-party scanner output | VM / template / container / DAST / SARIF / JSON findings normalized, de-duplicated and prioritized with native findings |
 
-Beyond the ten asset modules, eight more engines cover code, containers, cloud and the external surface:
+Community also includes **External discovery (EASM)** — give it a root domain and it expands the external surface from certificate-transparency + passive sources, resolves and fingerprints live hosts, and files them in the inventory — plus **capture / HAR import** for passive site-map, parameter, secret and auth analysis.
 
-| Engine | Input | What Corvex-RedOps does |
-|---|---|---|
-| External discovery | A root domain | Certificate-transparency + passive subdomain sources, DNS resolution and live-host fingerprinting, filed into the inventory |
-| Dependencies (SCA) | Lockfile / manifest | Dependency CVEs via OSV.dev + CycloneDX 1.5 SBOM |
-| Source code (SAST) | Source archive | Code findings mapped to CWE / OWASP |
-| Secret scan | Source archive | Committed keys, tokens and private keys — redacted in every output |
-| Container image | Image reference | OS and library CVEs in the image |
-| IaC / config | Dockerfile / Terraform / Kubernetes | Misconfigurations, plus a Kubernetes CIS benchmark |
-| Cloud posture (CSPM) | Cloud account (read-only) | Posture failures mapped to CIS, PCI-DSS, NIST and SOC 2 |
-| Scan import | Third-party scanner output | Normalized, de-duplicated and prioritized with native findings |
+### Premium — +8 advanced scan types
+
+| # | Scan type | Input | What Corvex-RedOps does |
+|---|---|---|---|
+| 11 | **Desktop app** | PE / ELF / Mach-O binary | Hardcoded secrets/keys, insecure URLs, missing binary hardening (NX/PIE/RELRO/canary/DEP/CFG) |
+| 12 | **Container image** | Image reference | OS and library CVEs in the image |
+| 13 | **IaC / config** | Dockerfile / Terraform / Kubernetes | Misconfigurations, plus a Kubernetes CIS benchmark |
+| 14 | **Cloud posture (CSPM)** | Cloud account (read-only) | Posture failures mapped to CIS, PCI-DSS, NIST and SOC 2 |
+| 15 | **Network device** | Router / switch config | Device config audit: telnet, default/RW SNMP, weak passwords, cleartext management |
+| 16 | **Firewall ruleset** | Firewall config | Ruleset audit: any-any permits, exposed services, shadowed rules |
+| 17 | **System hardening** | Host config / report | Host hardening gaps (SSH/kernel/CIS) + hardening-report ingestion |
+| 18 | **Active Directory** | Domain policy export | Password policy, Kerberos (AS-REP roasting / Kerberoasting), unconstrained delegation, GPP cpassword, SMBv1/LLMNR, machine-account quota, privileged-group sprawl |
 
 Plus **lab automation** — `lab/docker-compose.yml` stands up intentionally-vulnerable targets for testing and demos.
 
@@ -861,6 +869,8 @@ corvex serve --host 0.0.0.0 --port 8080
 
 The **same command** runs any asset type — the module is chosen automatically from each target's type. Examples (put the targets in a scope file, then `corvex run -s scope.yaml -o out/`):
 
+**Community** scan types:
+
 | Asset | Scope entry | Engine |
 |---|---|---|
 | **Infrastructure** | `infra=10.0.0.0/24` | Network discovery + vuln scanning |
@@ -868,13 +878,22 @@ The **same command** runs any asset type — the module is chosen automatically 
 | **WordPress** | `wordpress=https://blog.example.com` | CMS CVE + enumeration |
 | **API** | `api=https://api.example.com/openapi.json` | Endpoint + access-control testing (native) |
 | **Mobile** | *(upload the .apk/.ipa — see §4)* | Mobile analysis service (bundled) |
-| **Desktop** | *(upload the binary — see §4)* | Native binary analysis |
-| **Network device** | `network_device=./router.cfg` | *(built-in)* |
-| **Active Directory** | `ad=./secpol.inf` *(secedit export)* | Native AD posture review |
-| **Firewall** | `firewall=./iptables.rules` | *(built-in)* |
-| **Hardening** | `hardening=./sshd_config` | *(built-in)* |
+| **Dependencies (SCA)** | *(upload a lockfile — see §4)* | OSV.dev CVEs + CycloneDX SBOM |
+| **Source code (SAST)** | *(upload a source archive)* | CWE/OWASP code findings |
+| **Secret scan** | *(upload a source archive)* | Committed-key detection (redacted) |
 
-Config-file and binary modules (desktop, network device, firewall, hardening) run **natively** — no external tools required.
+**Premium** scan types (engines ship only in the Premium distribution; calling them in Community returns HTTP 402):
+
+| Asset | Scope entry | Engine |
+|---|---|---|
+| **Desktop** | *(upload the binary — see §4)* | Native binary analysis |
+| **Container image** | `{"image":"nginx:1.21"}` → `/engagements/container` | Image OS + library CVEs |
+| **IaC / config** | *(upload a Dockerfile / Terraform / K8s)* | Misconfiguration + CIS benchmark |
+| **Cloud posture** | `{"provider":"aws"}` → `/engagements/prowler` | CSPM mapped to CIS/PCI/NIST/SOC2 |
+| **Network device** | `network_device=./router.cfg` | Device config audit |
+| **Firewall** | `firewall=./iptables.rules` | Ruleset audit |
+| **Hardening** | `hardening=./sshd_config` | Host hardening gaps |
+| **Active Directory** | `ad=./secpol.inf` *(secedit export)* | AD posture review |
 
 ### 4. Uploading apps & configs
 
@@ -1161,7 +1180,7 @@ CI runs the suite on Python 3.10–3.12 (workflow provided at [`docs/github-acti
 
 ## 🗺️ Roadmap
 
-- **Phase 1 — open-source engine (v0.1.0):** ✅ complete — 10 asset modules, safe validation, reporting.
+- **Phase 1 — open-source engine (v0.1.0):** ✅ complete — the app-layer scan engine, safe validation, reporting.
 - **Phase 2 — SaaS platform:** ✅ API, web console, auth/RBAC, scheduling, reporting at scale · ⏳ billing & tiers.
 - **Phase 3 — exceed the incumbents:** ✅ OWASP-aligned coverage · ✅ threat-informed prioritization (EPSS + CISA KEV) · ✅ remediation SLA tracking · ✅ AI-assisted mobile runtime kit · ✅ local private AI (correlation / FP-reduction / copilot).
 - **Next (to widen the lead over enterprise VM suites):** first-class **asset inventory & attack-surface management**; **trend/posture analytics** (MTTR over time); native **Jira / ServiceNow / Slack** remediation workflow; deeper exploit validation + optional exploitation-framework hand-off; agent-based & container scanning; PostgreSQL backend and distributed workers.
