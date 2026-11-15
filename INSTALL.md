@@ -120,12 +120,14 @@ docker compose up -d --build         # console :8080, mobile-analysis :8000
 
 ## First run
 1. Open **http://localhost:8080**.
-2. Sign in as **`admin`**. No password ships — a strong one is generated on first run
-   and printed **once** to the API log (`docker logs pentestiq-api 2>&1 | grep -A3 'first-run admin'`,
-   or your console output for a non-Docker run). Change it after first login, or pin your
-   own with the `CORVEX_ADMIN_USER` / `CORVEX_ADMIN_PASSWORD` env vars. Use **Create workspace**
-   for a separate tenant.
-   Locked out? `docker exec -it pentestiq-api corvex reset-password admin` prints a new one.
+2. Sign in. No password ships with Corvex-RedOps. `install.sh` signs you in as **`corvex`** with a
+   random **one-time** password it prints once at the end of the install. Without the installer,
+   the app generates one for **`admin`** and prints it **once** to the API log
+   (`docker logs pentestiq-api 2>&1 | grep -A3 'first-run admin'`, or your console output for a
+   non-Docker run). Either way the console makes you choose your own password at the first
+   sign-in. Use **Create workspace** for a separate tenant.
+   Locked out? `docker exec -it pentestiq-api corvex reset-password <user>` prints a new one-time
+   password (changed again at the next sign-in).
 3. Add a target (New scan) or upload an app / OpenAPI spec, then **Run scan**.
 
 ## Deep-scan backend

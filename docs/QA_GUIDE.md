@@ -25,13 +25,13 @@ python qa/make_samples.py
 corvex serve            # http://127.0.0.1:8000  (console + /docs)
 ```
 
-On first run Corvex-RedOps prints a **one-time admin password** to this terminal:
+On first run Corvex-RedOps prints a **one-time admin password** to this terminal (the console asks for a new password at the first sign-in):
 
 ```
 ==================================================================
   Corvex-RedOps first-run admin created.
     username: admin
-    password: <copy-this>
+    password: <copy-this>   (one-time)
 ==================================================================
 ```
 
