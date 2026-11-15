@@ -700,8 +700,8 @@ corvex serve                                        # http://127.0.0.1:8000
 
 Then open **http://127.0.0.1:8000** for the console, or **/docs** for interactive API docs.
 On first run Corvex-RedOps creates an **`admin`** workspace and prints a **one-time random password to
-the server log** — copy it from the console output to sign in (or pin your own beforehand with
-`export CORVEX_ADMIN_PASSWORD=…`). Change it after first login. To bootstrap another tenant + owner from the CLI:
+the server log**. Copy it from the console output to sign in; the console then asks you to choose
+your own password before anything else. To bootstrap another tenant + owner from the CLI:
 
 ```bash
 corvex init-tenant --tenant "Corvex-RedOps" --username sajid --password "s3cr3tpass"
@@ -724,7 +724,7 @@ cd Corvex-RedOps
 sudo ./install.sh
 ```
 
-That's it — open **http://localhost:8080** and sign in with the installer's default login **`corvex` / `corvex`**. **Change the password immediately** in **Settings → Change password**, then start scanning. To use your own credentials from the start, set `CORVEX_ADMIN_USER` / `CORVEX_ADMIN_PASSWORD` in `deploy/.env` before the first boot.
+That's it — open **http://localhost:8080** and sign in as **`corvex`** with the **one-time password the installer printed at the end** (it is shown only once and removed from `deploy/.env` as soon as the console is up). The console asks you to choose your own password at the first sign-in, then you can start scanning. Lost it before signing in? `corvex reset-password corvex` prints a new one-time password.
 
 > Works on Debian / Ubuntu / Kali / Parrot / Mint, RHEL / CentOS / Fedora / Rocky /
 > AlmaLinux, Arch / Manjaro, and openSUSE / SLES. Idempotent — safe to re-run.
@@ -767,10 +767,10 @@ Full deployment guide, environment variables, and production notes (Postgres, sc
 
 The console is the fastest way to run a full assessment — no CLI needed.
 
-**1 · Sign in.** Open `http://localhost:8080`. After an `install.sh` deployment the default
-login is **`corvex` / `corvex`** — sign in and **change the password right away** in
-**Settings → Change password**. (Run the app directly instead of via the installer and it
-generates a strong random admin password, printed once to the server log.) Use **Create
+**1 · Sign in.** Open `http://localhost:8080`. After an `install.sh` deployment sign in as
+**`corvex`** with the one-time password the installer printed; you'll be asked to choose your own
+password straight away. (Run the app directly instead of via the installer and it generates a
+strong random one-time admin password, printed once to the server log.) Use **Create
 workspace** to set up a separate, isolated tenant.
 
 **2 · Scan live targets (web / API / infra).** Go to **New scan → Scan targets**:
@@ -1057,7 +1057,8 @@ Permissions are keyed like `engagements:write`, `scan:run`, `reports:export`, `d
 | Variable | Default | Purpose |
 |---|---|---|
 | `CORVEX_ADMIN_USER` | `admin` | Username for the first-run admin account |
-| `CORVEX_ADMIN_PASSWORD` | `corvex` via `install.sh` *(else random, logged once)* | Pins the first-run admin password. `install.sh` writes `corvex` into `deploy/.env` by default — **change it after first login**. Run the app without this var set and a strong random password is generated and printed **once** to the server log; the app itself ships no hardcoded default |
+| `CORVEX_ADMIN_PASSWORD` | random, one-time | First-run admin password, read only on the first boot. `install.sh` generates a random one, shows it once and blanks it in `deploy/.env` once the console is up; without it the app generates one and logs it once. Either way the admin must change it at the first sign-in. No password ships with Corvex-RedOps |
+| `CORVEX_ADMIN_FORCE_CHANGE` | `1` | Set `0` only for automated provisioning where a secrets manager owns the first-run admin password: the admin is then not forced to change it. The old public default `corvex` is always forced |
 | `PENTESTIQ_SECRET_KEY` | *(random per run)* | Signs session tokens — **set in production** so logins survive restarts |
 | `MOBSF_URL` | `http://localhost:8000` | Mobile-analysis service base URL |
 | `MOBSF_API_KEY` | *(empty)* | Mobile-analysis service API key |
