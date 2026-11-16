@@ -5,7 +5,9 @@
 #   1. export MOBSF_API_KEY=$(openssl rand -hex 32)
 #   2. export PENTESTIQ_SECRET_KEY=$(openssl rand -hex 32)
 #   3. docker compose -f deploy/docker-compose.yml up -d --build
-#   4. open http://localhost:8080  (console) — register, then Upload & scan an APK
+#   4. open http://localhost:8080  (console) — sign in as the first-run admin (one-time password,
+#      printed once to the log), then Upload & scan an APK. Self-service registration is OFF
+#      unless CORVEX_ALLOW_REGISTRATION=1; add workspaces with `corvex init-tenant`.
 services:
   mobsf:
     image: opensecurity/mobile-security-framework-mobsf:latest

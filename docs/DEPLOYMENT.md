@@ -12,7 +12,7 @@ cd Corvex-RedOps
 sudo ./install.sh
 ```
 
-Then open **http://localhost:8080**, click **Register**, and start scanning.
+Then open **http://localhost:8080**, sign in with the one-time admin password, choose your own, and start scanning. (Self-service registration is off unless `CORVEX_ALLOW_REGISTRATION=1`; add workspaces with `corvex init-tenant`.)
 
 **Supported distributions** (auto-detected):
 
@@ -48,7 +48,7 @@ export MOBSF_API_KEY=$(openssl rand -hex 32)
 export PENTESTIQ_SECRET_KEY=$(openssl rand -hex 32)
 docker compose -f deploy/docker-compose.yml up -d --build
 
-# open http://localhost:8080  -> register -> "Upload & scan" an .apk/.ipa
+# open http://localhost:8080  -> sign in (one-time admin password) -> "Upload & scan" an .apk/.ipa
 ```
 
 ## How mobile scanning works

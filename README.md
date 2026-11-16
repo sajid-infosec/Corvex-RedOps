@@ -770,8 +770,9 @@ The console is the fastest way to run a full assessment — no CLI needed.
 **1 · Sign in.** Open `http://localhost:8080`. After an `install.sh` deployment sign in as
 **`corvex`** with the one-time password the installer printed; you'll be asked to choose your own
 password straight away. (Run the app directly instead of via the installer and it generates a
-strong random one-time admin password, printed once to the server log.) Use **Create
-workspace** to set up a separate, isolated tenant.
+strong random one-time admin password, printed once to the server log.) To add a separate,
+isolated workspace run `corvex init-tenant` on the server. Self-service **Create workspace** on the
+sign-in screen is off by default and appears only when `CORVEX_ALLOW_REGISTRATION=1`.
 
 **2 · Scan live targets (web / API / infra).** Go to **New scan → Scan targets**:
 name the engagement, record who authorised it, enter targets one per line (optionally
@@ -1008,7 +1009,8 @@ Notification payload is Slack-compatible: *"Corvex-RedOps · Nightly Corvex-RedO
 Corvex-RedOps is multi-tenant. Authenticate with a **session token** (`Authorization: Bearer …`) or a **per-tenant API key** (`X-API-Key: …`).
 
 ```bash
-# register a tenant + owner, get a token
+# register a tenant + owner, get a token (needs CORVEX_ALLOW_REGISTRATION=1 on the server;
+# otherwise add the workspace with `corvex init-tenant` and use POST /auth/login)
 TOKEN=$(curl -s -XPOST http://localhost:8080/auth/register -H "Content-Type: application/json" \
   -d '{"tenant_name":"Corvex-RedOps","username":"sajid","password":"password123"}' | jq -r .token)
 
@@ -1058,6 +1060,7 @@ Permissions are keyed like `engagements:write`, `scan:run`, `reports:export`, `d
 |---|---|---|
 | `CORVEX_ADMIN_USER` | `admin` | Username for the first-run admin account |
 | `CORVEX_ADMIN_PASSWORD` | random, one-time | First-run admin password, read only on the first boot. `install.sh` generates a random one, shows it once and blanks it in `deploy/.env` once the console is up; without it the app generates one and logs it once. Either way the admin must change it at the first sign-in. No password ships with Corvex-RedOps |
+| `CORVEX_ALLOW_REGISTRATION` | `0` | `1` opens self-service registration (`POST /auth/register` and the console's **Create workspace**). Closed by default so a reachable console can't be used to create workspaces; add them with `corvex init-tenant` |
 | `CORVEX_ADMIN_FORCE_CHANGE` | `1` | Set `0` only for automated provisioning where a secrets manager owns the first-run admin password: the admin is then not forced to change it. The old public default `corvex` is always forced |
 | `PENTESTIQ_SECRET_KEY` | *(random per run)* | Signs session tokens — **set in production** so logins survive restarts |
 | `MOBSF_URL` | `http://localhost:8000` | Mobile-analysis service base URL |
@@ -1085,7 +1088,8 @@ Base URL: `http://<host>:<port>` · Auth: `Authorization: Bearer <token>` **or**
 
 | Method | Endpoint | Role | Description |
 |---|---|---|---|
-| `POST` | `/auth/register` | — | Create a tenant + owner, return a session token |
+| `GET` | `/auth/options` | — | What the sign-in screen may offer: `{"registration_open": bool}` |
+| `POST` | `/auth/register` | — | Create a tenant + owner, return a session token. **403 `registration_disabled` unless `CORVEX_ALLOW_REGISTRATION=1`** |
 | `POST` | `/auth/login` | — | Log in, return a session token |
 | `GET` | `/me` | any | Current principal (tenant, role) |
 | `POST` | `/apikeys` | admin+ | Mint a per-tenant API key (shown once) |
