@@ -91,3 +91,28 @@ def test_no_sqlite_3_35_plus_features_in_the_codebase():
     for p in [f for base in [ROOT / "pentestiq", *sorted(ROOT.glob("corvex_*"))] for f in base.rglob("*.py")]:
         hits += sqlite_335_hits(p.read_text(encoding="utf-8"), str(p.relative_to(ROOT)))
     assert hits == []
+
+
+def _create(tmp_path):
+    from pentestiq.api.app import create_app
+    from pentestiq.auth.service import AuthService
+    from pentestiq.config import AppConfig
+    from pentestiq.storage import SqliteEngagementStore
+    db = str(tmp_path / "x.db")
+    return create_app(store=SqliteEngagementStore(db), auth=AuthService(SqliteAuthStore(db), secret_key="s"),
+                      config=AppConfig(data_dir=str(tmp_path)))
+
+
+def test_refuses_to_start_below_sqlite_3_24_naming_the_version(tmp_path, monkeypatch):
+    import pytest
+    monkeypatch.setattr(sqlite3, "sqlite_version_info", (3, 23, 1))
+    monkeypatch.setattr(sqlite3, "sqlite_version", "3.23.1")
+    with pytest.raises(RuntimeError, match=r"needs SQLite 3\.24\.0 or newer.*SQLite 3\.23\.1"):
+        _create(tmp_path)
+
+
+def test_starts_on_sqlite_3_24_and_on_el9s_3_34(tmp_path, monkeypatch):
+    for v in ((3, 24, 0), (3, 34, 1)):
+        monkeypatch.setattr(sqlite3, "sqlite_version_info", v)
+        monkeypatch.setattr(sqlite3, "sqlite_version", ".".join(map(str, v)))
+        assert _create(tmp_path / ("v" + "_".join(map(str, v)))) is not None
