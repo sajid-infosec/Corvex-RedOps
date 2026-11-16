@@ -17,3 +17,7 @@ def test_forced_change_overlay_and_hooks():
     # labels are tied to inputs
     for i in ("pwf_cur", "pwf_new", "pwf_new2"):
         assert f'for="{i}"' in HTML and f'id="{i}"' in HTML
+
+
+def test_console_swaps_to_the_fresh_token_after_a_password_change():
+    assert HTML.count('if(j&&j.token){TOKEN=j.token;try{localStorage.setItem("ptiq_token",TOKEN)}') == 2

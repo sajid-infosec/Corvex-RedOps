@@ -58,8 +58,9 @@ def test_one_time_password_must_be_changed_before_anything_else(tmp_path, monkey
     r = c.post("/auth/change-password", headers=H,
                json={"current_password": "installer-one-time-9xQ", "new_password": "my-own-strong-pass-7"})
     assert r.status_code == 200
-    # the same session now works, and a fresh sign-in is not flagged
-    assert c.get("/engagements", headers=H).status_code == 200
+    # the token from before the change is dead; the fresh one returned by change-password works
+    assert c.get("/engagements", headers=H).status_code == 401
+    assert c.get("/engagements", headers={"Authorization": "Bearer " + r.json()["token"]}).status_code == 200
     body2, _ = _login(c, "corvex", "my-own-strong-pass-7")
     assert body2["password_change_required"] is False
 
