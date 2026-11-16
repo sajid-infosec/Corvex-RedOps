@@ -40,6 +40,7 @@ VENV_DIR="$REPO_DIR/.venv"
 NATIVE_LOG="$REPO_DIR/corvex.log"
 NATIVE_PID="$REPO_DIR/.corvex.pid"
 PORT="8080"
+LISTEN="0.0.0.0"        # console bind address (--listen); kept as today's default
 ACTION="up"
 ENGINE="auto"           # auto | docker | native
 AI_CHOICE=0             # 0=no AI LLM (default, zero-touch), 1=yes (Docker only)
@@ -56,6 +57,9 @@ if Docker is unavailable or can't reach the image registry — no prompts.
 Usage:
   sudo ./install.sh              install everything + deploy (auto engine)
   sudo ./install.sh --port 9090  deploy on a custom console port
+  sudo ./install.sh --listen 127.0.0.1
+                                 address the console listens on (default 0.0.0.0 = every
+                                 interface; plain HTTP, so put TLS in front or use 127.0.0.1)
   sudo ./install.sh --ai         also run the local language model (Docker only, heavy)
   sudo ./install.sh --native     force the native (no-Docker) install
   sudo ./install.sh --docker     force Docker (no native fallback)
@@ -68,6 +72,7 @@ HELP
 while [ $# -gt 0 ]; do
   case "$1" in
     --port) PORT="${2:?}"; shift 2;;
+    --listen) LISTEN="${2:?}"; shift 2;;
     --down) ACTION="down"; shift;;
     --ai) AI_CHOICE=1; shift;;
     --no-ai) AI_CHOICE=0; shift;;
@@ -78,6 +83,11 @@ while [ $# -gt 0 ]; do
     *) die "unknown option: $1 (try --help)";;
   esac
 done
+# --listen is an IP address (v4 or v6) or "localhost" — nothing else reaches sed or the env file
+case "$LISTEN" in
+  localhost) ;;
+  *[!0-9A-Fa-f.:]*|"") die "invalid --listen address: $LISTEN (use an IP address, e.g. 127.0.0.1 or 0.0.0.0)";;
+esac
 
 # ----------------------------------------------------------------------------- sudo
 if [ "$(id -u)" -eq 0 ]; then SUDO=""; else
@@ -243,6 +253,7 @@ write_env() {
 MOBSF_API_KEY=$(gen_secret)
 PENTESTIQ_SECRET_KEY=$(gen_secret)
 PENTESTIQ_PORT=${PORT}
+PENTESTIQ_LISTEN=$(compose_listen)
 PENTESTIQ_AI=${AI_CHOICE:-0}
 OLLAMA_URL=http://ollama:11434
 PENTESTIQ_AI_MODEL=${AI_MODEL}
@@ -266,6 +277,23 @@ consume_admin_password() {
 }
 after_start() { # $1 = warning if the health check times out
   if wait_healthy; then consume_admin_password; else warn "$1"; fi
+}
+
+set_listen_env() { # an existing env file gets the current --listen value too
+  [ -f "$ENV_FILE" ] || return 0
+  if grep -q '^PENTESTIQ_LISTEN=' "$ENV_FILE"; then
+    sed -i.bak "s/^PENTESTIQ_LISTEN=.*/PENTESTIQ_LISTEN=$(compose_listen)/" "$ENV_FILE" && rm -f "$ENV_FILE.bak"
+  else
+    printf "PENTESTIQ_LISTEN=%s\n" "$(compose_listen)" >> "$ENV_FILE"
+  fi
+}
+is_loopback() { case "$1" in 127.*|::1|localhost) return 0;; *) return 1;; esac; }
+# compose port syntax needs IPv6 in brackets ([::1]:8080:8080); the native server takes it bare
+compose_listen() { case "$LISTEN" in *:*) printf '[%s]' "$LISTEN";; *) printf '%s' "$LISTEN";; esac; }
+listen_warning() {
+  is_loopback "$LISTEN" && return 0
+  printf "\n  ${c_yel}⚠ The console is reachable from the network (listening on %s) over plain HTTP.${c_off}\n" "$LISTEN"
+  printf "    Put TLS in front of it (a reverse proxy with a certificate), or re-run with ${c_dim}--listen 127.0.0.1${c_off}.\n"
 }
 
 set_ai_env() {
@@ -328,6 +356,7 @@ try_docker() { # orchestrates the whole Docker path; 0 = success, 1 = fall back
   ensure_compose  || return 1
   write_env
   set_ai_env
+  set_listen_env
   if registry_reachable; then
     ok "Image registry reachable."
   else
@@ -397,6 +426,7 @@ deploy_native() { # returns 0 on a running server
   ok "Dependencies installed."
 
   write_env
+  set_listen_env
   # the app keeps its DB under ./data relative to its working dir — launch from
   # REPO_DIR so that is deterministic (REPO_DIR/data, which is gitignored).
   local secret; secret="$(grep -E '^PENTESTIQ_SECRET_KEY=' "$ENV_FILE" 2>/dev/null | cut -d= -f2-)"
@@ -414,7 +444,7 @@ deploy_native() { # returns 0 on a running server
   fi
   log "Starting the console on port ${PORT}…"
   ( cd "$REPO_DIR" && env PENTESTIQ_SECRET_KEY="$secret" PENTESTIQ_AI="${AI_CHOICE:-0}" $admin_env \
-      nohup "$VENV_DIR/bin/corvex" serve --host 0.0.0.0 --port "$PORT" >"$NATIVE_LOG" 2>&1 &
+      nohup "$VENV_DIR/bin/corvex" serve --host "$LISTEN" --port "$PORT" >"$NATIVE_LOG" 2>&1 &
     echo $! > "$NATIVE_PID" )
   ENGINE_USED="native"
   return 0
@@ -469,7 +499,11 @@ summary() {
   printf "\n${c_grn}════════════════════════════════════════════════════════════${c_off}\n"
   printf "  ${c_grn}✔ Corvex-RedOps is deployed.${c_off}  ${c_dim}(engine: %s)${c_off}\n" "${ENGINE_USED:-docker}"
   printf "${c_grn}════════════════════════════════════════════════════════════${c_off}\n"
-  printf "  Web console : ${c_blue}http://localhost:%s${c_off}   (or http://%s:%s)\n" "$PORT" "$ip" "$PORT"
+  if is_loopback "$LISTEN"; then
+    printf "  Web console : ${c_blue}http://localhost:%s${c_off}   (this host only)\n" "$PORT"
+  else
+    printf "  Web console : ${c_blue}http://localhost:%s${c_off}   (or http://%s:%s)\n" "$PORT" "$ip" "$PORT"
+  fi
   printf "  API docs    : ${c_blue}http://localhost:%s/docs${c_off}\n" "$PORT"
   if [ "${ENGINE_USED:-docker}" = "docker" ]; then
     if [ "${AI_CHOICE:-0}" = "1" ]; then
@@ -482,6 +516,7 @@ summary() {
   fi
   printf "\n  Sign in:\n"
   admin_password_hint
+  listen_warning
   printf "\n  Manage:\n"
   if [ "${ENGINE_USED:-docker}" = "docker" ]; then
     printf "    logs : ${c_dim}%s --env-file %s -f %s logs -f${c_off}\n" "$DC" "$ENV_FILE" "$COMPOSE_FILE"

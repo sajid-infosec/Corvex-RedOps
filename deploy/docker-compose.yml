@@ -8,6 +8,10 @@
 #   4. open http://localhost:8080  (console) — sign in as the first-run admin (one-time password,
 #      printed once to the log), then Upload & scan an APK. Self-service registration is OFF
 #      unless CORVEX_ALLOW_REGISTRATION=1; add workspaces with `corvex init-tenant`.
+#
+# Network exposure: the mobile-analysis service and the local AI runtime are published on
+# 127.0.0.1 only. The console listens on PENTESTIQ_LISTEN (default 0.0.0.0, every interface)
+# over plain HTTP — put TLS in front of it, or set PENTESTIQ_LISTEN=127.0.0.1.
 services:
   mobsf:
     image: opensecurity/mobile-security-framework-mobsf:latest
@@ -15,7 +19,7 @@ services:
     environment:
       - MOBSF_API_KEY=${MOBSF_API_KEY:?set MOBSF_API_KEY}
     ports:
-      - "8000:8000"          # MobSF UI/API (optional to expose publicly)
+      - "127.0.0.1:8000:8000"   # mobile-analysis UI/API: this host only (the console reaches it as http://mobsf:8000)
     restart: unless-stopped
 
   pentestiq:
@@ -35,7 +39,7 @@ services:
       - CORVEX_ADMIN_USER=${CORVEX_ADMIN_USER:-admin}
       - CORVEX_ADMIN_PASSWORD=${CORVEX_ADMIN_PASSWORD:-}
     ports:
-      - "${PENTESTIQ_PORT:-8080}:8080"   # Corvex-RedOps API + console
+      - "${PENTESTIQ_LISTEN:-0.0.0.0}:${PENTESTIQ_PORT:-8080}:8080"   # Corvex-RedOps API + console (install.sh --listen)
     volumes:
       - pentestiq-data:/app/data
     restart: unless-stopped
@@ -48,7 +52,7 @@ services:
     container_name: pentestiq-ollama
     profiles: ["ai"]
     ports:
-      - "11434:11434"
+      - "127.0.0.1:11434:11434"   # local AI runtime: this host only (the console reaches it as http://ollama:11434)
     volumes:
       - ollama-models:/root/.ollama
     restart: unless-stopped

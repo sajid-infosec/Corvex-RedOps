@@ -79,7 +79,9 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 
 Flags — same actions on every OS:
 - Force an engine: `--native` / `--docker` (sh), `-Native` / `-Docker` (ps1)
-- `--port 9090`, `--update`, `--down` (sh); `-Port 9090`, `-Update`, `-Down` (ps1)
+- `--port 9090`, `--listen 127.0.0.1`, `--update`, `--down` (sh); `-Port 9090`, `-Update`, `-Down` (ps1)
+
+**Network exposure.** The console serves plain HTTP on every interface by default (`--listen 0.0.0.0`). Put TLS in front of it (a reverse proxy with a certificate), or bind it to this host only with `--listen 127.0.0.1`; the installer's summary warns when it is reachable from the network. The mobile-analysis service and the local AI runtime are published on 127.0.0.1 only.
 
 The install is **non-interactive** — no questions. The optional local AI model
 (~5 GB; needs 8+ cores / 16 GB+ RAM and Docker) is **off by default**; add
