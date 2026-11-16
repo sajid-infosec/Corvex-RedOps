@@ -80,3 +80,43 @@ def test_serve_disables_uvicorns_own_proxy_headers_and_deps_pin_uvicorn():
     assert "proxy_headers=False" in (root / "pentestiq/cli.py").read_text()
     pyproject = (root / "pyproject.toml").read_text()
     assert '"uvicorn>=0.31"' in pyproject and '"uvicorn>=0.29"' not in pyproject
+
+
+ROUTE = """Iface\tDestination\tGateway \tFlags\tRefCnt\tUse\tMetric\tMask\t\tMTU\tWindow\tIRTT
+eth0\t00000000\t010011AC\t0003\t0\t0\t0\t00000000\t0\t0\t0
+eth0\t000011AC\t00000000\t0001\t0\t0\t0\t0000FFFF\t0\t0\t0
+"""
+
+
+def test_default_gateway_is_read_from_the_routing_table(tmp_path):
+    from pentestiq.api.proxies import default_gateway
+    f = tmp_path / "route"; f.write_text(ROUTE)
+    assert default_gateway(str(f)) == "172.17.0.1"
+    (tmp_path / "noroute").write_text(ROUTE.splitlines()[0] + "\n")
+    assert default_gateway(str(tmp_path / "noroute")) is None
+    assert default_gateway(str(tmp_path / "missing")) is None
+
+
+def _gw_app(tmp_path, monkeypatch, gw, trusted=None):
+    import pentestiq.api.proxies as px
+    monkeypatch.setattr(px, "default_gateway", lambda *a, **k: gw)
+    return _app(tmp_path, monkeypatch, trusted=trusted)
+
+
+def test_warns_once_when_an_untrusted_peer_is_the_gateway(tmp_path, monkeypatch, caplog):
+    app, _ = _gw_app(tmp_path, monkeypatch, "172.17.0.1")
+    c = TestClient(app, client=("172.17.0.1", 4000))
+    with caplog.at_level("WARNING", logger="pentestiq"):
+        c.get("/health"); c.get("/edition"); _fail(c)
+    msgs = [r.getMessage() for r in caplog.records if "default gateway" in r.getMessage()]
+    assert len(msgs) == 1 and "172.17.0.1" in msgs[0] and "--listen 127.0.0.1" in msgs[0]
+
+
+def test_no_warning_for_other_peers_or_a_trusted_gateway(tmp_path, monkeypatch, caplog):
+    app, _ = _gw_app(tmp_path, monkeypatch, "172.17.0.1")
+    with caplog.at_level("WARNING", logger="pentestiq"):
+        TestClient(app, client=("203.0.113.7", 4000)).get("/health")
+    app2, _ = _gw_app(tmp_path / "t", monkeypatch, "172.17.0.1", trusted="127.0.0.1,::1,172.17.0.1")
+    with caplog.at_level("WARNING", logger="pentestiq"):
+        TestClient(app2, client=("172.17.0.1", 4000)).get("/health")
+    assert not [r for r in caplog.records if "default gateway" in r.getMessage()]

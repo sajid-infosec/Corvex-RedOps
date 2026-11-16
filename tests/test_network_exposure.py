@@ -88,3 +88,54 @@ def test_docs_explain_the_gateway_and_never_star():
     for name in ("README.md", "INSTALL.md"):
         t = (ROOT / name).read_text()
         assert "docker network inspect deploy_default" in t and "Never `*`" in t, name
+
+
+def test_trusted_proxy_with_a_network_listen_warns(tmp_path):
+    r = _sh(tmp_path, "--trusted-proxy 172.18.0.1", "proxy_trust_warning")
+    assert "Trusted proxy 172.18.0.1 is set while the console listens on 0.0.0.0" in r.stdout
+    assert "--listen 127.0.0.1" in r.stdout
+    assert _sh(tmp_path, "--trusted-proxy 172.18.0.1 --listen 127.0.0.1", "proxy_trust_warning").stdout == ""
+    assert _sh(tmp_path, "", "proxy_trust_warning").stdout == ""          # nothing trusted beyond loopback
+
+
+def test_trust_warning_also_reads_an_existing_env_file(tmp_path):
+    _sh(tmp_path, "--trusted-proxy 10.0.0.0/24", "write_env >/dev/null")
+    assert "Trusted proxy 10.0.0.0/24" in _sh(tmp_path, "", "proxy_trust_warning").stdout
+
+
+PS1 = (ROOT / "install.ps1").read_text()
+
+
+def test_install_ps1_has_listen_and_trusted_proxy_with_the_same_rules():
+    assert '[string]$Listen = "0.0.0.0"' in PS1 and "[string[]]$TrustedProxy = @()" in PS1
+    # same validation as install.sh: IP or localhost; IP/CIDR, never "*"
+    assert "$Listen -notmatch '^[0-9A-Fa-f.:]+$'" in PS1
+    assert "$tp -notmatch '^[0-9A-Fa-f.:]+(/[0-9]{1,3})?$'" in PS1 and "never `\"*`\"" in PS1
+    # written to the env file (compose) and used by the native server
+    assert '"PENTESTIQ_LISTEN=$(Get-ComposeListen)`n"' in PS1 and '"CORVEX_TRUSTED_PROXIES=$(Get-TrustedList)`n"' in PS1
+    assert "serve --host $Listen --port $Port" in PS1 and "--host 0.0.0.0" not in PS1
+    assert "$env:CORVEX_TRUSTED_PROXIES = Get-TrustedList" in PS1
+    # the same two warnings
+    assert "reachable from the network" in PS1 and "could set their own X-Forwarded-For" in PS1
+    assert "Update-NetworkEnv" in PS1                     # an existing env file follows the flags
+
+
+def test_install_ps1_validation_regexes_behave_like_install_sh():
+    import re
+    listen = re.compile(r"^[0-9A-Fa-f.:]+$")
+    proxy = re.compile(r"^[0-9A-Fa-f.:]+(/[0-9]{1,3})?$")
+    for ok in ("127.0.0.1", "0.0.0.0", "::1"):
+        assert listen.match(ok)
+    for bad in ("1.2.3.4;id", "example.com", "*"):
+        assert not listen.match(bad)
+    for ok in ("172.18.0.1", "10.0.0.0/24", "fd00::/64"):
+        assert proxy.match(ok)
+    for bad in ("*", "10.0.0.0/8;id", "proxy.example.com", "/24", "10.0.0.0/"):
+        assert not proxy.match(bad)
+
+
+def test_docs_pair_the_gateway_with_loopback():
+    for name in ("README.md", "INSTALL.md"):
+        t = (ROOT / name).read_text()
+        assert "Trust the gateway only together with `--listen 127.0.0.1`" in t, name
+        assert "one-time warning" in t, name

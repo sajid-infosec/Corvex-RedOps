@@ -312,6 +312,19 @@ set_listen_env() { # an existing env file gets the current --listen value too
 is_loopback() { case "$1" in 127.*|::1|localhost) return 0;; *) return 1;; esac; }
 # compose port syntax needs IPv6 in brackets ([::1]:8080:8080); the native server takes it bare
 compose_listen() { case "$LISTEN" in *:*) printf '[%s]' "$LISTEN";; *) printf '%s' "$LISTEN";; esac; }
+# Extra trusted proxies in effect: this run's --trusted-proxy, else what the env file holds.
+trust_extras() {
+  local t; t="$(grep -E '^CORVEX_TRUSTED_PROXIES=' "$ENV_FILE" 2>/dev/null | cut -d= -f2-)"
+  [ -n "$TRUSTED_PROXY" ] && t="$(trusted_list)"
+  t="${t#127.0.0.1,::1}"; printf '%s' "${t#,}"
+}
+proxy_trust_warning() {
+  is_loopback "$LISTEN" && return 0
+  local x; x="$(trust_extras)"; [ -n "$x" ] || return 0
+  printf "\n  ${c_yel}⚠ Trusted proxy %s is set while the console listens on %s.${c_off}\n" "$x" "$LISTEN"
+  printf "    Clients that reach the console through a trusted address could set their own X-Forwarded-For\n"
+  printf "    and choose the address they're rate-limited under. Re-run with ${c_dim}--listen 127.0.0.1${c_off} so only the proxy can reach it.\n"
+}
 listen_warning() {
   is_loopback "$LISTEN" && return 0
   printf "\n  ${c_yel}⚠ The console is reachable from the network (listening on %s) over plain HTTP.${c_off}\n" "$LISTEN"
@@ -543,6 +556,7 @@ summary() {
   printf "\n  Sign in:\n"
   admin_password_hint
   listen_warning
+  proxy_trust_warning
   printf "\n  Manage:\n"
   if [ "${ENGINE_USED:-docker}" = "docker" ]; then
     printf "    logs : ${c_dim}%s --env-file %s -f %s logs -f${c_off}\n" "$DC" "$ENV_FILE" "$COMPOSE_FILE"

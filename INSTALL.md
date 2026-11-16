@@ -79,7 +79,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 
 Flags — same actions on every OS:
 - Force an engine: `--native` / `--docker` (sh), `-Native` / `-Docker` (ps1)
-- `--port 9090`, `--listen 127.0.0.1`, `--trusted-proxy <ip|cidr>`, `--update`, `--down` (sh); `-Port 9090`, `-Update`, `-Down` (ps1)
+- `--port 9090`, `--listen 127.0.0.1`, `--trusted-proxy <ip|cidr>`, `--update`, `--down` (sh); `-Port 9090`, `-Listen 127.0.0.1`, `-TrustedProxy <ip|cidr>`, `-Update`, `-Down` (ps1)
 
 **Network exposure.** The console serves plain HTTP on every interface by default (`--listen 0.0.0.0`). Put TLS in front of it (a reverse proxy with a certificate), or bind it to this host only with `--listen 127.0.0.1`; the installer's summary warns when it is reachable from the network. The mobile-analysis service and the local AI runtime are published on 127.0.0.1 only.
 
@@ -88,9 +88,17 @@ proxy on the same host (127.0.0.1 / ::1) may supply it through `X-Forwarded-For`
 peer's forwarded header is ignored and the peer address is used. To put a TLS proxy in front:
 
 - **Proxy on the host, console in Docker:** the proxy reaches the container through the
-  compose network's gateway, so trust that address. Find it with
+  compose network's gateway. Find it with
   `docker network inspect deploy_default --format '{{(index .IPAM.Config 0).Gateway}}'`
-  (e.g. `172.18.0.1`), then `sudo ./install.sh --trusted-proxy 172.18.0.1`.
+  (e.g. `172.18.0.1`), then `sudo ./install.sh --listen 127.0.0.1 --trusted-proxy 172.18.0.1`.
+  **Trust the gateway only together with `--listen 127.0.0.1`:** with the console published on
+  the network, other clients can arrive through that same gateway address and set their own
+  `X-Forwarded-For`. The installer warns when a trusted proxy is set and the console isn't on
+  loopback. On Windows: `.\install.ps1 -Listen 127.0.0.1 -TrustedProxy 172.18.0.1`.
+- **Every client looks the same?** On Docker Desktop, rootless Docker or Docker's userland
+  proxy, all connections can arrive from the container's default gateway. The console logs a
+  one-time warning when that happens, because sign-in limits are then shared by all users. The
+  fix is the setup above: a TLS proxy in front, trusted, with the console on `--listen 127.0.0.1`.
 - **Proxy in another container or on another machine:** trust its IP, or its network as a
   CIDR (`--trusted-proxy 10.0.0.0/24`). The option can be repeated.
 - **Never `*`.** Trusting every peer lets any client choose the address it is rate-limited
