@@ -1,6 +1,6 @@
 """Per-username slowdown: above 50 wrong passwords in an hour for one username (all
-addresses), every attempt waits 1.5 s before it is answered; never a lock; unknown
-usernames behave the same. Sleep is stubbed."""
+addresses), every attempt waits 1.5 s (awaited) before it is answered; never a lock;
+unknown usernames behave the same. The async sleep is stubbed."""
 from fastapi.testclient import TestClient
 
 import pentestiq.auth.service as svc
@@ -21,7 +21,10 @@ def _app(tmp_path, monkeypatch):
 
 def _sleeps(monkeypatch):
     calls = []
-    monkeypatch.setattr(svc, "_sleep", lambda s: calls.append(s))
+
+    async def fake(s):
+        calls.append(s)
+    monkeypatch.setattr(svc, "slowdown_sleep", fake)
     return calls
 
 
