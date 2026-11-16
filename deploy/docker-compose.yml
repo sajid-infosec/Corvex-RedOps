@@ -38,6 +38,8 @@ services:
       - PENTESTIQ_AI_MODEL=${PENTESTIQ_AI_MODEL:-qwen2.5:7b-instruct}
       - CORVEX_ADMIN_USER=${CORVEX_ADMIN_USER:-admin}
       - CORVEX_ADMIN_PASSWORD=${CORVEX_ADMIN_PASSWORD:-}
+      # Reverse proxies whose X-Forwarded-For is honoured (IPs/CIDRs). Never "*" (refused at start-up).
+      - CORVEX_TRUSTED_PROXIES=${CORVEX_TRUSTED_PROXIES:-127.0.0.1,::1}
     ports:
       - "${PENTESTIQ_LISTEN:-0.0.0.0}:${PENTESTIQ_PORT:-8080}:8080"   # Corvex-RedOps API + console (install.sh --listen)
     volumes:

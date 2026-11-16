@@ -41,6 +41,7 @@ NATIVE_LOG="$REPO_DIR/corvex.log"
 NATIVE_PID="$REPO_DIR/.corvex.pid"
 PORT="8080"
 LISTEN="0.0.0.0"        # console bind address (--listen); kept as today's default
+TRUSTED_PROXY=""        # extra reverse proxies (--trusted-proxy), added to the loopback default
 ACTION="up"
 ENGINE="auto"           # auto | docker | native
 AI_CHOICE=0             # 0=no AI LLM (default, zero-touch), 1=yes (Docker only)
@@ -58,6 +59,9 @@ Usage:
   sudo ./install.sh              install everything + deploy (auto engine)
   sudo ./install.sh --port 9090  deploy on a custom console port
   sudo ./install.sh --listen 127.0.0.1
+  sudo ./install.sh --trusted-proxy 172.18.0.1
+                                 a reverse proxy (IP or CIDR; repeatable) whose X-Forwarded-For
+                                 the console trusts for the client address. Never "*".
                                  address the console listens on (default 0.0.0.0 = every
                                  interface; plain HTTP, so put TLS in front or use 127.0.0.1)
   sudo ./install.sh --ai         also run the local language model (Docker only, heavy)
@@ -73,6 +77,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --port) PORT="${2:?}"; shift 2;;
     --listen) LISTEN="${2:?}"; shift 2;;
+    --trusted-proxy) TRUSTED_PROXY="${TRUSTED_PROXY:+$TRUSTED_PROXY,}${2:?}"; shift 2;;
     --down) ACTION="down"; shift;;
     --ai) AI_CHOICE=1; shift;;
     --no-ai) AI_CHOICE=0; shift;;
@@ -88,6 +93,12 @@ case "$LISTEN" in
   localhost) ;;
   *[!0-9A-Fa-f.:]*|"") die "invalid --listen address: $LISTEN (use an IP address, e.g. 127.0.0.1 or 0.0.0.0)";;
 esac
+# --trusted-proxy: IPs or CIDR ranges only — never "*" (any client could pick its own address)
+for _tp in $(printf '%s' "$TRUSTED_PROXY" | tr ',' ' '); do
+  case "$_tp" in
+    *[!0-9A-Fa-f.:/]*|/*|*/) die "invalid --trusted-proxy: $_tp (use an IP or CIDR, e.g. 172.18.0.1 or 10.0.0.0/24; never \"*\")";;
+  esac
+done
 
 # ----------------------------------------------------------------------------- sudo
 if [ "$(id -u)" -eq 0 ]; then SUDO=""; else
@@ -254,6 +265,7 @@ MOBSF_API_KEY=$(gen_secret)
 PENTESTIQ_SECRET_KEY=$(gen_secret)
 PENTESTIQ_PORT=${PORT}
 PENTESTIQ_LISTEN=$(compose_listen)
+CORVEX_TRUSTED_PROXIES=$(trusted_list)
 PENTESTIQ_AI=${AI_CHOICE:-0}
 OLLAMA_URL=http://ollama:11434
 PENTESTIQ_AI_MODEL=${AI_MODEL}
@@ -279,6 +291,16 @@ after_start() { # $1 = warning if the health check times out
   if wait_healthy; then consume_admin_password; else warn "$1"; fi
 }
 
+# Loopback (today's default) plus any --trusted-proxy entries.
+trusted_list() { printf '127.0.0.1,::1%s' "${TRUSTED_PROXY:+,$TRUSTED_PROXY}"; }
+set_trusted_env() { # an existing env file follows a --trusted-proxy given on this run
+  [ -f "$ENV_FILE" ] && [ -n "$TRUSTED_PROXY" ] || return 0
+  if grep -q '^CORVEX_TRUSTED_PROXIES=' "$ENV_FILE"; then
+    sed -i.bak "s#^CORVEX_TRUSTED_PROXIES=.*#CORVEX_TRUSTED_PROXIES=$(trusted_list)#" "$ENV_FILE" && rm -f "$ENV_FILE.bak"
+  else
+    printf "CORVEX_TRUSTED_PROXIES=%s\n" "$(trusted_list)" >> "$ENV_FILE"
+  fi
+}
 set_listen_env() { # an existing env file gets the current --listen value too
   [ -f "$ENV_FILE" ] || return 0
   if grep -q '^PENTESTIQ_LISTEN=' "$ENV_FILE"; then
@@ -357,6 +379,7 @@ try_docker() { # orchestrates the whole Docker path; 0 = success, 1 = fall back
   write_env
   set_ai_env
   set_listen_env
+  set_trusted_env
   if registry_reachable; then
     ok "Image registry reachable."
   else
@@ -427,6 +450,7 @@ deploy_native() { # returns 0 on a running server
 
   write_env
   set_listen_env
+  set_trusted_env
   # the app keeps its DB under ./data relative to its working dir — launch from
   # REPO_DIR so that is deterministic (REPO_DIR/data, which is gitignored).
   local secret; secret="$(grep -E '^PENTESTIQ_SECRET_KEY=' "$ENV_FILE" 2>/dev/null | cut -d= -f2-)"
@@ -437,6 +461,8 @@ deploy_native() { # returns 0 on a running server
   adp="$(grep -E '^CORVEX_ADMIN_PASSWORD=' "$ENV_FILE" 2>/dev/null | cut -d= -f2-)"
   [ -n "$adu" ] && admin_env="CORVEX_ADMIN_USER=$adu"
   [ -n "$adp" ] && admin_env="$admin_env CORVEX_ADMIN_PASSWORD=$adp"
+  local tpx; tpx="$(grep -E '^CORVEX_TRUSTED_PROXIES=' "$ENV_FILE" 2>/dev/null | cut -d= -f2-)"
+  [ -n "$tpx" ] && admin_env="$admin_env CORVEX_TRUSTED_PROXIES=$tpx"
 
   # stop a previous native instance, if any
   if [ -f "$NATIVE_PID" ] && kill -0 "$(cat "$NATIVE_PID" 2>/dev/null)" 2>/dev/null; then

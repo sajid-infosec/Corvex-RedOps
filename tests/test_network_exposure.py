@@ -62,3 +62,29 @@ def test_docs_explain_listen_and_tls():
     for name in ("README.md", "INSTALL.md"):
         t = (ROOT / name).read_text()
         assert "--listen 127.0.0.1" in t and "Put TLS in front" in t, name
+
+
+def test_trusted_proxy_flag_reaches_env_compose_and_native(tmp_path):
+    r = _sh(tmp_path, "--trusted-proxy 172.18.0.1 --trusted-proxy 10.0.0.0/24", 'write_env >/dev/null; cat "$ENV_FILE"')
+    assert "CORVEX_TRUSTED_PROXIES=127.0.0.1,::1,172.18.0.1,10.0.0.0/24" in r.stdout
+    assert "CORVEX_TRUSTED_PROXIES=${CORVEX_TRUSTED_PROXIES:-127.0.0.1,::1}" in COMPOSE
+    assert "CORVEX_TRUSTED_PROXIES=$tpx" in (ROOT / "install.sh").read_text()
+
+
+def test_existing_env_file_follows_a_new_trusted_proxy(tmp_path):
+    _sh(tmp_path, "", "write_env >/dev/null")
+    r = _sh(tmp_path, "--trusted-proxy 172.18.0.1", 'set_trusted_env; grep CORVEX_TRUSTED_PROXIES "$ENV_FILE"')
+    assert r.stdout.strip() == "CORVEX_TRUSTED_PROXIES=127.0.0.1,::1,172.18.0.1"
+
+
+def test_invalid_trusted_proxy_values_are_refused(tmp_path):
+    for bad in ("*", "10.0.0.0/8;id", "proxy.example.com", "/24", "10.0.0.0/"):
+        r = _sh(tmp_path, f"--trusted-proxy '{bad}'", "echo SHOULD-NOT-RUN")
+        assert r.returncode != 0 and "SHOULD-NOT-RUN" not in r.stdout, bad
+        assert "invalid --trusted-proxy" in r.stdout + r.stderr, bad
+
+
+def test_docs_explain_the_gateway_and_never_star():
+    for name in ("README.md", "INSTALL.md"):
+        t = (ROOT / name).read_text()
+        assert "docker network inspect deploy_default" in t and "Never `*`" in t, name

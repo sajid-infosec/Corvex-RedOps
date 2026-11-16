@@ -79,9 +79,25 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 
 Flags — same actions on every OS:
 - Force an engine: `--native` / `--docker` (sh), `-Native` / `-Docker` (ps1)
-- `--port 9090`, `--listen 127.0.0.1`, `--update`, `--down` (sh); `-Port 9090`, `-Update`, `-Down` (ps1)
+- `--port 9090`, `--listen 127.0.0.1`, `--trusted-proxy <ip|cidr>`, `--update`, `--down` (sh); `-Port 9090`, `-Update`, `-Down` (ps1)
 
 **Network exposure.** The console serves plain HTTP on every interface by default (`--listen 0.0.0.0`). Put TLS in front of it (a reverse proxy with a certificate), or bind it to this host only with `--listen 127.0.0.1`; the installer's summary warns when it is reachable from the network. The mobile-analysis service and the local AI runtime are published on 127.0.0.1 only.
+
+**Behind a reverse proxy.** Sign-in throttling uses the client's address. By default only a
+proxy on the same host (127.0.0.1 / ::1) may supply it through `X-Forwarded-For`; any other
+peer's forwarded header is ignored and the peer address is used. To put a TLS proxy in front:
+
+- **Proxy on the host, console in Docker:** the proxy reaches the container through the
+  compose network's gateway, so trust that address. Find it with
+  `docker network inspect deploy_default --format '{{(index .IPAM.Config 0).Gateway}}'`
+  (e.g. `172.18.0.1`), then `sudo ./install.sh --trusted-proxy 172.18.0.1`.
+- **Proxy in another container or on another machine:** trust its IP, or its network as a
+  CIDR (`--trusted-proxy 10.0.0.0/24`). The option can be repeated.
+- **Never `*`.** Trusting every peer lets any client choose the address it is rate-limited
+  under, which turns sign-in throttling off. The console refuses to start with `*` in
+  `CORVEX_TRUSTED_PROXIES`.
+
+The installer writes `CORVEX_TRUSTED_PROXIES` (loopback plus your entries) to `deploy/.env`.
 
 The install is **non-interactive** — no questions. The optional local AI model
 (~5 GB; needs 8+ cores / 16 GB+ RAM and Docker) is **off by default**; add

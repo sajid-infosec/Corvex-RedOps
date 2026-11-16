@@ -735,6 +735,7 @@ That's it — open **http://localhost:8080** and sign in as **`corvex`** with th
 # macOS / Linux
 sudo ./install.sh --port 9090   # custom console port
 sudo ./install.sh --listen 127.0.0.1   # console on this host only (default 0.0.0.0)
+sudo ./install.sh --trusted-proxy 172.18.0.1   # a TLS reverse proxy's address (see below)
 sudo ./install.sh --update      # rebuild & redeploy after a `git pull`
 sudo ./install.sh --down        # stop the stack
 ./install.sh --help
@@ -746,6 +747,22 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker -Down     # stop 
 ```
 
 **Network exposure.** The console serves plain HTTP on every interface by default (`--listen 0.0.0.0`). Put TLS in front of it (a reverse proxy with a certificate), or bind it to this host only with `--listen 127.0.0.1`; the installer's summary warns when it is reachable from the network. The mobile-analysis service and the local AI runtime are published on 127.0.0.1 only.
+
+**Behind a reverse proxy.** Sign-in throttling uses the client's address. By default only a
+proxy on the same host (127.0.0.1 / ::1) may supply it through `X-Forwarded-For`; any other
+peer's forwarded header is ignored and the peer address is used. To put a TLS proxy in front:
+
+- **Proxy on the host, console in Docker:** the proxy reaches the container through the
+  compose network's gateway, so trust that address. Find it with
+  `docker network inspect deploy_default --format '{{(index .IPAM.Config 0).Gateway}}'`
+  (e.g. `172.18.0.1`), then `sudo ./install.sh --trusted-proxy 172.18.0.1`.
+- **Proxy in another container or on another machine:** trust its IP, or its network as a
+  CIDR (`--trusted-proxy 10.0.0.0/24`). The option can be repeated.
+- **Never `*`.** Trusting every peer lets any client choose the address it is rate-limited
+  under, which turns sign-in throttling off. The console refuses to start with `*` in
+  `CORVEX_TRUSTED_PROXIES`.
+
+The installer writes `CORVEX_TRUSTED_PROXIES` (loopback plus your entries) to `deploy/.env`.
 
 | Service | Port | Purpose |
 |---|---|---|
@@ -1063,6 +1080,7 @@ Permissions are keyed like `engagements:write`, `scan:run`, `reports:export`, `d
 |---|---|---|
 | `CORVEX_ADMIN_USER` | `admin` | Username for the first-run admin account |
 | `CORVEX_ADMIN_PASSWORD` | random, one-time | First-run admin password, read only on the first boot. `install.sh` generates a random one, shows it once and blanks it in `deploy/.env` once the console is up; without it the app generates one and logs it once. Either way the admin must change it at the first sign-in. No password ships with Corvex-RedOps |
+| `CORVEX_TRUSTED_PROXIES` | `127.0.0.1,::1` | Reverse proxies (IPs/CIDRs, comma-separated) whose `X-Forwarded-For` sets the client address used for sign-in throttling. Set by `install.sh --trusted-proxy`. `*` is refused at start-up |
 | `CORVEX_ALLOW_REGISTRATION` | `0` | `1` opens self-service registration (`POST /auth/register` and the console's **Create workspace**). Closed by default so a reachable console can't be used to create workspaces; add them with `corvex init-tenant` |
 | `CORVEX_ADMIN_FORCE_CHANGE` | `1` | Set `0` only for automated provisioning where a secrets manager owns the first-run admin password: the admin is then not forced to change it. The old public default `corvex` is always forced |
 | `PENTESTIQ_SECRET_KEY` | *(random per run)* | Signs session tokens — **set in production** so logins survive restarts |
