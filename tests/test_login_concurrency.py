@@ -47,7 +47,26 @@ def test_40_concurrent_wrong_passwords_from_one_address_reach_the_check_at_most_
 
 
 def test_authenticated_requests_stay_fast_while_40_sign_ins_are_slowed(tmp_path, monkeypatch):
+    # What this test is about: the slowdown is awaited, so it never blocks the event loop.
+    # Isolate that from the machine's speed:
+    # - a cheap hash (this test only): 40 real 600k-iteration hashes saturate a 2-core CI
+    #   runner, which is not what is being measured;
+    # - probe /me once all 40 sign-ins are inside the slowdown, not after a fixed delay:
+    #   before that, their attempt-counting commits queue on the store lock, and on a slow
+    #   disk (Windows runners) /me would be timing fsyncs rather than the event loop.
+    import pentestiq.auth.passwords as pw
+    real_hash = pw.hash_password
+    monkeypatch.setattr(pw, "_ITERATIONS", 1_000)                   # no rehash back up to 600k
+    monkeypatch.setattr(svc, "hash_password", lambda p, iterations=1_000: real_hash(p, iterations))
     app, auth = _app(tmp_path, monkeypatch)
+    assert auth.store._conn.execute("SELECT password_hash FROM users").fetchone()[0].split("$")[1] == "1000"
+    real_sleep, in_slowdown, all_in = svc.slowdown_sleep, [], None
+
+    async def counted_sleep(seconds):
+        in_slowdown.append(1)
+        if len(in_slowdown) == 40:
+            all_in.set()
+        await real_sleep(seconds)
     # a token for the real admin, then push the username past the hourly slowdown threshold
     async def token():
         async with _client(app, "203.0.113.1") as c:
@@ -58,12 +77,20 @@ def test_authenticated_requests_stay_fast_while_40_sign_ins_are_slowed(tmp_path,
                              "ON CONFLICT(key, window_start) DO UPDATE SET count = 100", (key, w))
     auth.store._conn.commit()
 
+    monkeypatch.setattr(svc, "slowdown_sleep", counted_sleep)
+
     async def main():
+        nonlocal all_in
+        all_in = asyncio.Event()
         clients = [_client(app, f"198.51.100.{i + 1}") for i in range(40)]       # 40 addresses: no 429s
         t0 = time.monotonic()
         slow = [asyncio.create_task(c.post("/auth/login", json={"username": "corvex", "password": "wrong-pass-1"}))
                 for c in clients]
-        await asyncio.sleep(0.3)                                                 # all 40 now sleeping 1.5 s
+        try:
+            await asyncio.wait_for(all_in.wait(), timeout=30)                   # all 40 now sleeping 1.5 s
+        except asyncio.TimeoutError:
+            raise AssertionError("the 40 sign-ins never were in the slowdown at the same time: "
+                                 "is it blocking the event loop?") from None
         async with _client(app, "203.0.113.2") as me_client:
             t1 = time.monotonic()
             r = await me_client.get("/me", headers={"Authorization": "Bearer " + tok})
