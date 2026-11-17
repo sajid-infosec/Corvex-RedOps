@@ -35,3 +35,12 @@ def test_readme_shows_the_ci_badge_and_no_test_counts():
     readme = (WF.parents[1] / "README.md").read_text(encoding="utf-8")
     assert "https://github.com/sajid-infosec/corvex-redops/actions/workflows/ci.yml/badge.svg" in readme
     assert not re.search(r"badge/tests-|\d+\+?\s*(tests|passing)\b", readme)
+
+
+def test_actions_are_on_their_node_24_majors():
+    # checkout v5.0.0 and setup-python v6.0.0 are the releases whose notes move them to Node 24.
+    import re
+    for p in sorted(WF.glob("*.yml")):
+        text = p.read_text(encoding="utf-8")
+        for action, major in re.findall(r"uses:\s*actions/(checkout|setup-python)@v(\d+)", text):
+            assert int(major) >= (5 if action == "checkout" else 6), f"{p.name}: actions/{action}@v{major}"

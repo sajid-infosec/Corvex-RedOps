@@ -27,7 +27,7 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python: ["3.10", "3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: install.sh syntax
         if: runner.os == 'Linux'
@@ -45,7 +45,7 @@ jobs:
           }
           Write-Host "install.ps1: $($tokens.Count) tokens, no parse errors"
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
 
@@ -83,7 +83,7 @@ jobs:
       - name: Install Python 3.11 and git
         run: dnf install -y python3.11 python3.11-pip git
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install
         run: python3.11 -m pip install ".[api,reports,desktop,dev,ai]"
