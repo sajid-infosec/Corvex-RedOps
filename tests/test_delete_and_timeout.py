@@ -70,3 +70,23 @@ def test_user_stop_marks_reason_user():
     rc = RunControl("e2", deadline_s=9999)
     rc.stop()
     assert rc.stop_reason == "user"
+
+
+def test_a_reached_budget_trips_on_a_coarse_clock(monkeypatch):
+    # Windows' clock can report 0 s elapsed between start and the first check: a budget
+    # of 0 must still trip (>=), and the budget must not follow wall-clock jumps.
+    import pentestiq.core.runcontrol as rcm
+    monkeypatch.setattr(rcm.time, "monotonic", lambda: 1000.0)      # both clocks frozen:
+    monkeypatch.setattr(rcm.time, "time", lambda: 1_800_000_000.0)  # 0 s elapsed
+    rc = RunControl("coarse", deadline_s=0)
+    with pytest.raises(ScanCancelled):
+        rc.check()
+    assert rc.stop_reason == "deadline"
+
+
+def test_budget_ignores_wall_clock_jumps(monkeypatch):
+    import pentestiq.core.runcontrol as rcm
+    rc = RunControl("jump", deadline_s=60)
+    monkeypatch.setattr(rcm.time, "time", lambda: 9_999_999_999.0)   # wall clock leaps forward
+    rc.check()                                                        # no trip
+    assert rc.stop_reason is None
