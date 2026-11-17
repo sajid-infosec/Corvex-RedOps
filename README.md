@@ -772,6 +772,24 @@ peer's forwarded header is ignored and the peer address is used. To put a TLS pr
 
 The installer writes `CORVEX_TRUSTED_PROXIES` (loopback plus your entries) to `deploy/.env`.
 
+**Data directory and backups.** Accounts, engagements and settings live in one SQLite
+database, `pentestiq.db`, in the data directory: the `pentestiq-data` Docker volume
+(`/app/data` in the container), `data/` in the install folder for a native install, or
+`data_dir` in the config file. Uploads and the audit log sit beside it as plain files.
+
+- **Keep the data directory on a local disk, not NFS or SMB/CIFS.** The database runs in
+  WAL mode: it keeps `pentestiq.db-wal` and `pentestiq.db-shm` next to `pentestiq.db` and
+  relies on shared memory that network filesystems don't provide safely.
+- **Back up with SQLite's backup API**, which is safe while the console runs. Native:
+  `sqlite3 data/pentestiq.db ".backup 'pentestiq-backup.db'"`. Docker:
+  `docker exec pentestiq-api python -c "import sqlite3; d = sqlite3.connect('/app/data/pentestiq-backup.db'); sqlite3.connect('/app/data/pentestiq.db').backup(d); d.close()"`,
+  then `docker cp pentestiq-api:/app/data/pentestiq-backup.db .`
+  Or stop the console and copy all three files together. **Never copy `pentestiq.db` alone
+  while the console runs:** recent changes may still be in `pentestiq.db-wal`.
+- **Restore** with the console stopped: put the backup in place as `pentestiq.db`, delete any
+  `pentestiq.db-wal` and `pentestiq.db-shm` left beside it (an old WAL file would be replayed
+  onto the restored database), then start the console.
+
 | Service | Port | Purpose |
 |---|---|---|
 | `pentestiq` | 8080 | REST API + web console |
@@ -1101,7 +1119,7 @@ Permissions are keyed like `engagements:write`, `scan:run`, `reports:export`, `d
 
 ```yaml
 log_level: INFO             # DEBUG | INFO | WARNING | ERROR
-data_dir: ./data            # engagements, uploads, audit logs (git-ignored)
+data_dir: ./data            # engagements, uploads, audit logs (git-ignored); a local disk, not NFS/SMB
 max_concurrency: 4          # parallel jobs
 default_enforcement: warn   # off | warn | block
 rate_limit_per_host: 10     # requests/sec/host (0 = unlimited)

@@ -79,7 +79,10 @@ dedicated scanning host. Missing engines are skipped gracefully — the engine s
 
 ## Data & scale
 
-- Persistence is SQLite under `/app/data` (a Docker volume). For production/scale,
+- Persistence is SQLite under `/app/data` (a Docker volume), in WAL mode: keep it on a
+  local disk, not NFS or SMB/CIFS, and back it up with SQLite's backup API (or copy
+  `pentestiq.db`, `-wal` and `-shm` together with the console stopped); see INSTALL.md,
+  "Data directory and backups". For production/scale,
   swap in PostgreSQL behind the `EngagementStore` interface.
 - The scheduler runs in-process; for horizontal scale, move to a distributed
   worker behind the existing `JobQueue` / `ScheduleService` interfaces.
