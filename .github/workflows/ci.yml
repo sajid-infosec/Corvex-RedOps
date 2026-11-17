@@ -6,6 +6,17 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Everything the suite imports without importorskip: dev (pytest, pytest-timeout, httpx,
+# lief, ...) plus ai (scikit-learn, for the confidence-model test).
+# A hang fails the test after 300 s instead of burning the job's 6 hours.
+
 jobs:
   test:
     name: test (${{ matrix.os }}, py${{ matrix.python }})
@@ -17,12 +28,84 @@ jobs:
         python: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
+
+      - name: install.sh syntax
+        if: runner.os == 'Linux'
+        run: bash -n install.sh
+
+      - name: install.ps1 parses
+        if: runner.os == 'Linux'
+        shell: pwsh
+        run: |
+          $tokens = $null; $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD 'install.ps1'), [ref]$tokens, [ref]$errors)
+          if ($errors.Count -gt 0) {
+            foreach ($e in $errors) { Write-Host "::error file=install.ps1,line=$($e.Extent.StartLineNumber)::$($e.Message)" }
+            exit 1
+          }
+          Write-Host "install.ps1: $($tokens.Count) tokens, no parse errors"
+
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
+
       - name: Install
         run: |
           python -m pip install --upgrade pip
-          pip install ".[api,reports,desktop]" pytest
+          python -m pip install ".[api,reports,desktop,dev,ai]"
+
       - name: Test
-        run: pytest -q
+        run: python -m pytest -q -rs --timeout=300 --timeout-method=thread --junitxml=pytest.xml
+
+      # Linux runs everything; only macOS/Windows may skip (POSIX-only tests, with a reason).
+      - name: No skipped tests on Linux
+        if: runner.os == 'Linux'
+        shell: python
+        run: |
+          import xml.etree.ElementTree as ET
+          root = ET.parse("pytest.xml").getroot()
+          suite = root if root.tag == "testsuite" else root.find("testsuite")
+          skipped = int(suite.get("skipped", 0))
+          print(f"skipped: {skipped}")
+          raise SystemExit(1 if skipped else 0)
+
+  # Enterprise Linux 9 ships SQLite 3.34.1 (no RETURNING). The suite must pass on it.
+  el9-sqlite:
+    name: el9-sqlite (AlmaLinux 9, system SQLite)
+    runs-on: ubuntu-latest
+    container: almalinux:9
+    defaults:
+      run:
+        shell: bash
+    env:
+      PIP_ROOT_USER_ACTION: ignore
+    steps:
+      - name: Install Python 3.11 and git
+        run: dnf install -y python3.11 python3.11-pip git
+
+      - uses: actions/checkout@v4
+
+      - name: Install
+        run: python3.11 -m pip install ".[api,reports,desktop,dev,ai]"
+
+      - name: SQLite is EL9's 3.34
+        shell: python3.11 {0}
+        run: |
+          import sqlite3
+          v = sqlite3.sqlite_version
+          print(f"sqlite3.sqlite_version = {v}")
+          if not v.startswith("3.34."):
+              raise SystemExit(f"expected EL9's SQLite 3.34.x, found {v}")
+
+      - name: Test
+        run: python3.11 -m pytest -q -rs --timeout=300 --timeout-method=thread --junitxml=pytest.xml
+
+      - name: No skipped tests
+        shell: python3.11 {0}
+        run: |
+          import xml.etree.ElementTree as ET
+          root = ET.parse("pytest.xml").getroot()
+          suite = root if root.tag == "testsuite" else root.find("testsuite")
+          skipped = int(suite.get("skipped", 0))
+          print(f"skipped: {skipped}")
+          raise SystemExit(1 if skipped else 0)
