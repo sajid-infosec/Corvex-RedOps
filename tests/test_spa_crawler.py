@@ -10,13 +10,12 @@ import pytest
 
 # Needs a real headless browser — opt-in (run with `pytest -m live`), and re-enables
 # SPA crawling that the default test env disables via CORVEX_SPA_CRAWL=0.
-pytestmark = pytest.mark.live
-
-pytest.importorskip("playwright.sync_api")
 from pentestiq.crawler import SpaCrawler
 
-if not SpaCrawler.is_available():
-    pytest.skip("Playwright browser not available", allow_module_level=True)
+# Checked per test (not at import), so a default run that deselects these live tests
+# doesn't report a skip just because Playwright isn't installed.
+pytestmark = [pytest.mark.live,
+              pytest.mark.skipif(not SpaCrawler.is_available(), reason="Playwright not installed")]
 
 
 @pytest.fixture(autouse=True)

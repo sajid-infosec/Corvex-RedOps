@@ -10,7 +10,7 @@ def _apk():
 
 
 def test_mobsf_parse():
-    raw = (FIX / "mobsf_sample.json").read_text()
+    raw = (FIX / "mobsf_sample.json").read_text(encoding="utf-8")
     findings = MobsfIntegration().parse(raw, _apk())
     cats = [f.category for f in findings]
     # code analysis

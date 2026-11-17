@@ -61,11 +61,11 @@ def test_entropy_and_redaction():
 
 # ---- scanner ------------------------------------------------------------
 def test_scan_finds_and_redacts(tmp_path):
-    (tmp_path / "config.py").write_text(f'API_SECRET = "{STRIPE}"\nAWS = "{AKIA}"\n')
-    (tmp_path / ".env").write_text(f"GITHUB_TOKEN={GHP}\n")
+    (tmp_path / "config.py").write_text(f'API_SECRET = "{STRIPE}"\nAWS = "{AKIA}"\n', encoding="utf-8")
+    (tmp_path / ".env").write_text(f"GITHUB_TOKEN={GHP}\n", encoding="utf-8")
     # a vendored dir must be skipped
     nm = tmp_path / "node_modules"; nm.mkdir()
-    (nm / "junk.js").write_text(f'k="{AKIA}"')
+    (nm / "junk.js").write_text(f'k="{AKIA}"', encoding="utf-8")
     res = scan_secrets(str(tmp_path), subject="my-app")
     assert res.files_scanned == 2 and res.files_with_secrets == 2
     kinds = {f.title.split(" committed")[0] for f in res.findings}

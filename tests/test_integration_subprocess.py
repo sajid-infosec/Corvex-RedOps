@@ -3,6 +3,9 @@ using a stub binary on PATH. Proves the plumbing without needing the real tool;
 live validation against the tools happens on an operator's Kali/lab.
 """
 import os
+import sys
+
+import pytest
 from pathlib import Path
 from pentestiq.integrations.nmap_tool import NmapIntegration
 from pentestiq.integrations.nuclei_tool import NucleiIntegration
@@ -12,10 +15,12 @@ FIX = Path(__file__).parent / "fixtures"
 
 
 def _install_stub(tmp_path, name, fixture_env, monkeypatch):
+    if sys.platform == "win32":
+        pytest.skip("the stub tool is a #!/bin/sh script on PATH; Windows can't execute it")
     stub = tmp_path / name
-    stub.write_text('#!/bin/sh\ncat "$STUB_FIXTURE"\n')
+    stub.write_text('#!/bin/sh\ncat "$STUB_FIXTURE"\n', encoding="utf-8")
     stub.chmod(0o755)
-    monkeypatch.setenv("PATH", f"{tmp_path}:{os.environ['PATH']}")
+    monkeypatch.setenv("PATH", f"{tmp_path}{os.pathsep}{os.environ['PATH']}")
     monkeypatch.setenv("STUB_FIXTURE", str(fixture_env))
 
 

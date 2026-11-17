@@ -46,9 +46,9 @@ def test_export_ca_missing_raises(tmp_path):
 def test_export_ca_copies_pem(tmp_path):
     confdir = tmp_path / "conf"
     confdir.mkdir()
-    (confdir / "mitmproxy-ca-cert.pem").write_text("---FAKE CA---")
+    (confdir / "mitmproxy-ca-cert.pem").write_text("---FAKE CA---", encoding="utf-8")
     out = ca.export_ca(str(tmp_path / "exported.pem"), confdir=str(confdir))
-    assert Path(out).read_text() == "---FAKE CA---"
+    assert Path(out).read_text(encoding="utf-8") == "---FAKE CA---"
 
 
 # --- capture status ---------------------------------------------------------
@@ -64,7 +64,7 @@ def test_capture_status_shape(tmp_path):
 def test_capture_status_finds_ca(tmp_path):
     confdir = tmp_path / "conf"
     confdir.mkdir()
-    (confdir / "mitmproxy-ca-cert.pem").write_text("x")
+    (confdir / "mitmproxy-ca-cert.pem").write_text("x", encoding="utf-8")
     st = capture_status(confdir=str(confdir))
     assert st["ca_present"] is True and st["ca_path"].endswith(".pem")
 
@@ -100,7 +100,7 @@ def test_cli_deepscan_scan_har(tmp_path):
     res = runner.invoke(cli_app, ["deepscan-scan", HAR, "--out", str(out)])
     assert res.exit_code == 0, res.output
     assert "Deep Scan" in res.output and "Total findings" in res.output
-    data = json.loads(out.read_text())
+    data = json.loads(out.read_text(encoding="utf-8"))
     assert isinstance(data, list) and data
     assert data[0]["source_tools"] == [DEEPSCAN_TOOL]
 

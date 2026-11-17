@@ -10,7 +10,7 @@ def _api():
 
 
 def test_openapi_enumerates_and_flags_auth():
-    raw = (FIX / "openapi_sample.json").read_text()
+    raw = (FIX / "openapi_sample.json").read_text(encoding="utf-8")
     findings = OpenApiIntegration().parse(raw, _api())
     endpoints = [f for f in findings if f.category == "api-endpoint"]
     assert len(endpoints) == 2                      # /users and /health

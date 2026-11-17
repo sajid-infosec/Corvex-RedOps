@@ -88,3 +88,24 @@ def test_forged_role_in_a_validly_signed_token_does_not_escalate(tmp_path, monke
     tok = sign_token({"sub": row["user_id"], "tenant": row["tenant_id"], "role": "owner",
                       "iat": int(time.time() * 1000)}, "s3cret", 3600)
     assert c.get("/me", headers={"Authorization": "Bearer " + tok}).json()["role"] == "viewer"
+
+
+def test_session_stamps_never_repeat_on_a_coarse_clock(monkeypatch):
+    # Windows before Python 3.13 ticks every ~15.6 ms: a session issued in the same tick as a
+    # password reset must still end with it.
+    import pentestiq.auth.service as svc
+    monkeypatch.setattr(svc.time, "time", lambda: 1_800_000_000.0)      # a frozen clock
+    a, b, c = svc._now_ms(), svc._now_ms(), svc._now_ms()
+    assert a < b < c
+
+
+def test_a_change_in_the_same_clock_tick_still_ends_earlier_sessions(tmp_path, monkeypatch):
+    import pentestiq.auth.service as svc
+    c, _ = _app(tmp_path, monkeypatch, force="1")
+    monkeypatch.setattr(svc.time, "time", lambda: 1_800_000_000.0)      # every step in one tick
+    old = _login(c, "first-pass-123")
+    r = c.post("/auth/change-password", headers=old,
+               json={"current_password": "first-pass-123", "new_password": "my-new-pass-77"})
+    assert r.status_code == 200
+    assert c.get("/me", headers=old).status_code == 401
+    assert c.get("/me", headers={"Authorization": "Bearer " + r.json()["token"]}).status_code == 200

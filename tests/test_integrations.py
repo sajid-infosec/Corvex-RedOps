@@ -11,7 +11,7 @@ def _infra_asset():
 
 
 def test_nmap_parse_open_ports():
-    raw = (FIX / "nmap_sample.xml").read_text()
+    raw = (FIX / "nmap_sample.xml").read_text(encoding="utf-8")
     findings = NmapIntegration().parse(raw, _infra_asset())
     # only the 3 OPEN ports (443 is closed -> excluded)
     assert len(findings) == 3
@@ -27,7 +27,7 @@ def test_nmap_parse_open_ports():
 
 
 def test_nuclei_parse_jsonl():
-    raw = (FIX / "nuclei_sample.jsonl").read_text()
+    raw = (FIX / "nuclei_sample.jsonl").read_text(encoding="utf-8")
     findings = NucleiIntegration().parse(raw, _infra_asset())
     assert len(findings) == 3
     crit = [f for f in findings if f.category == "CVE-2021-1234"][0]
@@ -47,7 +47,7 @@ def test_missing_tool_scans_gracefully():
 
 def test_open_ports_do_not_collapse_in_engagement():
     from pentestiq.models import Engagement
-    raw = (FIX / "nmap_sample.xml").read_text()
+    raw = (FIX / "nmap_sample.xml").read_text(encoding="utf-8")
     findings = NmapIntegration().parse(raw, _infra_asset())
     eng = Engagement()
     eng.add_findings(findings)

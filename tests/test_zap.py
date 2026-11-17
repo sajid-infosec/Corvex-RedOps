@@ -10,7 +10,7 @@ def _web():
 
 
 def test_zap_parse_alerts():
-    raw = (FIX / "zap_sample.json").read_text()
+    raw = (FIX / "zap_sample.json").read_text(encoding="utf-8")
     findings = ZapIntegration().parse(raw, _web())
     assert len(findings) == 2
     sqli = [f for f in findings if "SQL" in f.title][0]

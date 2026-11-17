@@ -3,15 +3,20 @@ it once in the summary, and blanks it in the env file once the console is up."""
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def _run(tmp_path, script):
+    if sys.platform == "win32":   # install.sh is the Linux/macOS installer; Windows uses install.ps1
+        pytest.skip("drives install.sh through a POSIX bash (Windows installs with install.ps1)")
     env = {**os.environ, "CORVEX_INSTALL_SOURCE_ONLY": "1", "NO_COLOR": "1"}
     cmd = f'source "{ROOT}/install.sh"; ENV_FILE="{tmp_path}/deploy/.env"; {script}'
-    return subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, env=env, timeout=60)
+    return subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, env=env, timeout=60, encoding="utf-8", errors="replace")
 
 
 def test_sourcing_does_not_install_anything(tmp_path):
@@ -21,7 +26,7 @@ def test_sourcing_does_not_install_anything(tmp_path):
 
 
 def test_no_fixed_password_is_written(tmp_path):
-    text = (ROOT / "install.sh").read_text()
+    text = (ROOT / "install.sh").read_text(encoding="utf-8")
     assert "CORVEX_ADMIN_PASSWORD=corvex" not in text
     assert "password: corvex" not in text
 
@@ -31,7 +36,7 @@ def test_env_file_gets_a_random_one_time_password(tmp_path):
     assert r.returncode == 0, r.stderr
     pw = re.search(r"PW=(\S+)", r.stdout).group(1)
     assert re.fullmatch(r"[A-Za-z0-9]{20}", pw)
-    env = (tmp_path / "deploy/.env").read_text()
+    env = (tmp_path / "deploy/.env").read_text(encoding="utf-8")
     assert f"CORVEX_ADMIN_PASSWORD={pw}" in env and "CORVEX_ADMIN_USER=corvex" in env
     assert oct((tmp_path / "deploy/.env").stat().st_mode)[-3:] == "600"
     # a second install gets a different password
@@ -44,14 +49,14 @@ def test_password_is_shown_once_then_removed_from_the_env_file(tmp_path):
     pw = re.search(r"PW=(\S+)", r.stdout).group(1)
     assert pw in r.stdout.split("PW=")[0]                         # shown in the summary
     assert "shown only this once" in r.stdout and "removed from" in r.stdout
-    env = (tmp_path / "deploy/.env").read_text()
+    env = (tmp_path / "deploy/.env").read_text(encoding="utf-8")
     assert "CORVEX_ADMIN_PASSWORD=\n" in env and pw not in env    # blanked on disk
 
 
 def test_password_kept_until_the_console_has_started(tmp_path):
     r = _run(tmp_path, 'write_env >/dev/null; wait_healthy(){ return 1; }; after_start "timed out" 2>&1; admin_password_hint; echo "PW=$FIRST_ADMIN_PW"')
     pw = re.search(r"PW=(\S+)", r.stdout).group(1)
-    assert pw in (tmp_path / "deploy/.env").read_text()           # first boot still needs it
+    assert pw in (tmp_path / "deploy/.env").read_text(encoding="utf-8")           # first boot still needs it
     assert "until the console first starts" in r.stdout
 
 
@@ -66,12 +71,12 @@ def test_rerun_reuses_env_and_never_reveals_a_password(tmp_path):
 
 def test_legacy_env_file_with_old_default_is_flagged(tmp_path):
     (tmp_path / "deploy").mkdir()
-    (tmp_path / "deploy/.env").write_text("CORVEX_ADMIN_USER=corvex\nCORVEX_ADMIN_PASSWORD=corvex\n")
+    (tmp_path / "deploy/.env").write_text("CORVEX_ADMIN_USER=corvex\nCORVEX_ADMIN_PASSWORD=corvex\n", encoding="utf-8")
     r = _run(tmp_path, "admin_password_hint")
     assert "still contains the old default password" in r.stdout
 
 
 def test_docs_no_longer_advertise_a_default_login():
     for name in ("README.md", "INSTALL.md", "install.sh"):
-        text = (ROOT / name).read_text()
+        text = (ROOT / name).read_text(encoding="utf-8")
         assert "corvex / corvex" not in text and "`corvex` / `corvex`" not in text, name

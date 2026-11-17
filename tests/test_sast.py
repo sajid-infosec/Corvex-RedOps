@@ -49,7 +49,7 @@ def _fake_runner():
 
 # ---- scan_source: mapping + rehoming ------------------------------------
 def test_scan_source_maps_and_rehomes(tmp_path):
-    (tmp_path / "x.py").write_text("x=1")
+    (tmp_path / "x.py").write_text("x=1", encoding="utf-8")
     res = scan_source(str(tmp_path), subject="my-service", runner=_fake_runner())
     assert res.available and res.rules_run == 2 and len(res.findings) == 2
     assert res.files_flagged == 2

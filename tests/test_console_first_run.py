@@ -1,7 +1,7 @@
 """D8: the console has the forced-change overlay and no longer mentions a default login."""
 from pathlib import Path
 
-HTML = (Path(__file__).resolve().parents[1] / "pentestiq/api/static/index.html").read_text()
+HTML = (Path(__file__).resolve().parents[1] / "pentestiq/api/static/index.html").read_text(encoding="utf-8")
 
 
 def test_no_default_login_text():

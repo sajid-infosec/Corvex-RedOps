@@ -50,12 +50,12 @@ def test_options_endpoint_needs_no_auth_and_leaks_nothing(tmp_path, monkeypatch)
 
 
 def test_console_hides_create_workspace_unless_open():
-    html = (ROOT / "pentestiq/api/static/index.html").read_text()
+    html = (ROOT / "pentestiq/api/static/index.html").read_text(encoding="utf-8")
     assert 'id="btn_register" onclick="register()" hidden>Create workspace' in html
     assert 'fetch("/auth/options")' in html and "b.hidden=!o.registration_open" in html
 
 
 def test_docs_and_compose_describe_the_closed_default():
-    assert "CORVEX_ALLOW_REGISTRATION" in (ROOT / "README.md").read_text()
-    compose = (ROOT / "deploy/docker-compose.yml").read_text()
+    assert "CORVEX_ALLOW_REGISTRATION" in (ROOT / "README.md").read_text(encoding="utf-8")
+    compose = (ROOT / "deploy/docker-compose.yml").read_text(encoding="utf-8")
     assert "registration is OFF" in compose and "register, then Upload" not in compose

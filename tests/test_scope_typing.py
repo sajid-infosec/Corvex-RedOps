@@ -15,7 +15,7 @@ def test_inferred_when_no_prefix():
 def test_load_scope_strips_type_prefix(tmp_path):
     f = tmp_path / "s.yaml"
     f.write_text("engagement:\n  name: T\nscope:\n  in_scope:\n"
-                 "    - wordpress=http://blog\n    - http://site\n")
+                 "    - wordpress=http://blog\n    - http://site\n", encoding="utf-8")
     scope, assets = load_scope(f)
     # scope.in_scope must hold clean targets (so matching works)
     assert "http://blog" in scope.in_scope and "wordpress=http://blog" not in scope.in_scope

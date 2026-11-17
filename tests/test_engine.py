@@ -17,7 +17,7 @@ def test_load_scope_and_empty_workflow(tmp_path: Path):
     scope_file.write_text(
         "engagement:\n  name: T\nscope:\n  in_scope:\n"
         "    - http://localhost:3000\n    - 10.0.0.0/24\n"
-        "safe_mode: true\nenforcement: warn\n"
+        "safe_mode: true\nenforcement: warn\n", encoding="utf-8"
     )
     scope, assets = load_scope(scope_file)
     assert scope.name == "T"

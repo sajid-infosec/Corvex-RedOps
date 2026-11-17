@@ -16,7 +16,7 @@ def _item(host, method, path, auth=None, proto="https"):
 
 def _write(tmp_path, items):
     p = tmp_path / "burp.xml"
-    p.write_text("<?xml version='1.0'?><items>" + "".join(items) + "</items>")
+    p.write_text("<?xml version='1.0'?><items>" + "".join(items) + "</items>", encoding="utf-8")
     return str(p)
 
 

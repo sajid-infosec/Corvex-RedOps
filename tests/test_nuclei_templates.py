@@ -40,11 +40,11 @@ def tpldir(tmp_path):
     (d / "exposures" / "configs").mkdir(parents=True)
     (d / "default-logins").mkdir(parents=True)
     (d / ".git").mkdir()                       # must be skipped
-    (d / "cves" / "2021" / "CVE-2021-44228.yaml").write_text(TPL_A)
-    (d / "exposures" / "configs" / "git-config.yaml").write_text(TPL_B)
-    (d / "default-logins" / "default-login.yml").write_text(TPL_C)
-    (d / ".git" / "junk.yaml").write_text("id: nope\ninfo:\n  severity: info\n")
-    (d / ".templates-version").write_text("nuclei-templates v10.2.3\n")
+    (d / "cves" / "2021" / "CVE-2021-44228.yaml").write_text(TPL_A, encoding="utf-8")
+    (d / "exposures" / "configs" / "git-config.yaml").write_text(TPL_B, encoding="utf-8")
+    (d / "default-logins" / "default-login.yml").write_text(TPL_C, encoding="utf-8")
+    (d / ".git" / "junk.yaml").write_text("id: nope\ninfo:\n  severity: info\n", encoding="utf-8")
+    (d / ".templates-version").write_text("nuclei-templates v10.2.3\n", encoding="utf-8")
     return d
 
 

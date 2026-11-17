@@ -10,7 +10,7 @@ def _wp():
 
 
 def test_wpscan_parse():
-    raw = (FIX / "wpscan_sample.json").read_text()
+    raw = (FIX / "wpscan_sample.json").read_text(encoding="utf-8")
     findings = WpscanIntegration().parse(raw, _wp())
     cats = [f.category for f in findings]
     assert "wordpress-core" in cats

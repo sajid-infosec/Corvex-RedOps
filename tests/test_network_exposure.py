@@ -3,10 +3,13 @@ install.sh --listen (default kept at 0.0.0.0) with a warning when it is reachabl
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
-COMPOSE = (ROOT / "deploy/docker-compose.yml").read_text()
+COMPOSE = (ROOT / "deploy/docker-compose.yml").read_text(encoding="utf-8")
 
 
 def test_helper_services_bound_to_loopback():
@@ -22,9 +25,11 @@ def test_console_bind_address_is_configurable_with_todays_default():
 
 
 def _sh(tmp_path, args, script):
+    if sys.platform == "win32":   # install.sh is the Linux/macOS installer; Windows uses install.ps1
+        pytest.skip("drives install.sh through a POSIX bash (Windows installs with install.ps1)")
     env = {**os.environ, "CORVEX_INSTALL_SOURCE_ONLY": "1"}
     cmd = f'source "{ROOT}/install.sh" {args}; ENV_FILE="{tmp_path}/deploy/.env"; {script}'
-    return subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, env=env, timeout=60)
+    return subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, env=env, timeout=60, encoding="utf-8", errors="replace")
 
 
 def test_default_listen_warns_in_the_summary(tmp_path):
@@ -37,7 +42,7 @@ def test_loopback_listen_has_no_warning_and_reaches_env_and_native(tmp_path):
     r = _sh(tmp_path, "--listen 127.0.0.1", 'listen_warning; write_env >/dev/null; cat "$ENV_FILE"')
     assert "reachable from the network" not in r.stdout
     assert "PENTESTIQ_LISTEN=127.0.0.1" in r.stdout
-    assert 'serve --host "$LISTEN"' in (ROOT / "install.sh").read_text()
+    assert 'serve --host "$LISTEN"' in (ROOT / "install.sh").read_text(encoding="utf-8")
 
 
 def test_ipv6_is_bracketed_for_compose(tmp_path):
@@ -60,7 +65,7 @@ def test_invalid_listen_values_are_refused(tmp_path):
 
 def test_docs_explain_listen_and_tls():
     for name in ("README.md", "INSTALL.md"):
-        t = (ROOT / name).read_text()
+        t = (ROOT / name).read_text(encoding="utf-8")
         assert "--listen 127.0.0.1" in t and "Put TLS in front" in t, name
 
 
@@ -68,7 +73,7 @@ def test_trusted_proxy_flag_reaches_env_compose_and_native(tmp_path):
     r = _sh(tmp_path, "--trusted-proxy 172.18.0.1 --trusted-proxy 10.0.0.0/24", 'write_env >/dev/null; cat "$ENV_FILE"')
     assert "CORVEX_TRUSTED_PROXIES=127.0.0.1,::1,172.18.0.1,10.0.0.0/24" in r.stdout
     assert "CORVEX_TRUSTED_PROXIES=${CORVEX_TRUSTED_PROXIES:-127.0.0.1,::1}" in COMPOSE
-    assert "CORVEX_TRUSTED_PROXIES=$tpx" in (ROOT / "install.sh").read_text()
+    assert "CORVEX_TRUSTED_PROXIES=$tpx" in (ROOT / "install.sh").read_text(encoding="utf-8")
 
 
 def test_existing_env_file_follows_a_new_trusted_proxy(tmp_path):
@@ -86,7 +91,7 @@ def test_invalid_trusted_proxy_values_are_refused(tmp_path):
 
 def test_docs_explain_the_gateway_and_never_star():
     for name in ("README.md", "INSTALL.md"):
-        t = (ROOT / name).read_text()
+        t = (ROOT / name).read_text(encoding="utf-8")
         assert "docker network inspect deploy_default" in t and "Never `*`" in t, name
 
 
@@ -103,7 +108,7 @@ def test_trust_warning_also_reads_an_existing_env_file(tmp_path):
     assert "Trusted proxy 10.0.0.0/24" in _sh(tmp_path, "", "proxy_trust_warning").stdout
 
 
-PS1 = (ROOT / "install.ps1").read_text()
+PS1 = (ROOT / "install.ps1").read_text(encoding="utf-8")
 
 
 def test_install_ps1_has_listen_and_trusted_proxy_with_the_same_rules():
@@ -136,6 +141,6 @@ def test_install_ps1_validation_regexes_behave_like_install_sh():
 
 def test_docs_pair_the_gateway_with_loopback():
     for name in ("README.md", "INSTALL.md"):
-        t = (ROOT / name).read_text()
+        t = (ROOT / name).read_text(encoding="utf-8")
         assert "Trust the gateway only together with `--listen 127.0.0.1`" in t, name
         assert "one-time warning" in t, name
