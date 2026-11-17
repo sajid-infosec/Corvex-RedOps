@@ -5,6 +5,7 @@ import json
 import os
 import tempfile
 import zipfile
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -86,7 +87,7 @@ def test_archive_extraction_blocks_zip_slip(tmp_path):
         got = set()
         for root, _, files in os.walk(scan_dir):
             for f in files:
-                got.add(os.path.relpath(os.path.join(root, f), scan_dir))
+                got.add(Path(os.path.relpath(os.path.join(root, f), scan_dir)).as_posix())
         assert got == {"app/run.py", "app/config.py"}       # evil.py skipped
         parent = os.path.dirname(os.path.realpath(scan_dir))
         assert not os.path.exists(os.path.join(parent, "evil.py"))
@@ -157,3 +158,84 @@ def test_api_sast_semgrep_missing_returns_503(ctx, monkeypatch):
         r = c.post("/engagements/upload", headers=H, data={"asset_type": "sast"},
                    files={"file": ("repo.zip", fh, "application/zip")})
     assert r.status_code == 503
+
+
+# ---- extraction through a symlinked / unresolved destination -----------------
+def _symlink_dir(link, target):
+    try:
+        os.symlink(target, link, target_is_directory=True)
+    except (OSError, NotImplementedError):
+        pytest.skip("creating symlinks needs extra privileges on this platform")
+
+
+def _zip(tmp_path, members):
+    zp = tmp_path / "a.zip"
+    with zipfile.ZipFile(zp, "w") as z:
+        for name, body in members.items():
+            z.writestr(name, body)
+    return str(zp)
+
+
+def test_extracts_into_a_destination_reached_through_a_symlink(tmp_path, monkeypatch):
+    # macOS: mkdtemp() is under /var -> /private/var. The old check compared the resolved
+    # member path with the unresolved base and rejected every member.
+    from pentestiq.sast.semgrep_tool import _extract_zip
+    (tmp_path / "real").mkdir()
+    _symlink_dir(tmp_path / "link", tmp_path / "real")
+    zp = _zip(tmp_path, {"app/run.py": "import os", "../evil.py": "pwned"})
+    dest = tmp_path / "link" / "out"
+    dest.mkdir()
+    assert _extract_zip(zp, str(dest)) == 1
+    assert (tmp_path / "real" / "out" / "app" / "run.py").read_text(encoding="utf-8") == "import os"
+    assert not (tmp_path / "real" / "evil.py").exists() and not (tmp_path / "link" / "evil.py").exists()
+    # and end-to-end, with the temp dir itself behind a symlink, as on macOS
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path / "link"))
+    scan_dir, cleanup = materialize(zp)
+    try:
+        assert os.path.isfile(os.path.join(scan_dir, "app", "run.py"))
+    finally:
+        cleanup()
+
+
+def test_symlink_inside_the_destination_cannot_escape(tmp_path):
+    from pentestiq.sast.semgrep_tool import _extract_zip
+    (tmp_path / "outside").mkdir()
+    dest = tmp_path / "dest"
+    dest.mkdir()
+    _symlink_dir(dest / "out", tmp_path / "outside")
+    zp = _zip(tmp_path, {"out/x.py": "escaped", "ok.py": "fine"})
+    assert _extract_zip(zp, str(dest)) == 1
+    assert not (tmp_path / "outside" / "x.py").exists()
+
+
+def test_safe_join_compares_whole_path_components(tmp_path):
+    from pentestiq.sast.semgrep_tool import _inside
+    base = str(tmp_path / "b")
+    assert _inside(base, str(tmp_path / "b" / "x"))
+    assert not _inside(base, str(tmp_path / "bc" / "x"))          # sibling sharing a prefix
+    assert _safe_join(os.path.realpath(base), "../b2/x") is None
+
+
+def test_archive_with_files_but_nothing_extractable_is_an_error_not_an_empty_scan(tmp_path):
+    import io
+    import tarfile
+    zp = _zip(tmp_path, {"../evil.py": "pwned", "../../x.py": "pwned"})
+    with pytest.raises(ValueError, match="none of the archive's 2 file"):
+        materialize(zp)
+    tp = tmp_path / "a.tar"
+    with tarfile.open(tp, "w") as t:
+        info = tarfile.TarInfo("../evil.py"); data = b"pwned"; info.size = len(data)
+        t.addfile(info, io.BytesIO(data))
+    with pytest.raises(ValueError, match="none of the archive's 1 file"):
+        materialize(str(tp))
+    # an archive with no files at all is just empty, not an error
+    (tmp_path / "e").mkdir()
+    scan_dir, cleanup = materialize(_zip(tmp_path / "e", {}))
+    assert os.listdir(scan_dir) == []
+    cleanup()
+
+
+def test_sast_scan_of_an_unextractable_archive_reports_an_error(tmp_path):
+    zp = _zip(tmp_path, {"../evil.py": "pwned"})
+    res = scan_source(zp, runner=SemgrepRunner(run_fn=lambda *_: {"runs": []}))
+    assert res.error and "could be extracted safely" in res.error

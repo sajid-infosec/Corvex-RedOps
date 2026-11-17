@@ -122,3 +122,15 @@ def test_api_secret_scan_upload(ctx, tmp_path):
     # secret redacted end-to-end through the API
     assert STRIPE not in det["engagement"]["findings"][0]["evidence"][0]["description"]
     assert any(x["identifier"] == "my-service" for x in c.get("/assets", headers=H).json())
+
+
+def test_api_upload_where_nothing_can_be_extracted_is_refused_clearly(ctx, tmp_path):
+    c, H = ctx
+    zp = tmp_path / "slip.zip"
+    with zipfile.ZipFile(zp, "w") as z:
+        z.writestr("../evil.py", f'k="{AKIA}"')
+    with open(zp, "rb") as fh:
+        r = c.post("/engagements/upload", headers=H, data={"asset_type": "secrets", "name": "x"},
+                   files={"file": ("slip.zip", fh, "application/zip")})
+    assert r.status_code == 422
+    assert "could be extracted safely" in r.json()["detail"]
