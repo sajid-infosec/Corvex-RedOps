@@ -1,5 +1,6 @@
 import os
 import pytest
+from pathlib import Path
 from fastapi.testclient import TestClient
 from pentestiq.api.app import create_app
 from pentestiq.storage import SqliteEngagementStore, SqliteAuthStore
@@ -33,7 +34,7 @@ def test_upload_apk_creates_mobile_engagement(client):
     asset = rec["engagement"]["assets"][0]
     assert asset["type"] == "mobile"
     path = asset["identifier"]
-    assert "/uploads/" in path and path.endswith("DemoBank.apk")
+    assert "uploads" in Path(path).parts and path.endswith("DemoBank.apk")   # any separator
     assert os.path.exists(path)
     os.remove(path)                          # cleanup uploaded test file
 
