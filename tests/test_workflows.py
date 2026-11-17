@@ -28,3 +28,10 @@ def test_ci_runs_the_whole_suite_everywhere_including_el9_sqlite():
     assert el9["container"] == "almalinux:9"
     assert 'v.startswith("3.34.")' in text
     assert "bash -n install.sh" in text and "Language.Parser]::ParseFile" in text
+
+
+def test_readme_shows_the_ci_badge_and_no_test_counts():
+    import re
+    readme = (WF.parents[1] / "README.md").read_text(encoding="utf-8")
+    assert "https://github.com/sajid-infosec/corvex-redops/actions/workflows/ci.yml/badge.svg" in readme
+    assert not re.search(r"badge/tests-|\d+\+?\s*(tests|passing)\b", readme)

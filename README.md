@@ -10,7 +10,7 @@
 
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
-![Tests](https://img.shields.io/badge/tests-570%2B%20passing-brightgreen.svg)
+[![CI](https://github.com/sajid-infosec/corvex-redops/actions/workflows/ci.yml/badge.svg)](https://github.com/sajid-infosec/corvex-redops/actions/workflows/ci.yml)
 ![Scan templates](https://img.shields.io/badge/scan%20templates-18-0ea5e9.svg)
 <br/>
 ![Self-hosted](https://img.shields.io/badge/self--hosted-air--gappable-0aa.svg)
@@ -1200,8 +1200,8 @@ Full policy: **[docs/LEGAL_AND_ETHICS.md](docs/LEGAL_AND_ETHICS.md)**. *This is 
 ## 🧪 Development & Testing
 
 ```bash
-pip install -e ".[dev,api,reports,desktop]"
-pytest -q            # 450+ tests
+pip install -e ".[api,reports,desktop,dev,ai]"   # what CI installs
+pytest -q            # everything except the opt-in live tests (pytest -m live)
 ```
 
 - **Architecture & extension guide:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — how to write a new asset module or tool integration.
