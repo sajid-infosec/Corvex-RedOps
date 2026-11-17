@@ -6,6 +6,7 @@ import shutil
 import sqlite3
 from pathlib import Path
 
+from pentestiq.auth.models import Role
 from pentestiq.storage import SqliteAuthStore
 from pentestiq.storage.compat import BUSY_TIMEOUT_MS, use_wal
 
@@ -83,3 +84,25 @@ def test_docs_say_local_disk_and_how_to_back_up():
         assert ".backup 'pentestiq-backup.db'" in t and ".backup(d)" in t, name
         assert "Never copy `pentestiq.db` alone" in t and "pentestiq.db-wal" in t, name
     assert "local disk, not NFS or SMB/CIFS" in (ROOT / "docs/DEPLOYMENT.md").read_text(encoding="utf-8")
+
+
+def test_request_path_reads_use_a_separate_wal_reader_that_sees_every_commit(tmp_path):
+    s = SqliteAuthStore(str(tmp_path / "pentestiq.db"))
+    assert s._rconn is not s._conn and _pragmas(s._rconn) == ("wal", 1, BUSY_TIMEOUT_MS)
+    t = s.create_tenant("t"); u = s.create_user("bob", "x"); s.add_membership(u.id, t.id, Role.ADMIN)
+    assert s.get_session_state(u.id, t.id) == {"role": "admin", "sessions_valid_after": 0}
+    for at in (1, 2, 3):                                      # each write is visible at once
+        s.end_sessions("bob", at)
+        assert s.get_session_state(u.id, t.id)["sessions_valid_after"] == at
+    s.set_must_change_password("bob", True)
+    assert s.must_change_password(u.id) is True
+    # the reader doesn't wait for the writer: it answers while the write lock is held
+    with s._lock:
+        assert s.must_change_password(u.id) is True
+
+
+def test_in_memory_store_reads_through_its_own_connection():
+    s = SqliteAuthStore(":memory:")
+    assert s._rconn is s._conn
+    t = s.create_tenant("t"); u = s.create_user("bob", "x"); s.add_membership(u.id, t.id, Role.VIEWER)
+    assert s.get_session_state(u.id, t.id)["role"] == "viewer"

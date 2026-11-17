@@ -104,3 +104,51 @@ def test_authenticated_requests_stay_fast_while_40_sign_ins_are_slowed(tmp_path,
     assert status == 200
     assert me_took < 0.5, f"/me took {me_took:.2f}s while sign-ins were slowed"
     assert codes == [401] * 40 and total >= 1.5        # they really were slowed (and none locked out)
+
+
+def test_slow_sign_in_commits_dont_queue_authenticated_requests(tmp_path, monkeypatch):
+    # Each sign-in attempt is counted in its own transaction under the auth store's write
+    # lock. Make every commit slow (a slow disk) and send 40 sign-ins: /me, whose checks
+    # read through the store's separate WAL reader, must not wait behind them.
+    import pentestiq.auth.passwords as pw
+    real_hash = pw.hash_password
+    monkeypatch.setattr(pw, "_ITERATIONS", 1_000)
+    monkeypatch.setattr(svc, "hash_password", lambda p, iterations=1_000: real_hash(p, iterations))
+    app, auth = _app(tmp_path, monkeypatch)
+
+    async def token():
+        async with _client(app, "203.0.113.1") as c:
+            return (await c.post("/auth/login", json={"username": "corvex", "password": "right-pass-123"})).json()["token"]
+    tok = asyncio.run(token())
+
+    class SlowCommit:
+        def __init__(self, conn):
+            self._c = conn
+
+        def commit(self):
+            time.sleep(0.05)                     # a slow disk: 40 commits queue for ~2 s
+            return self._c.commit()
+
+        def __getattr__(self, name):
+            return getattr(self._c, name)
+    auth.store._conn = SlowCommit(auth.store._conn)
+
+    async def main():
+        clients = [_client(app, f"198.51.100.{i + 1}") for i in range(40)]
+        t0 = time.monotonic()
+        signins = [asyncio.create_task(c.post("/auth/login", json={"username": "corvex", "password": "wrong-pass-1"}))
+                   for c in clients]
+        await asyncio.sleep(0.1)                 # the sign-ins are now queued on the write lock
+        async with _client(app, "203.0.113.2") as m:
+            t1 = time.monotonic()
+            r = await m.get("/me", headers={"Authorization": "Bearer " + tok})
+            me_took = time.monotonic() - t1
+        codes = [x.status_code for x in await asyncio.gather(*signins)]
+        total = time.monotonic() - t0
+        for c in clients:
+            await c.aclose()
+        return r.status_code, me_took, codes, total
+    status, me_took, codes, total = asyncio.run(main())
+    assert status == 200
+    assert codes == [401] * 40 and total >= 1.5          # the commits really were slow and serialised
+    assert me_took < 0.5, f"/me took {me_took:.2f}s behind 40 slow sign-in commits"
