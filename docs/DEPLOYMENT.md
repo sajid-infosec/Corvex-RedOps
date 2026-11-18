@@ -12,7 +12,7 @@ cd Corvex-RedOps
 sudo ./install.sh
 ```
 
-Then open **http://localhost:8080**, sign in with the one-time admin password, choose your own, and start scanning. (Self-service registration is off unless `CORVEX_ALLOW_REGISTRATION=1`; add workspaces with `corvex init-tenant`.)
+Then open **http://localhost:8080**, sign in with the one-time admin password, choose your own, and start scanning. (Self-service registration is off unless `CORVEX_ALLOW_REGISTRATION=1`. Community includes one workspace; with Premium, add more with `corvex init-tenant`.)
 
 **Supported distributions** (auto-detected):
 

@@ -169,8 +169,9 @@ docker compose up -d --build         # console :8080, mobile-analysis :8000
    the app generates one for **`admin`** and prints it **once** to the API log
    (`docker logs pentestiq-api 2>&1 | grep -A3 'first-run admin'`, or your console output for a
    non-Docker run). Either way the console makes you choose your own password at the first
-   sign-in. For a separate tenant run `corvex init-tenant` on the server (self-service
-   **Create workspace** is off unless `CORVEX_ALLOW_REGISTRATION=1`).
+   sign-in. Community includes one workspace, this one; with Premium, add separate workspaces with
+   `corvex init-tenant` on the server (self-service **Create workspace** is off unless
+   `CORVEX_ALLOW_REGISTRATION=1`).
    Locked out? `docker exec -it pentestiq-api corvex reset-password <user>` prints a new one-time
    password (changed again at the next sign-in).
 3. Add a target (New scan) or upload an app / OpenAPI spec, then **Run scan**.

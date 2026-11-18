@@ -701,7 +701,8 @@ corvex serve                                        # http://127.0.0.1:8000
 Then open **http://127.0.0.1:8000** for the console, or **/docs** for interactive API docs.
 On first run Corvex-RedOps creates an **`admin`** workspace and prints a **one-time random password to
 the server log**. Copy it from the console output to sign in; the console then asks you to choose
-your own password before anything else. To bootstrap another tenant + owner from the CLI:
+your own password before anything else. To bootstrap the workspace + owner from the CLI instead (on an
+install with no workspace yet; Community includes one workspace, Premium any number):
 
 ```bash
 corvex init-tenant --tenant "Corvex-RedOps" --username sajid --password "s3cr3tpass"
@@ -816,9 +817,10 @@ The console is the fastest way to run a full assessment — no CLI needed.
 **1 · Sign in.** Open `http://localhost:8080`. After an `install.sh` deployment sign in as
 **`corvex`** with the one-time password the installer printed; you'll be asked to choose your own
 password straight away. (Run the app directly instead of via the installer and it generates a
-strong random one-time admin password, printed once to the server log.) To add a separate,
-isolated workspace run `corvex init-tenant` on the server. Self-service **Create workspace** on the
-sign-in screen is off by default and appears only when `CORVEX_ALLOW_REGISTRATION=1`.
+strong random one-time admin password, printed once to the server log.) Community includes one
+workspace, this one. With Premium, add separate, isolated workspaces by running `corvex init-tenant` on
+the server. Self-service **Create workspace** on the sign-in screen is off by default and appears only
+when `CORVEX_ALLOW_REGISTRATION=1` and the plan allows another workspace.
 
 **2 · Scan live targets (web / API / infra).** Go to **New scan → Scan targets**:
 name the engagement, record who authorised it, enter targets one per line (optionally
@@ -904,7 +906,7 @@ Without a prefix, the type is inferred (URLs/hosts → web, IPs/CIDRs → infra,
 | `corvex modules` | List registered asset modules |
 | `corvex run -s <scope> [-c <config>] [-o <dir>]` | Run an engagement; `-o` writes report.html/.md + engagement.json |
 | `corvex serve [--host H] [--port P]` | Start the REST API + web console |
-| `corvex init-tenant --tenant N --username U [--password P]` | Bootstrap a tenant + owner, print an API key (password generated if omitted) |
+| `corvex init-tenant --tenant N --username U [--password P]` | Bootstrap a workspace (tenant) + owner, print an API key (password generated if omitted). Community includes one workspace |
 | `corvex reset-password [USER] [--password P]` | Recover a console login (no USER lists users) |
 
 ```bash
@@ -1052,11 +1054,11 @@ Notification payload is Slack-compatible: *"Corvex-RedOps · Nightly Corvex-RedO
 
 ### 7. Authentication, tenants & RBAC
 
-Corvex-RedOps is multi-tenant. Authenticate with a **session token** (`Authorization: Bearer …`) or a **per-tenant API key** (`X-API-Key: …`).
+Each workspace (tenant) is kept separate; Community includes one workspace, Premium any number. Authenticate with a **session token** (`Authorization: Bearer …`) or a **per-tenant API key** (`X-API-Key: …`).
 
 ```bash
-# register a tenant + owner, get a token (needs CORVEX_ALLOW_REGISTRATION=1 on the server;
-# otherwise add the workspace with `corvex init-tenant` and use POST /auth/login)
+# register a workspace + owner, get a token (needs CORVEX_ALLOW_REGISTRATION=1 on the server and
+# room for another workspace: Community includes one; otherwise sign in with POST /auth/login)
 TOKEN=$(curl -s -XPOST http://localhost:8080/auth/register -H "Content-Type: application/json" \
   -d '{"tenant_name":"Corvex-RedOps","username":"sajid","password":"password123"}' | jq -r .token)
 

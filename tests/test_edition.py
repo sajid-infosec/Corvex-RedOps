@@ -65,10 +65,17 @@ def _tok(c):
                                           "password": "password123"}).json()["token"]
 
 
+def _admin_tok(c):
+    # Community includes one workspace (the first-run admin's): sign in to it, don't add one.
+    import os
+    return c.post("/auth/login", json={"username": os.environ["CORVEX_ADMIN_USER"],
+                                       "password": os.environ["CORVEX_ADMIN_PASSWORD"]}).json()["token"]
+
+
 def test_community_gates_premium_routes(monkeypatch, mkclient):
     monkeypatch.setenv("CORVEX_EDITION", "community")
     c = mkclient()
-    H = {"Authorization": f"Bearer {_tok(c)}"}
+    H = {"Authorization": f"Bearer {_admin_tok(c)}"}
     assert c.post("/schedules", headers=H,
                   json={"name": "n", "interval_seconds": 3600}).status_code == 402
     assert c.post("/projects", headers=H, json={"name": "p"}).status_code == 402
