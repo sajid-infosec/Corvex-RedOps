@@ -14,18 +14,18 @@ def client(tmp_path):
 
 
 def _owner(client):
-    tok = client.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q"}).json()["token"]
+    tok = client.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q-admin"}).json()["token"]
     return {"Authorization": "Bearer " + tok}
 
 
 def test_admin_creates_viewer_and_viewer_is_readonly(client):
     H = _owner(client)
-    r = client.post("/users", headers=H, json={"username": "ro1", "password": "readonly1", "role": "viewer"})
+    r = client.post("/users", headers=H, json={"username": "ro1", "password": "readonly-pass-1", "role": "viewer"})
     assert r.status_code == 201 and r.json()["role"] == "viewer"
     users = client.get("/users", headers=H).json()
     assert any(u["username"] == "ro1" and u["role"] == "viewer" for u in users)
 
-    vt = client.post("/auth/login", json={"username": "ro1", "password": "readonly1"}).json()["token"]
+    vt = client.post("/auth/login", json={"username": "ro1", "password": "readonly-pass-1"}).json()["token"]
     VH = {"Authorization": "Bearer " + vt}
     eng = client.post("/engagements", headers=H,
                       json={"engagement": {"name": "t"}, "scope": {"in_scope": ["web=http://x"]}}).json()
@@ -35,13 +35,13 @@ def test_admin_creates_viewer_and_viewer_is_readonly(client):
     # viewer cannot write (run / create user)
     assert client.post("/engagements/" + eng["id"] + "/run", headers=VH).status_code == 403
     assert client.post("/users", headers=VH,
-                       json={"username": "x", "password": "yyyyyyyy", "role": "viewer"}).status_code == 403
+                       json={"username": "x", "password": "yyyyyyyyyyyy", "role": "viewer"}).status_code == 403
 
 
 def test_duplicate_user_rejected(client):
     H = _owner(client)
-    client.post("/users", headers=H, json={"username": "dup", "password": "pwpwpwpw", "role": "member"})
-    r = client.post("/users", headers=H, json={"username": "dup", "password": "pwpwpwpw", "role": "member"})
+    client.post("/users", headers=H, json={"username": "dup", "password": "pwpwpwpwpwpw", "role": "member"})
+    r = client.post("/users", headers=H, json={"username": "dup", "password": "pwpwpwpwpwpw", "role": "member"})
     assert r.status_code == 409
 
 

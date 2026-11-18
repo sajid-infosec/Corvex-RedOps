@@ -16,7 +16,7 @@ def client(tmp_path):
 
 def _tok(c, user="owner"):
     return c.post("/auth/register", json={"tenant_name": "Corvex-RedOps", "username": user,
-                                          "password": "password123"}).json()["token"]
+                                          "password": "password1234"}).json()["token"]
 
 
 def _H(t):

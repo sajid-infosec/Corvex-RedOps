@@ -99,7 +99,7 @@ def ctx(tmp_path, monkeypatch):
     auth = AuthService(SqliteAuthStore(db), secret_key="s", session_ttl=3600)
     app = create_app(store=store, auth=auth, config=AppConfig(data_dir=str(tmp_path)))
     c = TestClient(app)
-    tok = c.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q"}).json()["token"]
+    tok = c.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q-admin"}).json()["token"]
     return c, {"Authorization": "Bearer " + tok}
 
 

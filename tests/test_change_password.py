@@ -19,7 +19,7 @@ def client(tmp_path):
     return TestClient(app)
 
 
-def _register(c, user="alice", pw="origpass1"):
+def _register(c, user="alice", pw="origpass-12345"):
     r = c.post("/auth/register",
                json={"tenant_name": "t", "username": user, "password": pw})
     assert r.status_code == 201, r.text
@@ -30,11 +30,11 @@ def test_change_password_happy_path(client):
     tok = _register(client)
     H = {"Authorization": "Bearer " + tok}
     r = client.post("/auth/change-password", headers=H,
-                    json={"current_password": "origpass1", "new_password": "brandNewPass9"})
+                    json={"current_password": "origpass-12345", "new_password": "brandNewPass9"})
     assert r.status_code == 200 and r.json()["ok"] is True
     # old password no longer logs in; new one does
     assert client.post("/auth/login",
-                       json={"username": "alice", "password": "origpass1"}).status_code == 401
+                       json={"username": "alice", "password": "origpass-12345"}).status_code == 401
     assert client.post("/auth/login",
                        json={"username": "alice", "password": "brandNewPass9"}).status_code == 200
 
@@ -47,7 +47,7 @@ def test_change_password_wrong_current_is_403(client):
     assert r.status_code == 403
     # password is unchanged
     assert client.post("/auth/login",
-                       json={"username": "alice", "password": "origpass1"}).status_code == 200
+                       json={"username": "alice", "password": "origpass-12345"}).status_code == 200
 
 
 def test_change_password_too_short_is_422(client):
@@ -55,23 +55,23 @@ def test_change_password_too_short_is_422(client):
     H = {"Authorization": "Bearer " + tok}
     # min_length is enforced by the schema -> 422 before the service runs
     r = client.post("/auth/change-password", headers=H,
-                    json={"current_password": "origpass1", "new_password": "short"})
+                    json={"current_password": "origpass-12345", "new_password": "short"})
     assert r.status_code == 422
 
 
 def test_change_password_requires_auth(client):
     _register(client)
     r = client.post("/auth/change-password",
-                    json={"current_password": "origpass1", "new_password": "brandNewPass9"})
+                    json={"current_password": "origpass-12345", "new_password": "brandNewPass9"})
     assert r.status_code in (401, 403)
 
 
 def test_change_password_only_affects_the_caller(client):
     # two users; alice changing her password must not touch bob's
-    ta = _register(client, "alice", "alicepass1")
-    _register(client, "bob", "bobpass123")
+    ta = _register(client, "alice", "alicepass-123")
+    _register(client, "bob", "bobpass-12345")
     client.post("/auth/change-password", headers={"Authorization": "Bearer " + ta},
-                json={"current_password": "alicepass1", "new_password": "aliceNewPass9"})
+                json={"current_password": "alicepass-123", "new_password": "aliceNewPass9"})
     # bob still logs in with his original password
     assert client.post("/auth/login",
-                       json={"username": "bob", "password": "bobpass123"}).status_code == 200
+                       json={"username": "bob", "password": "bobpass-12345"}).status_code == 200

@@ -74,7 +74,7 @@ def client(tmp_path):
 
 
 def _owner(client):
-    tok = client.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q"}).json()["token"]
+    tok = client.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q-admin"}).json()["token"]
     return {"Authorization": "Bearer " + tok}
 
 
@@ -95,8 +95,8 @@ def test_assets_api_crud_and_filters(client):
 
 def test_assets_api_rbac(client):
     H = _owner(client)
-    client.post("/users", json={"username": "ro", "password": "readonly1", "role": "viewer"}, headers=H)
-    vt = client.post("/auth/login", json={"username": "ro", "password": "readonly1"}).json()["token"]
+    client.post("/users", json={"username": "ro", "password": "readonly-pass-1", "role": "viewer"}, headers=H)
+    vt = client.post("/auth/login", json={"username": "ro", "password": "readonly-pass-1"}).json()["token"]
     VH = {"Authorization": "Bearer " + vt}
     assert client.get("/assets", headers=VH).status_code == 200          # viewer can read
     assert client.post("/assets", json={"identifier": "x.com"}, headers=VH).status_code == 403

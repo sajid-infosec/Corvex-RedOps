@@ -19,7 +19,7 @@ def client(tmp_path):
 
 
 def _owner(client):
-    tok = client.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q"}).json()["token"]
+    tok = client.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q-admin"}).json()["token"]
     return {"Authorization": "Bearer " + tok}
 
 
@@ -41,8 +41,8 @@ def test_delete_requires_member(client):
     H = _owner(client)
     eid = client.post("/engagements", headers=H,
                       json={"engagement": {"name": "x"}, "scope": {"in_scope": ["web=http://x"]}}).json()["id"]
-    client.post("/users", headers=H, json={"username": "ro", "password": "readonly1", "role": "viewer"})
-    vt = client.post("/auth/login", json={"username": "ro", "password": "readonly1"}).json()["token"]
+    client.post("/users", headers=H, json={"username": "ro", "password": "readonly-pass-1", "role": "viewer"})
+    vt = client.post("/auth/login", json={"username": "ro", "password": "readonly-pass-1"}).json()["token"]
     VH = {"Authorization": "Bearer " + vt}
     assert client.delete("/engagements/" + eid, headers=VH).status_code == 403
 

@@ -705,7 +705,7 @@ your own password before anything else. To bootstrap the workspace + owner from 
 install with no workspace yet; Community includes one workspace, Premium any number):
 
 ```bash
-corvex init-tenant --tenant "Corvex-RedOps" --username sajid --password "s3cr3tpass"
+corvex init-tenant --tenant "Corvex-RedOps" --username sajid --password "a-long-s3cr3t-pass"
 #  -> prints an API key you can use with  -H "X-API-Key: <key>"
 ```
 
@@ -1060,7 +1060,7 @@ Each workspace (tenant) is kept separate; Community includes one workspace, Prem
 # register a workspace + owner, get a token (needs CORVEX_ALLOW_REGISTRATION=1 on the server and
 # room for another workspace: Community includes one; otherwise sign in with POST /auth/login)
 TOKEN=$(curl -s -XPOST http://localhost:8080/auth/register -H "Content-Type: application/json" \
-  -d '{"tenant_name":"Corvex-RedOps","username":"sajid","password":"password123"}' | jq -r .token)
+  -d '{"tenant_name":"Corvex-RedOps","username":"sajid","password":"a-long-s3cr3t-pass"}' | jq -r .token)
 
 # who am I
 curl http://localhost:8080/me -H "Authorization: Bearer $TOKEN"
@@ -1079,7 +1079,7 @@ curl -XPOST http://localhost:8080/apikeys -H "Authorization: Bearer $TOKEN" \
 | `admin` | + Manage API keys, edit branding/settings |
 | `owner` | Full control (created by `register`) |
 
-Passwords are PBKDF2-hashed; API keys are stored only as a hash (shown once at creation). Every record is scoped to its tenant.
+Passwords are PBKDF2-hashed and every new one must be at least 12 characters (existing shorter passwords still sign in); API keys are stored only as a hash (shown once at creation). Every record is scoped to its tenant.
 
 **Fine-grained RBAC (Enterprise).** Beyond the four built-in roles, the Enterprise edition unlocks a permission catalog and **custom, per-tenant roles** enforced per-endpoint:
 
@@ -1107,7 +1107,7 @@ Permissions are keyed like `engagements:write`, `scan:run`, `reports:export`, `d
 | Variable | Default | Purpose |
 |---|---|---|
 | `CORVEX_ADMIN_USER` | `admin` | Username for the first-run admin account |
-| `CORVEX_ADMIN_PASSWORD` | random, one-time | First-run admin password, read only on the first boot. `install.sh` generates a random one, shows it once and blanks it in `deploy/.env` once the console is up; without it the app generates one and logs it once. Either way the admin must change it at the first sign-in. No password ships with Corvex-RedOps |
+| `CORVEX_ADMIN_PASSWORD` | random, one-time | First-run admin password, read only on the first boot. `install.sh` generates a random one, shows it once and blanks it in `deploy/.env` once the console is up; without it the app generates one and logs it once. Either way the admin must change it at the first sign-in. A pinned one must be at least 12 characters, or the console refuses to start. No password ships with Corvex-RedOps |
 | `CORVEX_TRUSTED_PROXIES` | `127.0.0.1,::1` | Reverse proxies (IPs/CIDRs, comma-separated) whose `X-Forwarded-For` sets the client address used for sign-in throttling. Set by `install.sh --trusted-proxy`. `*` is refused at start-up |
 | `CORVEX_ALLOW_REGISTRATION` | `0` | `1` opens self-service registration (`POST /auth/register` and the console's **Create workspace**). Closed by default so a reachable console can't be used to create workspaces; add them with `corvex init-tenant` |
 | `CORVEX_ADMIN_FORCE_CHANGE` | `1` | Set `0` only for automated provisioning where a secrets manager owns the first-run admin password: the admin is then not forced to change it. The old public default `corvex` is always forced |

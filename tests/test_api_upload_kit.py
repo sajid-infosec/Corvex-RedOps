@@ -71,7 +71,7 @@ def client(tmp_path):
 
 def _token(c):
     return c.post("/auth/register", json={"tenant_name": "Corvex-RedOps", "username": "owner",
-                                          "password": "password123"}).json()["token"]
+                                          "password": "password1234"}).json()["token"]
 
 
 def test_api_upload_creates_api_engagement_with_metadata(client, monkeypatch, tmp_path):

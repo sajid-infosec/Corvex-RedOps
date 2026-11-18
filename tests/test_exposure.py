@@ -45,7 +45,7 @@ def app_ctx(tmp_path):
     auth = AuthService(SqliteAuthStore(db), secret_key="s", session_ttl=3600)
     app = create_app(store=store, auth=auth, config=AppConfig(data_dir=str(tmp_path)))
     client = TestClient(app)
-    tok = client.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q"}).json()["token"]
+    tok = client.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q-admin"}).json()["token"]
     return client, {"Authorization": "Bearer " + tok}, store, SqliteInventoryStore(db)
 
 

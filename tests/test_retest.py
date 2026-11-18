@@ -96,7 +96,7 @@ def test_api_retest_updates_lifecycle(ctx):
     app = create_app(store=store, auth=auth, engine=FakeEngine(fresh),
                      config=AppConfig(data_dir=str(tmp_path)))
     c = TestClient(app)
-    tok = c.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q"}).json()["token"]
+    tok = c.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q-admin"}).json()["token"]
     H = {"Authorization": "Bearer " + tok}
     tid = c.get("/me", headers=H).json()["tenant_id"]
     old = datetime.now(timezone.utc) - timedelta(days=5)
@@ -122,7 +122,7 @@ def test_api_retest_rejects_non_scannable(ctx):
     app = create_app(store=store, auth=auth, engine=FakeEngine([]),
                      config=AppConfig(data_dir=str(tmp_path)))
     c = TestClient(app)
-    tok = c.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q"}).json()["token"]
+    tok = c.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q-admin"}).json()["token"]
     H = {"Authorization": "Bearer " + tok}
     tid = c.get("/me", headers=H).json()["tenant_id"]
     eng = Engagement(name="sca", scope=Scope(name="s"),

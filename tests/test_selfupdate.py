@@ -70,7 +70,7 @@ def ctx(tmp_path):
 
 
 def _owner(c):
-    r = c.post("/auth/register", json={"tenant_name": "T", "username": "owner", "password": "password123"})
+    r = c.post("/auth/register", json={"tenant_name": "T", "username": "owner", "password": "password1234"})
     assert r.status_code == 201, r.text
     return {"Authorization": f"Bearer {r.json()['token']}"}
 

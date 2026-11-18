@@ -317,7 +317,7 @@ function setToken(t){TOKEN=t;try{localStorage.setItem("ptiq_token",t)}catch(e){}
 async function register(){
   const tn=prompt("Name your workspace / organization:");if(!tn)return;
   const u=$("user").value.trim(),p=$("pass").value;
-  if(!u||p.length<8){toast("Username + password (8+ chars) required");return;}
+  if(!u||p.length<12){toast("Username + password (12+ chars) required");return;}
   const r=await fetch("/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tenant_name:tn,username:u,password:p})});
   if(!r.ok){toast("Could not create workspace ("+r.status+")");return;}
   setToken((await r.json()).token);toast("Workspace created — you are the owner");

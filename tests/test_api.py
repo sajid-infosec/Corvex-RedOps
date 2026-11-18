@@ -13,7 +13,7 @@ def ctx(tmp_path):
     return TestClient(create_app(store=estore, auth=auth)), auth, db
 
 
-def _register(c, tenant="Corvex-RedOps", user="owner", pw="password123"):
+def _register(c, tenant="Corvex-RedOps", user="owner", pw="password1234"):
     r = c.post("/auth/register", json={"tenant_name": tenant, "username": user, "password": pw})
     assert r.status_code == 201, r.text
     return r.json()["token"]
@@ -45,13 +45,13 @@ def test_register_login_flow(ctx):
     tok = _register(c)
     assert c.get("/me", headers=_H(tok)).json()["role"] == "owner"
     # login with same creds
-    r = c.post("/auth/login", json={"username": "owner", "password": "password123"})
+    r = c.post("/auth/login", json={"username": "owner", "password": "password1234"})
     assert r.status_code == 200 and "token" in r.json()
     # wrong password
     assert c.post("/auth/login", json={"username": "owner", "password": "nope"}).status_code == 401
     # duplicate username
     dup = c.post("/auth/register", json={"tenant_name": "Other", "username": "owner",
-                                         "password": "password123"})
+                                         "password": "password1234"})
     assert dup.status_code == 409
 
 

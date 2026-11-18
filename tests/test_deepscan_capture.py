@@ -128,7 +128,7 @@ def ctx(tmp_path):
     app = create_app(store=store, auth=auth, config=AppConfig(data_dir=str(tmp_path)))
     c = TestClient(app)
     tok = c.post("/auth/login",
-                 json={"username": "pentestiq", "password": "p3nt3st!q"}).json()["token"]
+                 json={"username": "pentestiq", "password": "p3nt3st!q-admin"}).json()["token"]
     return c, {"Authorization": "Bearer " + tok}
 
 

@@ -133,7 +133,7 @@ def ctx(tmp_path):
                                                  nuclei_tags="cve"))
     c = TestClient(app)
     tok = c.post("/auth/login", json={"username": "pentestiq",
-                                      "password": "p3nt3st!q"}).json()["token"]
+                                      "password": "p3nt3st!q-admin"}).json()["token"]
     return c, {"Authorization": "Bearer " + tok}
 
 

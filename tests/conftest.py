@@ -8,7 +8,7 @@ import os
 
 # Pin the seeded admin so existing tests can log in with known credentials.
 os.environ.setdefault("CORVEX_ADMIN_USER", "pentestiq")
-os.environ.setdefault("CORVEX_ADMIN_PASSWORD", "p3nt3st!q")
+os.environ.setdefault("CORVEX_ADMIN_PASSWORD", "p3nt3st!q-admin")
 # The pinned test admin skips the first-sign-in forced change (the documented opt-out for
 # automated provisioning). tests/test_first_run_admin.py exercises the forced change itself.
 os.environ.setdefault("CORVEX_ADMIN_FORCE_CHANGE", "0")

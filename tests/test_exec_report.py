@@ -57,7 +57,7 @@ def client(tmp_path):
 
 
 def test_report_variant_endpoint(client):
-    tok = client.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q"}).json()["token"]
+    tok = client.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q-admin"}).json()["token"]
     H = {"Authorization": "Bearer " + tok}
     eid = client.post("/engagements", headers=H,
                       json={"engagement": {"name": "t"}, "scope": {"in_scope": ["web=http://x"]}}).json()["id"]

@@ -36,7 +36,7 @@ On first run Corvex-RedOps prints a **one-time admin password** to this terminal
 ```
 
 Open **http://127.0.0.1:8000**, sign in as `admin` with that password (or set
-`export CORVEX_ADMIN_PASSWORD=…` before starting to pin your own), and change it.
+`export CORVEX_ADMIN_PASSWORD=…` (12+ characters) before starting to pin your own), and change it.
 
 `qa/samples/` now contains:
 

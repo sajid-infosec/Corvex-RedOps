@@ -17,7 +17,7 @@ def ctx(tmp_path):
 
 def _reg(c, user="owner"):
     tok = c.post("/auth/register", json={"tenant_name": "Corvex-RedOps", "username": user,
-                                         "password": "password123"}).json()["token"]
+                                         "password": "password1234"}).json()["token"]
     tid = c.get("/me", headers={"Authorization": f"Bearer {tok}"}).json()["tenant_id"]
     return tok, tid
 

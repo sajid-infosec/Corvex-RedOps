@@ -74,13 +74,13 @@ def client(tmp_path):
 
 
 def test_discovery_endpoint_validates_domain(client):
-    tok = client.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q"}).json()["token"]
+    tok = client.post("/auth/login", json={"username": "pentestiq", "password": "p3nt3st!q-admin"}).json()["token"]
     H = {"Authorization": "Bearer " + tok}
     assert client.post("/discovery", json={"domain": "not a domain/x"}, headers=H).status_code == 422
     assert client.post("/discovery", json={"domain": ""}, headers=H).status_code == 422
     # viewer cannot run discovery
-    client.post("/users", json={"username": "ro", "password": "readonly1", "role": "viewer"}, headers=H)
-    vt = client.post("/auth/login", json={"username": "ro", "password": "readonly1"}).json()["token"]
+    client.post("/users", json={"username": "ro", "password": "readonly-pass-1", "role": "viewer"}, headers=H)
+    vt = client.post("/auth/login", json={"username": "ro", "password": "readonly-pass-1"}).json()["token"]
     assert client.post("/discovery", json={"domain": "example.com"},
                        headers={"Authorization": "Bearer " + vt}).status_code == 403
 

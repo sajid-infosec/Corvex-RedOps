@@ -62,7 +62,7 @@ def mkclient(tmp_path):
 
 def _tok(c):
     return c.post("/auth/register", json={"tenant_name": "T", "username": "owner",
-                                          "password": "password123"}).json()["token"]
+                                          "password": "password1234"}).json()["token"]
 
 
 def _admin_tok(c):

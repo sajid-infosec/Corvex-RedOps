@@ -80,12 +80,14 @@ def test_force_change_opt_out_for_provisioning(tmp_path, monkeypatch):
     assert c.get("/engagements", headers=H).status_code == 200
 
 
-def test_old_shipped_password_is_always_forced(tmp_path, monkeypatch):
-    # even with the opt-out, 'corvex' is public knowledge
-    c, _ = _app(tmp_path, monkeypatch, password="corvex", force="0")
-    body, H = _login(c, "corvex", "corvex")
-    assert body["password_change_required"] is True
-    assert c.get("/engagements", headers=H).status_code == 403
+def test_a_short_pinned_password_refuses_to_start(tmp_path, monkeypatch):
+    # first boot with CORVEX_ADMIN_PASSWORD under 12 characters (the old shipped 'corvex'
+    # included): no admin is seeded with a password nobody could set today
+    import pytest
+    for pw in ("corvex", "elevenchars"):
+        with pytest.raises(RuntimeError, match=rf"CORVEX_ADMIN_PASSWORD is {len(pw)} characters.*at least 12"):
+            _app(tmp_path / pw, monkeypatch, password=pw, force="0")
+    _app(tmp_path / "ok", monkeypatch, password="twelve-chars", force="0")       # 12 starts
 
 
 def test_existing_install_on_old_password_is_forced_at_next_start(tmp_path, monkeypatch):
