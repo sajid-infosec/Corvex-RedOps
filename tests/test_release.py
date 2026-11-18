@@ -55,9 +55,13 @@ def test_changelog_has_a_dated_0_2_0_section_with_the_groups():
         assert must in body, must
 
 
-def test_unreleased_holds_nothing_already_shipped():
+def test_unreleased_lists_the_fixes_since_0_2_0():
     unreleased = re.search(r"^## \[Unreleased\]\n(.*?)(?=^## \[)", CHANGELOG, re.S | re.M).group(1)
-    assert unreleased.strip() == "Nothing yet."
+    assert re.findall(r"^### (\w+)", unreleased, re.M) == ["Fixes"]
+    assert "- The per-username sign-in slowdown no longer resets at the top of each hour." in unreleased
+    assert "- Docs: the single-file binary's console is at http://127.0.0.1:8000, not 8080." in unreleased
+    hits = [n for n in NAMES if re.search(rf"(?<![\w-]){re.escape(n)}(?![\w-])", unreleased, re.I)]
+    assert hits == []
 
 
 def test_the_new_section_names_no_third_party_tools():

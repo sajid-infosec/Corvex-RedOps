@@ -5,7 +5,9 @@ All notable changes to Corvex-RedOps are documented here. This project adheres t
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixes
+- The per-username sign-in slowdown no longer resets at the top of each hour.
+- Docs: the single-file binary's console is at http://127.0.0.1:8000, not 8080.
 
 ## [0.2.0] — 2026-11-18
 
