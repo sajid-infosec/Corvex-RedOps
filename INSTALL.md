@@ -1,7 +1,7 @@
 # Installing Corvex-RedOps
 
 Runs on **Linux, macOS, and Windows**. Every path gives you the same CLI
-(`pentestiq`) and web console (`pentestiq serve` → http://localhost:8080).
+(`pentestiq`) and web console (`pentestiq serve` → http://127.0.0.1:8000).
 Pick one.
 
 | Path | Needs | Best for |
@@ -39,7 +39,7 @@ if ($got -eq $want) { "OK" } else { "MISMATCH - don't run it" }
 **2. Run it**
 ```bash
 chmod +x corvex-redops-linux-x64        # or corvex-redops-macos-arm64
-./corvex-redops-linux-x64 serve          # console at http://localhost:8080
+./corvex-redops-linux-x64 serve          # console at http://127.0.0.1:8000
 ```
 ```powershell
 .\corvex-redops-windows-x64.exe serve
@@ -212,5 +212,6 @@ the full deep-scan backend and mobile-analysis service** — nothing else to ins
 ```bash
 pentestiq version
 pentestiq modules                    # lists the 9 asset modules
-curl http://localhost:8080/health    # {"status":"ok",...} once serving
+curl http://127.0.0.1:8000/health    # {"status":"ok",...} once `serve` runs
+curl http://localhost:8080/health    # the same, for a Docker / installer deployment
 ```

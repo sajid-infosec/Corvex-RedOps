@@ -620,7 +620,7 @@ Or into a virtualenv:
 git clone https://github.com/sajid-infosec/Corvex-RedOps.git && cd Corvex-RedOps
 python3 -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\Activate.ps1
 pip install ".[api,reports,desktop]"                    # or ".[all]" for everything incl. SPA rendering
-corvex serve                                          # open http://localhost:8080
+corvex serve                                          # open http://127.0.0.1:8000
 ```
 
 ### Option C — one-command installer scripts
