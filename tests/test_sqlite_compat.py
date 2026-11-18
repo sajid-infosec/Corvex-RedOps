@@ -116,3 +116,13 @@ def test_starts_on_sqlite_3_24_and_on_el9s_3_34(tmp_path, monkeypatch):
         monkeypatch.setattr(sqlite3, "sqlite_version_info", v)
         monkeypatch.setattr(sqlite3, "sqlite_version", ".".join(map(str, v)))
         assert _create(tmp_path / ("v" + "_".join(map(str, v)))) is not None
+
+
+def test_reserve_can_peek_at_other_windows_without_counting_them(tmp_path):
+    s = _store(tmp_path)                                   # no RETURNING, like SQLite 3.34
+    prev = ("user-hour:a", 0)
+    keys = [("user-ip:a|1.2.3.4", 900), ("ip:1.2.3.4", 900), ("user-hour:a", 3600)]
+    assert s.reserve_login_attempt(keys, peek=[prev]) == [1, 1, 1, 0]          # absent -> 0
+    s.reserve_login_attempt([prev])                                            # one attempt there
+    assert s.reserve_login_attempt(keys, peek=[prev]) == [2, 2, 2, 1]          # read, not counted
+    assert s.reserve_login_attempt(keys, peek=[prev]) == [3, 3, 3, 1]
