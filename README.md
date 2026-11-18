@@ -594,16 +594,20 @@ Download the single-file executable for your OS from the
 
 | OS | Asset |
 |---|---|
-| Linux (x64) | `pentestiq-linux-x64` |
-| macOS (Apple Silicon) | `pentestiq-macos-arm64` |
-| Windows (x64) | `pentestiq-windows-x64.exe` |
+| Linux (x64) | `corvex-redops-linux-x64` |
+| macOS (Apple Silicon) | `corvex-redops-macos-arm64` |
+| Windows (x64) | `corvex-redops-windows-x64.exe` |
 
 ```bash
 # Linux / macOS
-chmod +x pentestiq-linux-x64 && ./pentestiq-linux-x64 serve
+chmod +x corvex-redops-linux-x64 && ./corvex-redops-linux-x64 serve
 # Windows (PowerShell)
-.\pentestiq-windows-x64.exe serve
+.\corvex-redops-windows-x64.exe serve
 ```
+
+Each release also carries `SHA256SUMS`. The binaries aren't code-signed yet, so macOS and
+Windows warn on the first run: [INSTALL.md](INSTALL.md#a-prebuilt-binary) shows how to check a
+download against `SHA256SUMS` and how to allow it.
 
 ### Option B — pipx / pip (cross-platform, recommended for CLI users)
 ```bash

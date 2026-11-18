@@ -1,71 +1,166 @@
 name: Release
 
+# A tag v<version> builds everything and publishes one GitHub release: the wheel, the sdist,
+# three single-file binaries and SHA256SUMS, with the CHANGELOG section as the release body.
+# Run it by hand (workflow_dispatch) for a full dry run: it builds and checks everything,
+# and publishes nothing.
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
+  version:
+    name: Version, tag and release notes
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - id: check
+        name: Package version; on a tag, the tag must be v<version>
+        shell: python
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          import os, re, sys
+          pyproject = re.search(r'^version\s*=\s*"([^"]+)"', open("pyproject.toml", encoding="utf-8").read(), re.M)
+          version = pyproject.group(1)
+          init = re.search(r'__version__\s*=\s*"([^"]+)"', open("pentestiq/__init__.py", encoding="utf-8").read())
+          if not init or init.group(1) != version:
+              sys.exit(f"pyproject.toml says {version}, pentestiq/__init__.py says {init and init.group(1)}")
+          if os.environ["REF_TYPE"] == "tag" and os.environ["REF_NAME"] != f"v{version}":
+              sys.exit(f"tag {os.environ['REF_NAME']} doesn't match the package version: expected v{version}")
+          # the release body: this version's CHANGELOG section, without its heading
+          text = open("CHANGELOG.md", encoding="utf-8").read()
+          m = re.search(rf"^## \[{re.escape(version)}\][^\n]*\n(.*?)(?=^## \[|^\[[^\]]+\]: |\Z)", text, re.S | re.M)
+          if not m or not m.group(1).strip():
+              sys.exit(f"CHANGELOG.md has no section for {version}")
+          open("release-notes.md", "w", encoding="utf-8").write(m.group(1).strip() + "\n")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write(f"version={version}\n")
+          print(f"version {version}; release notes: {len(m.group(1).strip())} characters")
+      - uses: actions/upload-artifact@v6
+        with:
+          name: release-notes
+          path: release-notes.md
+
   wheels:
     name: Build sdist + wheel
+    needs: version
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
-        with: { python-version: "3.11" }
+        with:
+          python-version: "3.11"
       - run: python -m pip install --upgrade pip build
       - run: python -m build
-      - uses: actions/upload-artifact@v4
-        with: { name: dist, path: dist/* }
-      - name: Attach to release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with: { files: dist/* }
+      - name: Both carry the package version
+        shell: bash
+        run: |
+          v="${{ needs.version.outputs.version }}"
+          ls -l dist/*-"$v".tar.gz dist/*-"$v"-py3-none-any.whl     # fails if either is missing
+      - uses: actions/upload-artifact@v6
+        with:
+          name: dist
+          path: dist/*
 
   binaries:
     name: Binary (${{ matrix.os }})
+    needs: version
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
-            asset: pentestiq-linux-x64
+            asset: corvex-redops-linux-x64
           - os: macos-latest
-            asset: pentestiq-macos-arm64
+            asset: corvex-redops-macos-arm64
           - os: windows-latest
-            asset: pentestiq-windows-x64.exe
+            asset: corvex-redops-windows-x64.exe
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
-        with: { python-version: "3.11" }
+        with:
+          python-version: "3.11"
       - name: Install (with API + reports so the binary can serve)
         run: |
           python -m pip install --upgrade pip pyinstaller
-          pip install ".[api,reports,desktop]"
+          python -m pip install ".[api,reports,desktop]"
       - name: Build onefile binary
-        run: pyinstaller --onefile --name pentestiq --collect-all pentestiq --collect-submodules fastapi --collect-submodules uvicorn packaging/pyinstaller_entry.py
-      - name: Smoke test (Unix)
-        if: runner.os != 'Windows'
-        run: ./dist/pentestiq version
-      - name: Smoke test (Windows)
-        if: runner.os == 'Windows'
-        run: .\dist\pentestiq.exe version
-      - name: Rename asset (Unix)
-        if: runner.os != 'Windows'
-        run: mv dist/pentestiq "dist/${{ matrix.asset }}"
-      - name: Rename asset (Windows)
-        if: runner.os == 'Windows'
-        run: Rename-Item dist/pentestiq.exe "${{ matrix.asset }}"
-      - uses: actions/upload-artifact@v4
+        run: pyinstaller --onefile --name corvex-redops --collect-all pentestiq --collect-submodules fastapi --collect-submodules uvicorn packaging/pyinstaller_entry.py
+      - name: Name the asset and check it prints exactly the package version
+        shell: python
+        env:
+          ASSET: ${{ matrix.asset }}
+          EXPECTED: Corvex-RedOps v${{ needs.version.outputs.version }}
+        run: |
+          import os, subprocess, sys
+          built = os.path.join("dist", "corvex-redops.exe" if os.name == "nt" else "corvex-redops")
+          asset = os.path.join("dist", os.environ["ASSET"])
+          os.replace(built, asset)
+          r = subprocess.run([os.path.abspath(asset), "version"], capture_output=True, text=True, timeout=300)
+          got = r.stdout.strip()
+          print(f"{asset} version -> {got!r} (exit {r.returncode})")
+          if r.returncode != 0 or got != os.environ["EXPECTED"]:
+              sys.exit(f"expected {os.environ['EXPECTED']!r}, got {got!r}; stderr: {r.stderr.strip()[-500:]}")
+      - uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.asset }}
           path: dist/${{ matrix.asset }}
-      - name: Attach to release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+
+  release:
+    name: Checksums + release (publishes only on a tag push)
+    needs: [version, wheels, binaries]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
         with:
-          files: dist/${{ matrix.asset }}
+          path: dist
+          merge-multiple: true
+      - name: SHA256SUMS over the wheel, the sdist and the three binaries
+        working-directory: dist
+        shell: bash
+        run: |
+          v="${{ needs.version.outputs.version }}"
+          files=(*-"$v"-py3-none-any.whl *-"$v".tar.gz corvex-redops-linux-x64 corvex-redops-macos-arm64 corvex-redops-windows-x64.exe)
+          for f in "${files[@]}"; do test -f "$f" || { echo "::error::missing $f"; exit 1; }; done
+          sha256sum "${files[@]}" > SHA256SUMS
+          cat SHA256SUMS
+          sha256sum --check SHA256SUMS
+          test -s release-notes.md
+      - name: Publish the release
+        if: github.event_name == 'push' && github.ref_type == 'tag'
+        working-directory: dist
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          v="${{ needs.version.outputs.version }}"
+          gh release create "$TAG" --repo "${{ github.repository }}" --verify-tag \
+            --title "Corvex-RedOps $TAG" --notes-file release-notes.md \
+            *-"$v"-py3-none-any.whl *-"$v".tar.gz \
+            corvex-redops-linux-x64 corvex-redops-macos-arm64 corvex-redops-windows-x64.exe SHA256SUMS
+      - name: Dry run — nothing published
+        if: ${{ !(github.event_name == 'push' && github.ref_type == 'tag') }}
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+        run: |
+          echo "Dry run ($EVENT on $REF): built and checked everything; published nothing."

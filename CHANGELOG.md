@@ -3,127 +3,97 @@
 All notable changes to Corvex-RedOps are documented here. This project adheres to
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased] — Phase 2 (SaaS)
+## [Unreleased]
+
+Nothing yet.
+
+## [0.2.0] — 2026-11-18
+
+Corvex-RedOps grows from a command-line scanner into a self-hosted security-testing platform
+with a web console and REST API, and this release hardens sign-in, deployment and
+portability. Community includes 10 scan types and one workspace; Premium adds the rest (see
+the editions table in the README).
 
 ### Added
-- **Exploit-availability intelligence + validation planner** — a new open,
-  offline-first oracle (`pentestiq/intel/exploit_intel.py`) answers the question
-  KEV and EPSS don't: *does a public exploit actually exist for this CVE, and how
-  mature is it?* It ingests **Exploit-DB**'s `files_exploits.csv` (the dataset
-  `searchsploit` ships; the `codes` column maps EDB-IDs → CVEs) plus a
-  framework-module index, from a bundled seed (air-gapped) up to the full catalogue
-  via `ExploitIntel.refresh()`. Each CVE resolves to a maturity tier — *weaponized*
-  (framework module) › *public-exploit* (verified Exploit-DB entry) › *poc* ›
-  *none* — recorded as metadata only, never exploit code. This becomes a
-  **transparent factor in the Corvex-RedOps Risk Priority** score (shown with its
-  multiplier alongside CVSS/EPSS/KEV), and drives a new **`ValidationPlanner`**
-  (`pentestiq/validators/planner.py`) that classifies every finding honestly:
-  **safe** (auto-confirmed by a non-destructive validator), **active** (gated
-  behind `allow_active`), **manual** (no safe validator but a public exploit
-  exists — cited for authorized manual validation), or **none** (detection-only).
-  No scanner detects or validates *everything*; this makes exactly what the engine
-  can and cannot auto-confirm explicit in the deliverable. Surfaced end-to-end: an
-  **Exploitability & Validation Coverage** section in every report format (HTML,
-  Markdown, **PDF, DOCX**); a console **"EXPLOIT" badge** on prioritized findings
-  plus a **Settings → Threat intelligence** card to refresh Exploit-DB / KEV on
-  demand; API `GET /intel/exploit` + admin `POST /intel/exploit/refresh`; a safe
-  `DirectoryListingValidator`; and an optional interval-based auto-refresh of the
-  KEV + Exploit-DB datasets at startup (`intel_refresh_days`, off by default,
-  offline-safe).
-- **Insecure-deserialization signal check** (native active-checks engine, OWASP
-  **A08:2021** / CWE-502). Passively flags language-native serialized objects
-  crossing the client boundary — Java (`rO0AB…`), PHP (`O:…`/`a:…`), .NET
-  `__VIEWSTATE`, Python pickle — in responses and `Set-Cookie` values; upgrades
-  the A08 deserialization row from *partial* to a real check.
-- **Shadow / undocumented API-endpoint check** (native active-checks engine,
-  OWASP **API9:2023** Improper Inventory Management). Diffs the crawled/discovered
-  endpoints against the documented OpenAPI surface (id-segments templatized) and
-  flags endpoints that are reachable but absent from the spec — the shadow/zombie
-  routes attackers find. Read-only GET probes; upgrades the API9 shadow-endpoint
-  row from *partial* to a real check.
-- **Edition / tier gating (open-core)** — a central `pentestiq/edition.py`
-  (Community → Pro → Team → Enterprise) resolved from `CORVEX_EDITION` or the
-  repo-root `EDITION` file. The full security-testing engine stays free
-  (Community); premium tiers unlock the managed/scale surface — multi-tenant &
-  team management, client portal, ticketing, white-label, continuous scheduling,
-  exposure alerting (CTEM), SSO/SAML, distributed workers and managed hosting.
-  Gated API routes return **HTTP 402** below their tier; `GET /edition` reports the
-  edition, per-feature availability and limits. (Phase 2 Increment 6 — plan
-  enforcement; billing integration still to come.)
-- **Unrestricted file-upload check** (native active-checks engine, OWASP
-  A05:2021 / CWE-434). Authenticated and `allow_active`-gated: uploads inert
-  dangerous-type payloads (php/phtml/jsp/svg/html) and confirms acceptance plus
-  retrievability/execution via a served read-back (CRITICAL when a web shell is
-  served back executable). New OWASP-catalog row; maps to CWE-434.
-- **Mass-assignment / property-injection check** (native active-checks engine,
-  OWASP API3:2023 BOPLA — write side). Authenticated and `allow_active`-gated: it
-  injects server-controlled fields (`role`, `is_admin`, `verified`, `balance`) into a
-  write to the authenticated identity's **own** object and confirms real privilege
-  escalation via a **pre/post read-back diff** (high confidence) or a write-response
-  echo (medium) — the business-logic class generic DAST/VA scanners structurally
-  cannot find. Complements the read-side excessive-data-exposure check; findings map
-  to CWE-915 and flow through the normal dedup / risk / report pipeline.
+- **Web console and REST API.** Run and follow scans live (pause, resume, stop), triage
+  findings, export reports. Interactive API docs at `/docs`.
+- **Ten Community scan types:** web, REST/API, infrastructure, WordPress, mobile apps
+  (APK/IPA), dependencies (with a CycloneDX SBOM), source code, secrets, proxy-history
+  import, and imported scan results (SARIF and common scanner formats; SARIF export).
+- **Built-in active checks and injection fuzzing** for the OWASP Top 10 and API Top 10:
+  broken object- and function-level authorization, token weaknesses, mass assignment,
+  unrestricted file upload, undocumented API endpoints, insecure-deserialization signals,
+  and more. An attack-surface crawler, and out-of-band detection with a self-hostable
+  callback server.
+- **Prioritization:** EPSS and CISA KEV, exploit-availability intelligence (metadata only,
+  never exploit code), and a validation planner that shows which findings were confirmed
+  automatically and which need manual validation. SLA tracking and service-banner to CVE
+  matching.
+- **Asset inventory and external attack-surface discovery**, with exposure scoring and
+  posture trends.
+- **MITRE ATT&CK mapping, an attack-path graph and safe control validation.**
+- **Reports** in HTML, Markdown, PDF and DOCX, with an executive summary, compliance mapping
+  (OWASP, PCI-DSS, ISO 27001, MITRE ATT&CK) and exploitability and validation coverage.
+- **Deep Scan core:** capture and HAR import for passive analysis.
+- **An optional local AI layer** (self-hosted) and a self-learning false-positive model.
+- **Editions.** Community and Premium, set with `CORVEX_EDITION` or an `EDITION` file;
+  Premium-only routes answer HTTP 402 in Community. **Community includes one workspace:** a
+  second one is refused (HTTP 403 `workspace_limit`; `corvex init-tenant` exits 1).
+  Installs that already have more keep working.
+- **Installers** for Linux, macOS and Windows (`install.sh`, `install.ps1`): Docker with a
+  native fallback, `--update` / `--down`, and updates from the console.
+- **Accounts:** session sign-in, per-workspace API keys, four built-in roles, self-service
+  password change, and `corvex reset-password` for recovery.
 
-### Added
-- **One-command installer** (`install.sh`) — detects the Linux distribution (apt/dnf/pacman/zypper), installs all prerequisites (Docker Engine, Docker Compose, git/curl/openssl), generates secrets, and deploys the full SaaS stack (Corvex-RedOps + mobile-analysis engine). Idempotent; `--port` / `--update` / `--down` options.
+### Security
+- **No default credentials.** The first-run admin gets a random one-time password (the
+  installer shows it once and never leaves it on disk) that must be changed at the first
+  sign-in. A pinned `CORVEX_ADMIN_PASSWORD` shorter than 12 characters stops the console at
+  first boot.
+- **Every new password is at least 12 characters.** Existing shorter passwords still sign
+  in.
+- Passwords are hashed with PBKDF2-HMAC-SHA256 at 600,000 iterations and upgraded at the
+  next sign-in.
+- Sessions end when a password is changed or reset; roles are read from the database on
+  every request.
+- Self-service registration is closed by default (`CORVEX_ALLOW_REGISTRATION=1` opens it).
+- **Sign-in throttling with no account lockout:** limits per username and address and per
+  address (IPv6 by /64), counted before the password check so a burst of parallel requests
+  can't get past them, and a per-username slowdown above 50 wrong passwords an hour that
+  doesn't hold up other requests.
+- **Reverse proxies:** only trusted proxies (`--trusted-proxy`, `CORVEX_TRUSTED_PROXIES`,
+  never `*`) may set the client address. Warnings when a trusted proxy is set while the
+  console isn't on loopback, and when every client appears to share one address.
+- Helper services listen on 127.0.0.1 only; `--listen` / `-Listen` choose the console's
+  address, with a warning when it is reachable over plain HTTP.
+- **Uploaded archives:** path traversal and symlink escapes are rejected, and an archive
+  whose files are all rejected is reported as an error instead of scanning as empty.
 
+### Fixes
+- The account database runs SQLite in WAL mode, and the checks made on every signed-in
+  request no longer wait behind sign-in writes.
+- Scans stop at exactly their time budget, measured on a monotonic clock. The default
+  budget is 4 hours (it was 15 minutes, which stopped scans early).
+- Archive uploads on macOS and Windows no longer scan as empty.
+- On Windows, a session issued just before a password change now ends with it.
+- Text files and tool output are read as UTF-8 on every platform.
+- Console: severity bars, the posture-trend chart, light-theme readability and discovery
+  status messages.
+- Installers: the macOS summary, Python detection on Windows, starting Docker on update, a
+  port clash on re-run, and quieter output.
 
-### Added
-- **Hardening module** — CIS-style gap analysis: audits **sshd_config** (root login,
-  password auth, empty passwords, SSHv1, weak ciphers/MACs, X11, MaxAuthTries, idle
-  timeout), **sysctl** (ASLR, ip_forward, ICMP redirects, SYN cookies, rp_filter), and
-  ingests **Lynis reports** (warnings/suggestions/hardening_index). Native. **This
-  completes all nine asset modules of the original vision.**
-- **Firewall module (nipper-class)** — audits firewall rulesets (**iptables-save** and
-  **Cisco ASA** access-lists): flags default-allow policies, **any-to-any permits**,
-  dangerous services (Telnet/RDP/SMB/DB/…) exposed to any source, all-ports-from-any,
-  rules **shadowed** by an earlier any-any permit, and missing explicit deny. Native.
-  Eight asset modules now.
-- **Network device module** — Cisco IOS-style **config audit**: flags Telnet, default/RW
-  SNMP communities, `enable password` vs `secret`, type-7 passwords, missing
-  `service password-encryption`, cleartext HTTP management, small-servers/finger, and
-  missing AAA/logging/NTP. Native (no device access). Configs upload through the console
-  (type selector); `POST /engagements/upload` now takes an `asset_type`. Seven modules now.
-- **Desktop module** — static analysis of uploaded binaries (PE/ELF/Mach-O): a
-  **secrets scanner** (AWS/Google/Slack keys, private keys, JWTs, hardcoded
-  credentials, cleartext http:// URLs) and a **binary-hardening** check (NX, PIE/ASLR,
-  stack canary, RELRO, DEP, CFG) via lief. Native — no external CLI. Six modules now.
-  Uploaded through the same console button (`.exe`/`.dmg`/`.msi`/… auto-typed).
-- **APK/IPA upload in the console** — `POST /engagements/upload` (multipart) plus an
-  "Upload & scan" button; the server saves the app and runs it through the mobile-analysis engine.
-  No file paths for the user. Deployment compose (`deploy/docker-compose.yml`) runs
-  Corvex-RedOps + the mobile-analysis engine together; see docs/DEPLOYMENT.md.
-- **Mobile module** — APK/IPA static analysis via the **mobile-analysis engine** (code analysis, manifest
-  issues, dangerous permissions, hardcoded secrets, certificate analysis) with
-  CWE / OWASP-Mobile / MASVS references. Asset auto-typing for `.apk`/`.ipa`
-  (and `.exe`/`.dmg`/… for desktop). Five asset modules now ship.
+### Platforms
+- Linux, macOS and Windows; CI tests Python 3.10, 3.11 and 3.12 on all three.
+- SQLite 3.24 or newer, including Enterprise Linux 9's 3.34 (tested in CI). The console
+  refuses to start on an older SQLite and names the version it found.
+- Single-file binaries for Linux x64, macOS arm64 and Windows x64, published with
+  SHA256SUMS. They aren't code-signed yet; INSTALL.md explains what that means.
 
-
-### Added
-- **Reporting at scale** — **PDF and DOCX** report export (reportlab / python-docx),
-  a **compliance mapping** view (OWASP Top 10 / PCI-DSS / ISO 27001 / MITRE ATT&CK)
-  in every report and via `GET /engagements/{id}/compliance`, and **per-tenant
-  white-label branding** (company name, accent color, footer) via `GET/PUT /settings`.
-  `GET /engagements/{id}/report?format=html|md|pdf|docx`.
-- **Scheduling & continuous scanning** — recurring engagements on an interval, with
-  finding **diffing between runs** (new / fixed / persisting) and **notifications**
-  (Slack-compatible / generic webhooks). In-process scheduler (no external broker);
-  `POST /schedules`, `/schedules/{id}/run-now`, `/schedules/{id}/diff`, `/schedules/{id}/runs`.
-- **Auth, multi-tenancy & RBAC** — user register/login (PBKDF2-hashed passwords),
-  HMAC-signed session tokens, per-tenant **API keys** (hashed, shown once), and
-  roles (viewer/member/admin/owner) enforced on every endpoint. `pentestiq init-tenant`
-  bootstraps a tenant + owner. Auth via `Authorization: Bearer` or `X-API-Key`.
-- **Web console** — a self-contained dashboard served at `/` by `pentestiq serve`:
-  create engagements, run scans (live status polling), view findings with a severity
-  chart and attack chains, and open reports. Vanilla JS, no build step.
-- **REST API** (FastAPI) over the engine — `pentestiq serve`, or
-  `uvicorn pentestiq.api.app:app`. Endpoints: create/list/get engagement, run
-  (background with status), findings, report (HTML/Markdown), health. Auto docs at `/docs`.
-- **Persistence layer** — `EngagementStore` with a SQLite backend (Postgres-swappable);
-  engagements survive restarts.
-- **Tenancy scaffolding** — every record scoped to a tenant via the `X-API-Key` header.
-- Engine: programmatic entry points (`build_from_dict`, `run_from_dict`, `execute`).
-- See [docs/PHASE2_ROADMAP.md](docs/PHASE2_ROADMAP.md) for the SaaS plan.
+### Docs
+- INSTALL.md with steps per OS, network exposure, reverse proxies, the data directory and
+  backups (keep the data on a local disk; back up with SQLite's backup API).
+- README: the editions table, and the CI status badge in place of a fixed test count.
+- A manual QA guide and an architecture guide.
 
 ## [0.1.0] — 2026-08-31
 
@@ -155,4 +125,6 @@ First open-source release. End-to-end VAPT pipeline: **scope → scan → normal
 - Safe-mode and scope enforcement are enabled by scaffolding but default to a
   permissive `warn` mode; set `enforcement: block` to hard-enforce.
 
+[Unreleased]: https://github.com/sajid-infosec/corvex-redops/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/sajid-infosec/corvex-redops/releases/tag/v0.2.0
 [0.1.0]: https://github.com/sajid-infosec/Corvex-RedOps/releases/tag/v0.1.0

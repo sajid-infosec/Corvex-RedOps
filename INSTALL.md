@@ -14,19 +14,46 @@ Pick one.
 ---
 
 ## A. Prebuilt binary
-No Python, no Docker. Download your OS's single-file executable from the
+No Python, no Docker. Download your OS's single-file executable **and `SHA256SUMS`** from the
 [Releases page](https://github.com/sajid-infosec/Corvex-RedOps/releases).
 
-**Linux / macOS**
+| OS | File |
+|---|---|
+| Linux (x64) | `corvex-redops-linux-x64` |
+| macOS (Apple Silicon) | `corvex-redops-macos-arm64` |
+| Windows (x64) | `corvex-redops-windows-x64.exe` |
+
+**1. Check the download against `SHA256SUMS`** (both files in the same folder). Each command
+prints `OK` only if the file is exactly the one the release published:
 ```bash
-chmod +x pentestiq-linux-x64        # or pentestiq-macos-arm64
-./pentestiq-linux-x64 serve          # console at http://localhost:8080
+grep ' corvex-redops-linux-x64$' SHA256SUMS | sha256sum -c -           # Linux
+grep ' corvex-redops-macos-arm64$' SHA256SUMS | shasum -a 256 -c -     # macOS
+```
+```powershell
+# Windows (PowerShell)
+$want = ((Select-String -Path SHA256SUMS -Pattern ' corvex-redops-windows-x64.exe$').Line -split '\s+')[0]
+$got  = (Get-FileHash .\corvex-redops-windows-x64.exe -Algorithm SHA256).Hash.ToLower()
+if ($got -eq $want) { "OK" } else { "MISMATCH - don't run it" }
 ```
 
-**Windows (PowerShell)**
-```powershell
-.\pentestiq-windows-x64.exe serve
+**2. Run it**
+```bash
+chmod +x corvex-redops-linux-x64        # or corvex-redops-macos-arm64
+./corvex-redops-linux-x64 serve          # console at http://localhost:8080
 ```
+```powershell
+.\corvex-redops-windows-x64.exe serve
+```
+
+**The binaries aren't code-signed yet** (no developer certificate, no notarization), so the
+operating system warns the first time:
+
+- **macOS:** Gatekeeper blocks the first open ("cannot be opened because Apple cannot check it
+  for malicious software"). Once the checksum matches, allow it either by removing the download
+  flag, `xattr -d com.apple.quarantine corvex-redops-macos-arm64`, or after the first blocked
+  attempt in **System Settings → Privacy & Security → Open Anyway**.
+- **Windows:** SmartScreen warns "Windows protected your PC". Once the checksum matches, choose
+  **More info → Run anyway**.
 
 ---
 
