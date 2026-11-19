@@ -29,8 +29,8 @@ pentestiq modules   # infra, web, wordpress, api
 
 ```bash
 cd lab && docker compose up -d && cd ..
-#  Juice Shop -> http://localhost:3000
-#  DVWA       -> http://localhost:8080
+#  practice web app    -> http://localhost:3000
+#  second practice app -> http://localhost:8080
 ```
 
 ## 5. Write a scope file
@@ -43,7 +43,7 @@ engagement:
   authorized_by: "self (isolated lab)"
 scope:
   in_scope:
-    - web=http://localhost:3000        # Juice Shop
+    - web=http://localhost:3000        # practice web app
     - infra=127.0.0.1                  # local host
   allowed_actions: [discover, assess, validate_safe]
 safe_mode: true

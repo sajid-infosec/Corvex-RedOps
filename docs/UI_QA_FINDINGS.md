@@ -33,7 +33,7 @@ looked hung).
   in a `finally`. (`api/static/index.html`)
 
 ### B3 — [Medium] Brand leak: old "PentestIQ" name on a user-facing surface
-Dynamic-kit "PURPOSE" column showed "PentestIQ — …", sourced from the Frida script
+Dynamic-kit "PURPOSE" column showed "PentestIQ — …", sourced from the dynamic-instrumentation script
 header comments.
 - **Fix (shipped):** rewrote the brand in `kit/frida/{crypto-hooks,root-jailbreak-bypass,
   ssl-pinning-bypass,webview-inspect}.js` + `kit/frida/README.md`. `grep -rn PentestIQ`

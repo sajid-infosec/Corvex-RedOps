@@ -1,4 +1,4 @@
 # lab/
 
 Docker/Vagrant/Terraform blueprints for intentionally-vulnerable ranges
-(Juice Shop, DVWA, vulnerable WordPress, vuln API). ISOLATED NETWORKS ONLY.
+(two practice web apps, a vulnerable WordPress, a vulnerable API). ISOLATED NETWORKS ONLY.

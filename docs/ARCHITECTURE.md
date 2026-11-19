@@ -144,7 +144,7 @@ downstream (dedupe, scoring, reporting) reads it.
 | **Web application** | Crawl, active/passive scan, OWASP Top 10 | Injection/auth/access-control validation w/ evidence | DAST web-scanning engine, template-based scanning engine, web-server scanning engine, SQL-injection engine (gated), content-discovery engine |
 | **WordPress** | Core/plugin/theme CVE + user enum + config audit | Known-vuln + weak-cred validation | WordPress scanning engine, WordPress vuln templates |
 | **API (REST/GraphQL/SOAP)** | Spec-driven discovery, OWASP API Top 10 | BOLA/BFLA/auth/injection validation | DAST API scan, schemathesis, template-based scanning engine, custom |
-| **Mobile (APK & IPA)** | Static analysis, secrets, permissions, MASVS map | Dynamic checks where device/emulator available | mobile-analysis engine, apktool, jadx, SAST engine (mobile rules) |
+| **Mobile (APK & IPA)** | Static analysis, secrets, permissions, MASVS map | Dynamic checks where device/emulator available | mobile-analysis engine, decompilers, SAST engine (mobile rules) |
 | **Desktop (Win/macOS/Linux)** | Binary/dependency analysis, config/secret exposure | Local privesc & misconfig validation | custom analyzers, dependency scanners, YARA |
 | **Network devices** | Config ingestion, firmware/CVE checks | Default-cred / exposure validation | custom parsers, template-based scanning engine, CVE feeds |
 | **Firewall / config audit** *(nipper-class)* | Policy analysis vs. benchmarks | Shadow/permissive-rule detection & scoring | custom rule engine, config parsers |
@@ -152,7 +152,7 @@ downstream (dedupe, scoring, reporting) reads it.
 
 ### 5.1 Lab Automation (`lab/`)
 Docker/Vagrant/Terraform blueprints that stand up intentionally-vulnerable
-targets (e.g., DVWA, Juice Shop, a deliberately-vulnerable server VM, a vulnerable WP, a vuln
+targets (e.g., deliberately vulnerable practice web apps, a deliberately-vulnerable server VM, a vulnerable WP, a vuln
 API) for testing Corvex-RedOps itself, demos, and training. **Isolated networks
 only.**
 
@@ -186,7 +186,7 @@ See [LEGAL_AND_ETHICS.md](LEGAL_AND_ETHICS.md).
 | Engine / API | **Python** (FastAPI) | Dominant in security tooling; huge library ecosystem; fast to build |
 | Job orchestration | Celery/RQ + Redis (or Temporal later) | Async, parallel, rate-limited scanning |
 | Data | PostgreSQL + object storage | Relational findings model + evidence blobs |
-| CLI | Python (Typer/Click) | First client; matches practitioner workflow |
+| CLI | Python | First client; matches practitioner workflow |
 | Tool execution | Containerized runners (Docker) | Isolate/pin each tool; reproducible |
 | SaaS frontend (phase 2) | React/Next.js + Tailwind | Modern console; fast iteration |
 | AI reporting | Pluggable LLM (hosted API or self-host) | Narrative generation; keep provider swappable |

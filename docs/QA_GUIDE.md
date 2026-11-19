@@ -149,8 +149,8 @@ Expected for `vsftpd 2.3.4`: **CRITICAL — Outdated vsftpd 2.3.4** (CVE-2011-25
 ## 8. Web / API (optional, live target)
 
 Point the **Web** template at a deliberately vulnerable app you host locally, e.g.
-[OWASP Juice Shop](https://github.com/juice-shop/juice-shop) (`docker run -p 3000:3000
-bkimminich/juice-shop`) or DVWA. Expect crawl → OWASP checks → injection findings
+a deliberately vulnerable practice app (`docker run -p 3000:3000
+bkimminich/juice-shop`). Expect crawl → OWASP checks → injection findings
 (reflected XSS, SQLi) with **safe validation** flipping confirmed ones to *validated*.
 
 > Only scan targets you own or are authorized to test.

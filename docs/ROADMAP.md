@@ -32,7 +32,7 @@ over breadth: a few asset modules that work *well* beat nine that half-work.
 **In (v0.1):** engine + scope/safety + async jobs; normalized findings model;
 integrations for port & service discovery, template-based scanning, VM or DAST web scanning, and WordPress scanning; web + infra modules
 (WordPress + API in beta); safe-mode validation for a couple of finding classes;
-Markdown/HTML report + basic AI narrative; CLI; lab (Juice Shop + DVWA + a vuln
+Markdown/HTML report + basic AI narrative; CLI; lab (practice apps + a vuln
 WP); docs.
 
 **Deferred (post-v0.1):** mobile (APK/IPA), desktop apps, network-device &
@@ -47,7 +47,7 @@ advanced AI reporting, PDF/DOCX polish. (These are sequenced in "Beyond Week 8".
 - Finalize stack, repo conventions, license decision (Business Plan §10).
 - Scaffold engine: config loader, logging, plugin/module interface.
 - Define the **normalized findings model** (schema + storage, PostgreSQL).
-- Stand up the `lab/` with one target (OWASP Juice Shop) via Docker.
+- Stand up the `lab/` with one target (a deliberately vulnerable practice app) via Docker.
 - **Milestone:** engine boots; empty workflow runs against a lab target and logs.
 
 ### Week 2 — Scope, Safety & Job Engine

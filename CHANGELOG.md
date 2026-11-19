@@ -8,6 +8,7 @@ All notable changes to Corvex-RedOps are documented here. This project adheres t
 ### Fixes
 - The per-username sign-in slowdown no longer resets at the top of each hour.
 - Docs: the single-file binary's console is at http://127.0.0.1:8000, not 8080.
+- Docs and console: generic names for bundled engines and practice targets; the Deep Scan payload-fuzzing tab is now labelled "Fuzzer".
 
 ## [0.2.0] — 2026-11-18
 
@@ -104,7 +105,7 @@ First open-source release. End-to-end VAPT pipeline: **scope → scan → normal
 
 ### Added
 - **Engine**: config loader, structured logging, module interface + registry,
-  concurrent workflow runner, Typer CLI (`run`, `modules`, `version`).
+  concurrent workflow runner, CLI (`run`, `modules`, `version`).
 - **Normalized findings model** with cross-tool deduplication and provenance.
 - **Safety & ops core**: ScopeManager, SafeModeGovernor (safe-mode default;
   intrusive/exploit require explicit opt-in), append-only JSONL audit trail,
@@ -118,7 +119,7 @@ First open-source release. End-to-end VAPT pipeline: **scope → scan → normal
 - **Reporting engine**: client-ready HTML + Markdown reports + engagement JSON,
   with a pluggable AI-narrative hook that degrades to a data-driven summary.
 - **Explicit asset typing** in scope files (`wordpress=`, `api=`, …).
-- Lab (`docker compose`: Juice Shop + DVWA), example scopes, 66 tests.
+- Lab (`docker compose`: two deliberately vulnerable practice apps), example scopes, 66 tests.
 - CI workflow provided at `docs/github-actions-ci.yml` — copy to `.github/workflows/ci.yml` to enable GitHub Actions (runs pytest on 3.10–3.12).
 
 ### Notes

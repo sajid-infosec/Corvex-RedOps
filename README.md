@@ -124,7 +124,7 @@ It ships as **both** a free, self-hostable open-source engine **and** a multi-te
 - **One normalized findings model** across every tool and asset type — deduplicate, correlate, and risk-score once.
 - **10 Community scan types** covering the app-layer attack surface; **Premium adds 8** advanced scan types (see [Asset Coverage](#-asset-coverage)).
 - **Proxy-history XML import** — turn a captured proxy/history export into a ready-to-run engagement: every captured endpoint, parameter and bearer-token identity is extracted and fed straight to the active engine (a 90 MB history parses in ~1s).
-- **Attack-surface Deep Scan** — ingest a HAR capture and passively map the site tree, parameter/reflection catalog, exposed secrets and tokens, and auth/session reconstruction — every finding normalized into the one findings model (Community). The interactive **Deep Scan operator** workspace — capture proxy with **live intercept** (Forward/Drop), **Repeater**, **Intruder**, authenticated-session replay and WinRM credentialed audit — is **Premium** (see [Editions](#-editions--community-vs-premium)).
+- **Attack-surface Deep Scan** — ingest a HAR capture and passively map the site tree, parameter/reflection catalog, exposed secrets and tokens, and auth/session reconstruction — every finding normalized into the one findings model (Community). The interactive **Deep Scan operator** workspace — capture proxy with **live intercept** (Forward/Drop), **Repeater**, **Fuzzer**, authenticated-session replay and WinRM credentialed audit — is **Premium** (see [Editions](#-editions--community-vs-premium)).
 - **Safe exploit validation** — non-destructive reflected-XSS and boolean-based SQLi confirmation that flips findings from *detected* to *validated* (with evidence) or dismisses false positives.
 - **Risk scoring (0–100)** blending severity, CVSS, confidence, and validation state.
 - **Threat-informed prioritization — Corvex-RedOps Risk Priority (PRP)** — blends CVSS with **FIRST EPSS** (exploit probability) and **CISA KEV** (known-exploited, incl. ransomware) into one transparent 0–100 score, with the SLA state for every finding. This is the exploit-aware ranking enterprise VM suites charge for and keep opaque behind proprietary scores — here **explainable, free, and offline-capable** (bundled KEV seed; live refresh from CISA/FIRST). See [`pentestiq/intel/`](pentestiq/intel/).
@@ -196,7 +196,7 @@ Edition is resolved from the `CORVEX_EDITION` environment variable (or a repo-ro
 | Reporting (HTML / PDF / DOCX / MD) · REST API · web console · 4 built-in roles · audit trail | ✅ | ✅ |
 | Local-AI layer (self-hosted, optional) · capture/HAR import for passive analysis | ✅ | ✅ |
 | Workspaces | 1 | unlimited |
-| **Deep Scan operator** — capture proxy, live intercept (Forward / Drop), **Repeater**, **Intruder**, authenticated-session replay, WinRM credentialed audit | — | ✅ |
+| **Deep Scan operator** — capture proxy, live intercept (Forward / Drop), **Repeater**, **Fuzzer**, authenticated-session replay, WinRM credentialed audit | — | ✅ |
 | **Dark-web & exposure intelligence (DRP)** — breach / credential / stealer-log / ransomware-leak / typosquat monitoring | — | ✅ |
 | **Team & RBAC** — multi-tenant workspaces · team management · fine-grained custom roles | — | ✅ |
 | **PTaaS workflow** — remediation projects · ticketing (Jira / ServiceNow / Slack / webhook) · client portal | — | ✅ |
@@ -205,7 +205,7 @@ Edition is resolved from the `CORVEX_EDITION` environment variable (or a repo-ro
 
 ### Premium capabilities in depth
 
-- **Deep Scan operator suite** — an interception-proxy workspace that turns a capture into an interactive assessment: a **capture proxy** with **live intercept** (hold a request in-flight, edit it, then Forward or Drop), a **Repeater** to resend any in-scope request, an **Intruder** fuzzer with `§`-marked payload positions, **authenticated-session** replay (token/form/macro login with CSRF handling), and a read-only **WinRM credentialed Windows audit** (EOL OS, SMBv1, missing-patch findings). Every active send is double-gated by the engagement scope **and** a sender allow-list.
+- **Deep Scan operator suite** — an interception-proxy workspace that turns a capture into an interactive assessment: a **capture proxy** with **live intercept** (hold a request in-flight, edit it, then Forward or Drop), a **Repeater** to resend any in-scope request, a **Fuzzer** with `§`-marked payload positions, **authenticated-session** replay (token/form/macro login with CSRF handling), and a read-only **WinRM credentialed Windows audit** (EOL OS, SMBv1, missing-patch findings). Every active send is double-gated by the engagement scope **and** a sender allow-list.
 - **Dark-web & exposure intelligence (DRP)** — continuous monitoring across breach dumps, stealer logs, paste sites, ransomware leak sites and typosquat domains, correlated to your assets and unified into the inventory and KEV-aware risk model. Observe-only and metadata-only (credential **values** are never stored).
 - **Fine-grained RBAC** — beyond the four built-in roles, define **custom roles** over a permission catalog (`engagements:read/write`, `scan:run`, `reports:export`, `deepscan:operate`, `darkweb:read`, `users:manage`, …), enforced per-endpoint with a **no-privilege-escalation** guard.
 
@@ -493,7 +493,7 @@ behaves exactly as its deterministic engine.
 - **In-console copilot** — ask questions about a scan ("what's the most urgent risk
   and why?") grounded strictly in the engagement's findings.
 - **Self-learning confidence model** — analysts mark findings **confirmed** or
-  **false-positive** in the console; a lightweight scikit-learn model retrains on
+  **false-positive** in the console; a lightweight local machine-learning model retrains on
   that feedback and scores how likely future findings are real. Genuine
   self-improvement, no GPU required.
 

@@ -68,7 +68,7 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
   Every scan upserts its targets/discovered hosts into the registry (dedupe by
   identifier). *Accept:* run a scan → assets appear with source=engagement.
 - **A3 · External discovery (EASM) module** — `M`
-  Orchestrate **the subdomain-enumeration engine** (subdomains), **httpx** (live hosts + tech),
+  Orchestrate **the subdomain-enumeration engine** (subdomains), **the live-host probe** (live hosts + tech),
   **tls/cert-transparency** (crt.sh) to expand a root domain into its external
   surface. New asset_type `attack_surface`; feed results into the registry.
   *Accept:* give `example.com` → get subdomains, live URLs, open ports, tech stack.
@@ -98,7 +98,7 @@ prioritization, local private AI, self-hostable, $0. The backlog below turns the
   Wrap **the SAST (code) engine** (open-source rulesets) for source-code findings; map to CWE/OWASP; feed PRP.
   *Accept:* scan a repo → SAST findings in the same model + report.
 - **C3t · Secret scanning** — `S`
-  **Gitleaks/trufflehog**-class secret detection over uploaded code. *Accept:* planted secret is found.
+  pattern-and-entropy secret detection over uploaded code. *Accept:* planted secret is found.
 
 ### EPIC D — MITRE ATT&CK + Attack-Path Graph  *(closes C3; automated-pentest / attack-path-analysis class)*  ✅ shipped
 - **D1 · ATT&CK mapping** — `S`
