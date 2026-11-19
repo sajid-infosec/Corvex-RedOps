@@ -5,6 +5,10 @@ All notable changes to Corvex-RedOps are documented here. This project adheres t
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.2.1] — 2026-11-19
+
 ### Fixes
 - The per-username sign-in slowdown no longer resets at the top of each hour.
 - Docs: the single-file binary's console is at http://127.0.0.1:8000, not 8080.
@@ -128,6 +132,7 @@ First open-source release. End-to-end VAPT pipeline: **scope → scan → normal
 - Safe-mode and scope enforcement are enabled by scaffolding but default to a
   permissive `warn` mode; set `enforcement: block` to hard-enforce.
 
-[Unreleased]: https://github.com/sajid-infosec/corvex-redops/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/sajid-infosec/corvex-redops/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/sajid-infosec/corvex-redops/releases/tag/v0.2.1
 [0.2.0]: https://github.com/sajid-infosec/corvex-redops/releases/tag/v0.2.0
 [0.1.0]: https://github.com/sajid-infosec/Corvex-RedOps/releases/tag/v0.1.0

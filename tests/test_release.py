@@ -1,5 +1,5 @@
-"""v0.2.0 release prep: one version everywhere; the CHANGELOG section that becomes the release
-body; the release workflow's tag/version check, asset names, checksums and dry-run guard; the
+"""Release prep (0.2.0, now 0.2.1): one version everywhere; the CHANGELOG sections that become the
+release body; the release workflow's tag/version check, asset names, checksums and dry-run guard; the
 docs that tell users how to check and open the binaries."""
 import os
 import re
@@ -23,7 +23,7 @@ def _pyproject_version():
 
 
 def test_package_versions_match():
-    assert _pyproject_version() == pentestiq.__version__ == "0.2.0"
+    assert _pyproject_version() == pentestiq.__version__ == "0.2.1"
 
 
 def test_cli_prints_exactly_the_version_the_smoke_test_expects():
@@ -35,6 +35,7 @@ def test_cli_prints_exactly_the_version_the_smoke_test_expects():
 # ---- CHANGELOG ---------------------------------------------------------------
 CHANGELOG = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 SECTION = re.search(r"^## \[0\.2\.0\] — (\d{4}-\d{2}-\d{2})\n(.*?)(?=^## \[)", CHANGELOG, re.S | re.M)
+SECTION_0_2_1 = re.search(r"^## \[0\.2\.1\] — (\d{4}-\d{2}-\d{2})\n(.*?)(?=^## \[)", CHANGELOG, re.S | re.M)
 
 # third-party tools and competitors that user-facing text must not name (standards and data
 # sources such as OWASP, CWE, SARIF, CycloneDX, EPSS, CISA KEV, MITRE ATT&CK are fine)
@@ -55,14 +56,22 @@ def test_changelog_has_a_dated_0_2_0_section_with_the_groups():
         assert must in body, must
 
 
-def test_unreleased_lists_the_fixes_since_0_2_0():
+def test_unreleased_is_empty_and_sits_above_0_2_1():
     unreleased = re.search(r"^## \[Unreleased\]\n(.*?)(?=^## \[)", CHANGELOG, re.S | re.M).group(1)
-    assert re.findall(r"^### (\w+)", unreleased, re.M) == ["Fixes"]
-    assert "- The per-username sign-in slowdown no longer resets at the top of each hour." in unreleased
-    assert "- Docs: the single-file binary's console is at http://127.0.0.1:8000, not 8080." in unreleased
+    assert unreleased.strip() == "Nothing yet."
+    assert re.findall(r"^## \[([^\]]+)\]", CHANGELOG, re.M)[:3] == ["Unreleased", "0.2.1", "0.2.0"]
+    assert "[0.2.1]: https://github.com/sajid-infosec/corvex-redops/releases/tag/v0.2.1" in CHANGELOG
+
+
+def test_0_2_1_lists_the_fixes_since_0_2_0():
+    assert SECTION_0_2_1, "no ## [0.2.1] — YYYY-MM-DD section"
+    fixes = SECTION_0_2_1.group(2)
+    assert re.findall(r"^### (\w+)", fixes, re.M) == ["Fixes"]
+    assert "- The per-username sign-in slowdown no longer resets at the top of each hour." in fixes
+    assert "- Docs: the single-file binary's console is at http://127.0.0.1:8000, not 8080." in fixes
     assert ("- Docs: generic names for bundled engines and practice targets; Premium's Deep Scan "
-            'payload-fuzzing tab is now labelled "Fuzzer".') in unreleased
-    hits = [n for n in NAMES if re.search(rf"(?<![\w-]){re.escape(n)}(?![\w-])", unreleased, re.I)]
+            'payload-fuzzing tab is now labelled "Fuzzer".') in fixes
+    hits = [n for n in NAMES if re.search(rf"(?<![\w-]){re.escape(n)}(?![\w-])", fixes, re.I)]
     assert hits == []
 
 
@@ -89,13 +98,14 @@ def _run_version_step(tmp_path, ref_type, ref_name):
 
 
 def test_tag_must_match_the_package_version(tmp_path):
-    r, out = _run_version_step(tmp_path / "ok", "tag", "v0.2.0")
+    r, out = _run_version_step(tmp_path / "ok", "tag", "v0.2.1")
     assert r.returncode == 0, r.stderr
-    assert out.read_text() == "version=0.2.0\n"
+    assert out.read_text() == "version=0.2.1\n"
     notes = (tmp_path / "ok" / "release-notes.md").read_text(encoding="utf-8")
-    assert notes.startswith("Corvex-RedOps grows") and "### Security" in notes and "## [0.1.0]" not in notes
-    r, _ = _run_version_step(tmp_path / "bad", "tag", "v0.2.1")
-    assert r.returncode != 0 and "expected v0.2.0" in r.stderr
+    assert notes.startswith("### Fixes\n- The per-username sign-in slowdown") and notes.count("\n- ") == 3
+    assert "## [" not in notes and "Nothing yet." not in notes and "Corvex-RedOps grows" not in notes
+    r, _ = _run_version_step(tmp_path / "bad", "tag", "v0.2.0")
+    assert r.returncode != 0 and "expected v0.2.1" in r.stderr
     r, _ = _run_version_step(tmp_path / "dispatch", "branch", "main")       # a dry run on a branch
     assert r.returncode == 0, r.stderr
 
@@ -124,8 +134,8 @@ def test_assets_checksums_and_the_dry_run_guard():
 
 @pytest.mark.skipif(sys.platform == "win32", reason="runs the release job's bash step (ubuntu in CI)")
 def test_checksum_step_covers_the_five_files_and_refuses_a_missing_one(tmp_path):
-    script = _step("release", "SHA256SUMS").get("run").replace("${{ needs.version.outputs.version }}", "0.2.0")
-    files = ["pentestiq-0.2.0-py3-none-any.whl", "pentestiq-0.2.0.tar.gz", *ASSETS]
+    script = _step("release", "SHA256SUMS").get("run").replace("${{ needs.version.outputs.version }}", "0.2.1")
+    files = ["pentestiq-0.2.1-py3-none-any.whl", "pentestiq-0.2.1.tar.gz", *ASSETS]
     for f in files:
         (tmp_path / f).write_bytes(f.encode())
     (tmp_path / "release-notes.md").write_text("notes\n")
