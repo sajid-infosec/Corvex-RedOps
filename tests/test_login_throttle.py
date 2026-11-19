@@ -77,3 +77,34 @@ def test_unknown_usernames_are_throttled_the_same_way(tmp_path, monkeypatch):
     for user in ("corvex", "ghost-user"):
         seen[user] = [_login(c, user, "wrong-guess-1").status_code for _ in range(6)]
     assert seen["corvex"] == seen["ghost-user"] == [401] * 5 + [429]
+
+
+# ---- the 15-minute windows are fixed, on purpose --------------------------------------------
+# The username+IP and IP counters restart at :00, :15, :30 and :45 (not a sliding 15 minutes),
+# so a burst that straddles a boundary gets a fresh count. The per-username hourly slowdown
+# still carries over (tests/test_login_slowdown.py). The throttle clock is pinned by the
+# `throttle_clock` fixture in tests/conftest.py.
+
+def test_the_throttle_clock_is_pinned_mid_window_and_mid_hour(throttle_clock):
+    assert throttle_clock.t % 900 == 450                  # 7.5 minutes into a 15-minute window
+    assert throttle_clock.t % 3600 == 37 * 60 + 30        # hh:37:30
+
+
+def test_a_sixth_failure_in_the_same_window_is_refused_until_it_ends(tmp_path, monkeypatch, throttle_clock):
+    app = _app(tmp_path, monkeypatch)
+    c = _from(app, "192.0.2.60")
+    hour = throttle_clock.t - throttle_clock.t % 3600
+    throttle_clock.t = hour + 14 * 60 + 59                # hh:14:59
+    assert [_login(c, "corvex", "wrong-guess-1").status_code for _ in range(5)] == [401] * 5
+    r = _login(c, "corvex", "wrong-guess-1")
+    assert r.status_code == 429 and r.headers["Retry-After"] == "1"   # the window ends at hh:15:00
+
+
+def test_five_failures_at_14_59_then_one_at_15_00_is_not_refused(tmp_path, monkeypatch, throttle_clock):
+    app = _app(tmp_path, monkeypatch)
+    c = _from(app, "192.0.2.61")
+    hour = throttle_clock.t - throttle_clock.t % 3600
+    throttle_clock.t = hour + 14 * 60 + 59                # hh:14:59
+    assert [_login(c, "corvex", "wrong-guess-1").status_code for _ in range(5)] == [401] * 5
+    throttle_clock.t = hour + 15 * 60                     # hh:15:00, a new window
+    assert _login(c, "corvex", "wrong-guess-1").status_code == 401   # counted afresh, not refused

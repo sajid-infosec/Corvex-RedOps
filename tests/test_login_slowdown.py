@@ -1,10 +1,8 @@
 """Per-username slowdown: above 50 wrong passwords in the last hour for one username (all
 addresses), every attempt waits 1.5 s (awaited) before it is answered; never a lock;
-unknown usernames behave the same. The async sleep is stubbed, and the service's clock is
-frozen (mid-hour unless a test moves it), so no test depends on the time it runs."""
-import time as _time
-
-import pytest
+unknown usernames behave the same. The async sleep is stubbed, and the throttle's clock is
+pinned by the `throttle_clock` fixture (tests/conftest.py: hh:37:30 unless a test moves it),
+so no test depends on the time it runs."""
 from fastapi.testclient import TestClient
 
 import pentestiq.auth.service as svc
@@ -15,28 +13,7 @@ from pentestiq.storage import SqliteAuthStore, SqliteEngagementStore
 
 
 HOUR = 3600
-TOP = 1_800_000_000 - 1_800_000_000 % HOUR          # hh:00:00
-MID = TOP + HOUR // 2                                # hh:30:00
-
-
-class _Clock:
-    """Stands in for the `time` module inside pentestiq.auth.service only."""
-
-    def __init__(self, t):
-        self.t = t
-
-    def time(self):
-        return float(self.t)
-
-    def __getattr__(self, name):
-        return getattr(_time, name)
-
-
-@pytest.fixture(autouse=True)
-def clock(monkeypatch):
-    c = _Clock(MID)
-    monkeypatch.setattr(svc, "time", c)
-    return c
+TOP = 1_800_000_000 - 1_800_000_000 % HOUR          # hh:00:00, the hour the throttle_clock fixture pins
 
 
 def _app(tmp_path, monkeypatch):
@@ -101,49 +78,49 @@ def _one(app, user="corvex"):
     assert c.post("/auth/login", json={"username": user, "password": "wrong-guess-1"}).status_code == 401
 
 
-def test_the_slowdown_carries_over_the_top_of_the_hour(tmp_path, monkeypatch, clock):
+def test_the_slowdown_carries_over_the_top_of_the_hour(tmp_path, monkeypatch, throttle_clock):
     app, _ = _app(tmp_path, monkeypatch)
     calls = _sleeps(monkeypatch)
-    clock.t = TOP + HOUR - 10                             # hh:59:50
+    throttle_clock.t = TOP + HOUR - 10                    # hh:59:50
     _spray(app, "corvex", 51)                             # slowed from here on
     n = len(calls)
-    clock.t = TOP + HOUR + 5                              # hh+1:00:05, a new hourly window
+    throttle_clock.t = TOP + HOUR + 5                     # hh+1:00:05, a new hourly window
     _one(app)
     assert len(calls) == n + 1 and calls[-1] == 1.5       # still slowed (it used to reset here)
 
 
-def test_fifty_before_the_top_of_the_hour_is_still_not_above_fifty(tmp_path, monkeypatch, clock):
+def test_fifty_before_the_top_of_the_hour_is_still_not_above_fifty(tmp_path, monkeypatch, throttle_clock):
     # same threshold as within one hour: 50 earlier failures are not "above 50"
     app, _ = _app(tmp_path, monkeypatch)
     calls = _sleeps(monkeypatch)
-    clock.t = TOP + HOUR - 10
+    throttle_clock.t = TOP + HOUR - 10
     _spray(app, "corvex", 50)
-    clock.t = TOP + HOUR + 5
+    throttle_clock.t = TOP + HOUR + 5
     _one(app)
     assert calls == []
 
 
-def test_the_slowdown_ends_once_the_failures_are_two_hours_old(tmp_path, monkeypatch, clock):
+def test_the_slowdown_ends_once_the_failures_are_two_hours_old(tmp_path, monkeypatch, throttle_clock):
     app, _ = _app(tmp_path, monkeypatch)
     calls = _sleeps(monkeypatch)
     _spray(app, "corvex", 51)
     _one(app)
     assert calls and calls[-1] == 1.5                     # slowed now
     n = len(calls)
-    clock.t = MID + 2 * HOUR
+    throttle_clock.t += 2 * HOUR
     _one(app)
     assert len(calls) == n                                # two hours later: not slowed
 
 
-def test_the_previous_hour_fades_out_across_the_new_one(tmp_path, monkeypatch, clock):
+def test_the_previous_hour_fades_out_across_the_new_one(tmp_path, monkeypatch, throttle_clock):
     # 60 failures late in one hour count less the further the next hour gets: estimate =
     # 60 * (3600 - elapsed) / 3600 + this window's attempts (this one included)
     calls = _sleeps(monkeypatch)
     for elapsed, slowed in ((60, True), (600, False)):     # 59 + 1 - 1 = 59 > 50; 50 + 1 - 1 = 50
         app, _ = _app(tmp_path / str(elapsed), monkeypatch)
-        clock.t = TOP + HOUR - 10
+        throttle_clock.t = TOP + HOUR - 10
         _spray(app, "corvex", 60)
         n = len(calls)
-        clock.t = TOP + HOUR + elapsed
+        throttle_clock.t = TOP + HOUR + elapsed
         _one(app)
         assert (len(calls) == n + 1) is slowed, elapsed
