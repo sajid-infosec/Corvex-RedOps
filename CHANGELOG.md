@@ -8,7 +8,7 @@ All notable changes to Corvex-RedOps are documented here. This project adheres t
 ### Fixes
 - The per-username sign-in slowdown no longer resets at the top of each hour.
 - Docs: the single-file binary's console is at http://127.0.0.1:8000, not 8080.
-- Docs and console: generic names for bundled engines and practice targets; the Deep Scan payload-fuzzing tab is now labelled "Fuzzer".
+- Docs: generic names for bundled engines and practice targets; Premium's Deep Scan payload-fuzzing tab is now labelled "Fuzzer".
 
 ## [0.2.0] — 2026-11-18
 

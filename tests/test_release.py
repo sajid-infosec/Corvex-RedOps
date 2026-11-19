@@ -60,6 +60,8 @@ def test_unreleased_lists_the_fixes_since_0_2_0():
     assert re.findall(r"^### (\w+)", unreleased, re.M) == ["Fixes"]
     assert "- The per-username sign-in slowdown no longer resets at the top of each hour." in unreleased
     assert "- Docs: the single-file binary's console is at http://127.0.0.1:8000, not 8080." in unreleased
+    assert ("- Docs: generic names for bundled engines and practice targets; Premium's Deep Scan "
+            'payload-fuzzing tab is now labelled "Fuzzer".') in unreleased
     hits = [n for n in NAMES if re.search(rf"(?<![\w-]){re.escape(n)}(?![\w-])", unreleased, re.I)]
     assert hits == []
 
