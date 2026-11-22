@@ -708,9 +708,10 @@ corvex serve                                        # http://127.0.0.1:8000
 ```
 
 Then open **http://127.0.0.1:8000** for the console, or **/docs** for interactive API docs.
-On first run Corvex-RedOps creates an **`admin`** workspace and prints a **one-time random password to
-the server log**. Copy it from the console output to sign in; the console then asks you to choose
-your own password before anything else. To bootstrap the workspace + owner from the CLI instead (on an
+A fresh install has **no admin and no password**. In a terminal, `corvex serve` prints the address
+and a **one-time setup code**; open the console, enter the code, choose the admin username (default
+`admin`) and password (12+ characters, twice) on the **Set up Corvex-RedOps** page, then sign in.
+`corvex setup-code` prints a new code (the code is never written to a log). To bootstrap the workspace + owner from the CLI instead (on an
 install with no workspace yet; Community includes one workspace, Premium any number):
 
 ```bash
@@ -734,7 +735,7 @@ cd Corvex-RedOps
 sudo ./install.sh
 ```
 
-That's it — open **http://localhost:8080** and sign in as **`corvex`** with the **one-time password the installer printed at the end** (it is shown only once and removed from `deploy/.env` as soon as the console is up). The console asks you to choose your own password at the first sign-in, then you can start scanning. Lost it before signing in? `corvex reset-password corvex` prints a new one-time password.
+That's it — the installer's last lines are the console address and a **one-time setup code**. Open the address, enter the code on the **Set up Corvex-RedOps** page, choose the admin username and password, and sign in. Need a new code? `sudo docker exec -it pentestiq-api corvex setup-code`. For a headless install, export `CORVEX_ADMIN_PASSWORD` (12+ characters; `CORVEX_ADMIN_USER` optional) before running the installer: the admin is created directly and there is no setup page.
 
 > Works on Debian / Ubuntu / Kali / Parrot / Mint, RHEL / CentOS / Fedora / Rocky /
 > AlmaLinux, Arch / Manjaro, and openSUSE / SLES. Idempotent — safe to re-run.
@@ -823,10 +824,9 @@ Full deployment guide, environment variables, and production notes (Postgres, sc
 
 The console is the fastest way to run a full assessment — no CLI needed.
 
-**1 · Sign in.** Open `http://localhost:8080`. After an `install.sh` deployment sign in as
-**`corvex`** with the one-time password the installer printed; you'll be asked to choose your own
-password straight away. (Run the app directly instead of via the installer and it generates a
-strong random one-time admin password, printed once to the server log.) Community includes one
+**1 · Set up and sign in.** Open `http://localhost:8080`. On a fresh install the console shows
+**Set up Corvex-RedOps**: enter the one-time setup code the installer printed (or
+`corvex setup-code` prints), choose the admin username and password, then sign in. Community includes one
 workspace, this one. With Premium, add separate, isolated workspaces by running `corvex init-tenant` on
 the server. Self-service **Create workspace** on the sign-in screen is off by default and appears only
 when `CORVEX_ALLOW_REGISTRATION=1` and the plan allows another workspace.
@@ -1116,7 +1116,7 @@ Permissions are keyed like `engagements:write`, `scan:run`, `reports:export`, `d
 | Variable | Default | Purpose |
 |---|---|---|
 | `CORVEX_ADMIN_USER` | `admin` | Username for the first-run admin account |
-| `CORVEX_ADMIN_PASSWORD` | random, one-time | First-run admin password, read only on the first boot. `install.sh` generates a random one, shows it once and blanks it in `deploy/.env` once the console is up; without it the app generates one and logs it once. Either way the admin must change it at the first sign-in. A pinned one must be at least 12 characters, or the console refuses to start. No password ships with Corvex-RedOps |
+| `CORVEX_ADMIN_PASSWORD` | *(unset)* | Headless installs: creates the first admin directly at the first boot, with no setup page (the admin must change it at the first sign-in unless `CORVEX_ADMIN_FORCE_CHANGE=0`). Must be at least 12 characters, or the console refuses to start. Unset (the default): no admin is created and the first visitor sets one up with a one-time setup code. No password ships with Corvex-RedOps, and none is generated |
 | `CORVEX_TRUSTED_PROXIES` | `127.0.0.1,::1` | Reverse proxies (IPs/CIDRs, comma-separated) whose `X-Forwarded-For` sets the client address used for sign-in throttling. Set by `install.sh --trusted-proxy`. `*` is refused at start-up |
 | `CORVEX_ALLOW_REGISTRATION` | `0` | `1` opens self-service registration (`POST /auth/register` and the console's **Create workspace**). Closed by default so a reachable console can't be used to create workspaces; add them with `corvex init-tenant` |
 | `CORVEX_ADMIN_FORCE_CHANGE` | `1` | Set `0` only for automated provisioning where a secrets manager owns the first-run admin password: the admin is then not forced to change it. The old public default `corvex` is always forced |

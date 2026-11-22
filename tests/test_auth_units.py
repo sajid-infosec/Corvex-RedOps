@@ -29,20 +29,17 @@ def test_role_ranking():
     assert Role.ADMIN.satisfies(Role.ADMIN)
 
 
-def test_first_boot_generates_random_admin_password(tmp_path, monkeypatch):
-    """No password is shipped: first boot generates a random one (or uses env)."""
+def test_first_boot_creates_no_admin_and_no_password(tmp_path, monkeypatch):
+    """No password is shipped or generated: without CORVEX_ADMIN_PASSWORD the first boot
+    creates nothing and the install waits for the first-visit setup."""
     from pentestiq.auth.service import AuthService
     from pentestiq.storage import SqliteAuthStore
     monkeypatch.delenv("CORVEX_ADMIN_PASSWORD", raising=False)
     monkeypatch.delenv("CORVEX_ADMIN_USER", raising=False)
     a = AuthService(SqliteAuthStore(str(tmp_path / "a.db")), secret_key="s", session_ttl=3600)
     res = a.ensure_default_admin()
-    assert res["created"] and res["user"] == "admin"
-    assert res["password"] and len(res["password"]) >= 12       # generated, strong
-    assert a.login("admin", res["password"])                    # the generated pw works
-    # idempotent + never re-emits the password
-    res2 = a.ensure_default_admin()
-    assert res2["created"] is False and res2["password"] is None
+    assert res["created"] is False and res["password"] is None and res["setup_required"] is True
+    assert a.store.count_users() == 0 and a.setup_required()
 
 
 def test_first_boot_honours_env_credentials(tmp_path, monkeypatch):
@@ -57,18 +54,16 @@ def test_first_boot_honours_env_credentials(tmp_path, monkeypatch):
     assert a.login("root", "pinned-secret-123")
 
 
-def test_first_boot_empty_env_password_still_generates(tmp_path, monkeypatch):
-    """Compose passes CORVEX_ADMIN_PASSWORD="" when unset: treat it as unset,
-    generate a password and return it so it is printed once (never a silent,
-    unrecoverable random password)."""
+def test_first_boot_empty_env_password_counts_as_unset(tmp_path, monkeypatch):
+    """Compose passes CORVEX_ADMIN_PASSWORD="" when unset: treated as unset — setup pending,
+    nothing created, nothing generated."""
     from pentestiq.auth.service import AuthService
     from pentestiq.storage import SqliteAuthStore
     monkeypatch.setenv("CORVEX_ADMIN_PASSWORD", "")
     monkeypatch.delenv("CORVEX_ADMIN_USER", raising=False)
     a = AuthService(SqliteAuthStore(str(tmp_path / "a.db")), secret_key="s", session_ttl=3600)
     res = a.ensure_default_admin()
-    assert res["created"] and res["password"]
-    assert a.login("admin", res["password"])
+    assert res["created"] is False and res["password"] is None and a.setup_required()
 
 
 def test_reset_password_recovers_login(tmp_path):

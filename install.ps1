@@ -261,6 +261,10 @@ function Write-Env {
   if (-not $script:AiOn -or -not (Get-EnvValue "PENTESTIQ_AI")) { Set-EnvValue "PENTESTIQ_AI" "0" }
   if (-not (Get-EnvValue "OLLAMA_URL")) { Set-EnvValue "OLLAMA_URL" "http://ollama:11434" }
   if (-not (Get-EnvValue "PENTESTIQ_AI_MODEL")) { Set-EnvValue "PENTESTIQ_AI_MODEL" $AiModel }
+  if ($env:CORVEX_ADMIN_PASSWORD) {     # headless: the admin is created at the console's first start
+    Set-EnvValue "CORVEX_ADMIN_USER" $(if ($env:CORVEX_ADMIN_USER) { $env:CORVEX_ADMIN_USER } else { "admin" })
+    Set-EnvValue "CORVEX_ADMIN_PASSWORD" $env:CORVEX_ADMIN_PASSWORD
+  }
 }
 
 function Wait-Healthy {
@@ -291,11 +295,9 @@ function Show-Summary([string]$Engine) {
     Write-Host "  Note: the console now listens on 127.0.0.1 only (it was on $script:ListenChangedFrom); re-run with -Listen 0.0.0.0 to keep network access." -ForegroundColor Yellow
   }
   if ($Engine -eq "docker") {
-    Write-Host "  Sign in as admin - one-time password in the console log:"
-    Write-Host "    docker logs pentestiq-api 2>&1 | Select-String -Context 0,3 'first-run admin'"
     Write-Host "  Manage:  logs -> docker compose --env-file `"$EnvFile`" -f `"$ComposeFile`" logs -f"
   } else {
-    Write-Host "  Sign in as admin - one-time password in $NativeLog on first run."
+    Write-Host "  Manage:  logs -> $NativeLog"
   }
   Write-Host "           stop -> .\install.ps1 -Down"
   if (-not (Test-Loopback $Listen)) {
@@ -305,7 +307,36 @@ function Show-Summary([string]$Engine) {
     Write-Host "  [!] Trusted proxy $($TrustedProxy -join ',') is set while the console listens on ${Listen}: clients could choose their own X-Forwarded-For. Use -Listen 127.0.0.1." -ForegroundColor Yellow
   }
   Write-Host "============================================================" -ForegroundColor Green
+  # the last lines: where to go, and the one-time setup code on a fresh install
+  $url = "http://$(Get-HealthHost):$Port"
+  $codeCmd  = if ($Engine -eq "docker") { "docker exec -it pentestiq-api corvex setup-code" } else { "`$env:CORVEX_DATA_DIR='$NativeData'; & '$(Join-Path $NativeVenv "Scripts\corvex.exe")' setup-code" }
+  $resetCmd = if ($Engine -eq "docker") { "docker exec -it pentestiq-api corvex reset-password <user>" } else { "`$env:CORVEX_DATA_DIR='$NativeData'; & '$(Join-Path $NativeVenv "Scripts\corvex.exe")' reset-password <user>" }
   Write-Host ""
+  if ($script:SetupCode) {
+    Write-Host "  Open $url and set up the admin account with this one-time setup code:"
+    Write-Host "  Setup code : $script:SetupCode   (valid until used; a new one: $codeCmd)" -ForegroundColor Green
+  } elseif ($env:CORVEX_ADMIN_PASSWORD) {
+    Write-Host "  Sign in at $url as $(if ($env:CORVEX_ADMIN_USER) { $env:CORVEX_ADMIN_USER } else { 'admin' }) with the CORVEX_ADMIN_PASSWORD you set."
+  } else {
+    Write-Host "  Sign in at $url with your admin account."
+    Write-Host "  Forgotten the password? $resetCmd"
+  }
+}
+
+# A fresh install (no admin yet): a one-time setup code from the console, kept in memory only.
+$script:SetupCode = ""
+function Get-SetupCode([string]$Engine) {
+  try {
+    $st = Invoke-RestMethod -TimeoutSec 5 "http://$(Get-HealthHost):$Port/setup/status"
+    if (-not $st.setup_required) { return }
+  } catch { return }
+  if ($Engine -eq "docker") {
+    $out = Invoke-ComposeOutput @("exec", "-T", "pentestiq", "corvex", "setup-code", "--quiet")
+  } else {
+    $env:CORVEX_DATA_DIR = $NativeData
+    $out = @(& (Join-Path $NativeVenv "Scripts\corvex.exe") setup-code --quiet 2>$null)
+  }
+  if ($LASTEXITCODE -eq 0 -and $out) { $script:SetupCode = ("$($out | Select-Object -Last 1)").Trim() }
 }
 
 # --------------------------------------------------------------- Docker engine
@@ -536,6 +567,11 @@ function Stop-All {
   if (Test-Path $NativePid) { Info "Stopping the native console..."; Stop-NativeConsole; Ok "Native console stopped." }
 }
 
+function Complete-Docker {
+  if ($env:CORVEX_ADMIN_PASSWORD) { Set-EnvValue "CORVEX_ADMIN_PASSWORD" "" }   # the admin exists now
+  Get-SetupCode "docker"
+}
+
 # --------------------------------------------------------------- main
 if ($Down) { Stop-All; exit 0 }
 
@@ -546,19 +582,19 @@ if ($PublishMobile) { $MobilePort = $script:MobilePort }
 $NativeAiNote = "The local AI model needs Docker. To add it later: install Docker Desktop, then run .\install.ps1 -Docker -Ai"
 if ($Native -or $script:ForceNative) {
   if ($Ai) { $script:AiStatus = "skipped - $NativeAiNote" }
-  if (Deploy-Native) { Show-Summary "native"; if (-not $Ai) { Info $NativeAiNote } }
+  if (Deploy-Native) { Get-SetupCode "native"; if (-not $Ai) { Info $NativeAiNote }; Show-Summary "native" }
   exit 0
 }
 
 Select-Ai
 if ($Docker) {
-  if (Deploy-Docker) { Install-Ai; Show-Summary "docker"; exit 0 }
+  if (Deploy-Docker) { Install-Ai; Complete-Docker; Show-Summary "docker"; exit 0 }
   Die "The Docker install failed and -Docker was forced (no fallback). Nothing was left running."
 }
 
 # default: auto - try Docker, fall back to native automatically
-if (Deploy-Docker) { Install-Ai; Show-Summary "docker"; exit 0 }
+if (Deploy-Docker) { Install-Ai; Complete-Docker; Show-Summary "docker"; exit 0 }
 Warn "Docker path unavailable - installing natively instead (no Docker needed)."
 if ($script:AiOn) { $script:AiStatus = "skipped - $NativeAiNote" }
 $script:AiOn = $false
-if (Deploy-Native) { Show-Summary "native" }
+if (Deploy-Native) { Get-SetupCode "native"; Show-Summary "native" }

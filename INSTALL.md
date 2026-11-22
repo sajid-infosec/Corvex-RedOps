@@ -212,16 +212,20 @@ docker compose up -d --build         # console on 127.0.0.1:8080 (mobile-analysi
 
 ## First run
 1. Open **http://localhost:8080**.
-2. Sign in. No password ships with Corvex-RedOps. `install.sh` signs you in as **`corvex`** with a
-   random **one-time** password it prints once at the end of the install. Without the installer,
-   the app generates one for **`admin`** and prints it **once** to the API log
-   (`docker logs pentestiq-api 2>&1 | grep -A3 'first-run admin'`, or your console output for a
-   non-Docker run). Either way the console makes you choose your own password at the first
-   sign-in. Community includes one workspace, this one; with Premium, add separate workspaces with
+2. **Set up the admin.** A fresh install has no admin and no password — nothing is generated
+   and nothing is written to a log. The console shows **Set up Corvex-RedOps**: enter the
+   one-time setup code (8 characters, valid until used), the admin username (default `admin`)
+   and the password twice (12+ characters), then sign in normally. Where the code comes from:
+   the installer's last lines; `corvex serve` (and the single-file binary) in a terminal; or a
+   new one at any time with `sudo docker exec -it pentestiq-api corvex setup-code` (native:
+   `corvex setup-code`). Until setup is done every API route except setup and `/health` refuses.
+   Headless: set `CORVEX_ADMIN_PASSWORD` (and optionally `CORVEX_ADMIN_USER`) before the first
+   start and the admin is created directly, without the setup page. An install that already has
+   an admin never sees the page. Community includes one workspace, this one; with Premium, add separate workspaces with
    `corvex init-tenant` on the server (self-service **Create workspace** is off unless
    `CORVEX_ALLOW_REGISTRATION=1`).
-   Locked out? `docker exec -it pentestiq-api corvex reset-password <user>` prints a new one-time
-   password (changed again at the next sign-in).
+   Locked out? `sudo docker exec -it pentestiq-api corvex reset-password <user>` prints a new
+   one-time password (changed again at the next sign-in).
 3. Add a target (New scan) or upload an app / OpenAPI spec, then **Run scan**.
 
 ## Deep-scan backend

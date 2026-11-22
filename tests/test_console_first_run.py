@@ -21,3 +21,18 @@ def test_forced_change_overlay_and_hooks():
 
 def test_console_swaps_to_the_fresh_token_after_a_password_change():
     assert HTML.count('if(j&&j.token){TOKEN=j.token;try{localStorage.setItem("ptiq_token",TOKEN)}') == 2
+
+
+def test_first_visit_setup_page():
+    assert 'id="setup"' in HTML and "Set up Corvex-RedOps" in HTML
+    for i in ("su_code", "su_user", "su_pw", "su_pw2"):
+        assert f'for="{i}"' in HTML and f'id="{i}"' in HTML
+    assert 'id="su_user" value="admin"' in HTML                       # default username
+    for hook in ('fetch("/setup/status")', 'fetch("/setup",', "password_confirm:pw2",
+                 'd.detail.error==="setup_required"){showSetup()', "if(d.setup_required){showSetup(d);return;}"):
+        assert hook in HTML, hook
+
+
+def test_sign_in_hint_has_the_docker_reset_command_and_no_installer_password():
+    assert "sudo docker exec -it pentestiq-api corvex reset-password &lt;user&gt;" in HTML
+    assert "one-time password from the installer" not in HTML and "one-time admin password to the server log" not in HTML

@@ -25,18 +25,16 @@ python qa/make_samples.py
 corvex serve            # http://127.0.0.1:8000  (console + /docs)
 ```
 
-On first run Corvex-RedOps prints a **one-time admin password** to this terminal (the console asks for a new password at the first sign-in):
+On first run Corvex-RedOps prints the address and a **one-time setup code** to this terminal:
 
 ```
-==================================================================
-  Corvex-RedOps first-run admin created.
-    username: admin
-    password: <copy-this>   (one-time)
-==================================================================
+Set up Corvex-RedOps: open http://127.0.0.1:8000
+One-time setup code: 7KQ2MHX4   (valid until used; `corvex setup-code` prints a new one)
 ```
 
-Open **http://127.0.0.1:8000**, sign in as `admin` with that password (or set
-`export CORVEX_ADMIN_PASSWORD=…` (12+ characters) before starting to pin your own), and change it.
+Open **http://127.0.0.1:8000**, enter the code on the **Set up Corvex-RedOps** page and choose the
+admin username and password (or `export CORVEX_ADMIN_PASSWORD=…` (12+ characters) before starting
+to create the admin directly, without the setup page).
 
 `qa/samples/` now contains:
 

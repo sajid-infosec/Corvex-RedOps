@@ -1,5 +1,5 @@
-"""D8: no shipped default password. The first-run admin gets a one-time password and must
-change it at the first sign-in; until then the session opens nothing but change-password,
+"""D8: no shipped default password. A pinned first-run admin (CORVEX_ADMIN_PASSWORD) must
+change it at the first sign-in (without one, nothing is created: first-visit setup); until then the session opens nothing but change-password,
 /me and /edition. Operator resets are one-time too, and an admin still on the old shipped
 password ('corvex') is forced to change it."""
 import sqlite3
@@ -65,12 +65,11 @@ def test_one_time_password_must_be_changed_before_anything_else(tmp_path, monkey
     assert body2["password_change_required"] is False
 
 
-def test_generated_password_without_installer_is_also_one_time(tmp_path, monkeypatch):
+def test_without_a_pinned_password_nothing_is_created_or_generated(tmp_path, monkeypatch):
     c, auth = _app(tmp_path, monkeypatch, user="admin", password=None)
-    # ensure_default_admin already ran in create_app; it's idempotent and won't re-show the password
+    assert auth.store.count_users() == 0
+    assert c.get("/setup/status").json()["setup_required"] is True
     assert auth.ensure_default_admin()["password"] is None
-    uid = auth.store.get_user_auth("admin")["user_id"]
-    assert auth.password_change_required(uid) is True
 
 
 def test_force_change_opt_out_for_provisioning(tmp_path, monkeypatch):

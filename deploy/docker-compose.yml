@@ -5,9 +5,11 @@
 #   1. export MOBSF_API_KEY=$(openssl rand -hex 32)
 #   2. export PENTESTIQ_SECRET_KEY=$(openssl rand -hex 32)
 #   3. docker compose -f deploy/docker-compose.yml up -d --build
-#   4. open http://localhost:8080  (console) — sign in as the first-run admin (one-time password,
-#      printed once to the log), then Upload & scan an APK. Self-service registration is OFF
-#      unless CORVEX_ALLOW_REGISTRATION=1; add workspaces with `corvex init-tenant`.
+#   4. docker compose -f deploy/docker-compose.yml exec pentestiq corvex setup-code
+#      open http://localhost:8080 (console), enter that one-time code and create the admin, then
+#      Upload & scan an APK. (Headless: set CORVEX_ADMIN_PASSWORD to create the admin directly.)
+#      Self-service registration is OFF unless CORVEX_ALLOW_REGISTRATION=1; add workspaces
+#      with `corvex init-tenant`.
 #
 # Network exposure: only the console publishes a host port, on PENTESTIQ_LISTEN (default
 # 127.0.0.1, this host only). The mobile-analysis engine and the local AI runtime have no host
