@@ -10,12 +10,16 @@ All notable changes to Corvex-RedOps are documented here. This project adheres t
 - The native install runs the console as the unprivileged `corvex-redops` user under a systemd unit, with its own venv and its data in `/var/lib/corvex-redops` — never as root and never from the checkout.
 - The Docker image runs the console as a non-root user, pins its template engine and subdomain finder by version and SHA-256 (amd64 and arm64), and no longer copies `deploy/.env`, `data/` or a local venv into the image.
 
+### Added
+- The local AI model is installed on request: in a terminal the installer asks "Install the local AI model? About 5 GB download, needs 8 GB free memory. [y/N]" (no terminal: no AI unless `--ai`). It checks memory and disk first, skips the download when the model is already there, and prints "AI: ready" only after `/ai/status` reports the model available and the model wrote a real test narrative; otherwise it says what failed and leaves AI off. `corvex ai-check` runs the same check.
+
 ### Changed
 - The installer runs a read-only preflight (platform, free memory and disk, Docker, every host port) before changing anything. A busy port is named with the program holding it; the next free port is used when you didn't choose one. A stack that doesn't come up healthy, or an interrupted install, is taken down again.
 - Docker DNS repair is a single `docker.service` drop-in, added only when image pulls fail because Docker's built-in resolver rejects the network's DNS replies. The installer no longer changes systemd-resolved, `/etc/resolv.conf` or Docker's `daemon.json`.
 
 ### Fixes
 - The headless crawl works in the arm64 image.
+- The AI status no longer counts a different size of the same model as the configured one.
 
 ## [0.2.1] — 2026-11-19
 

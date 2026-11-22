@@ -17,7 +17,8 @@
   Force an engine or manage the stack:
     .\install.ps1 -Docker             # force Docker (no native fallback)
     .\install.ps1 -Native             # force the native (no-Docker) install
-    .\install.ps1 -Ai                 # also run the local AI model (Docker only, heavy)
+    .\install.ps1 -Ai                 # install the local AI model (Docker only; ~5 GB, 8 GB free memory)
+    .\install.ps1 -NoAi               # don't (without either, an interactive window is asked)
     .\install.ps1 -Port 9090          # console port (default 8080; the next free one if taken)
     .\install.ps1 -Listen 0.0.0.0     # reachable from the network (default 127.0.0.1, plain HTTP)
     .\install.ps1 -TrustedProxy 172.18.0.1   # a TLS reverse proxy's IP/CIDR (repeatable; never "*")
@@ -49,8 +50,11 @@ $RepoDir     = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ComposeFile = Join-Path $RepoDir "deploy\docker-compose.yml"
 $MobileFile  = Join-Path $RepoDir "deploy\docker-compose.publish-mobile.yml"
 $EnvFile     = Join-Path $RepoDir "deploy\.env"
-$AiModel     = if ($env:PENTESTIQ_AI_MODEL) { $env:PENTESTIQ_AI_MODEL } else { "qwen2.5:7b-instruct" }
-$script:AiOn = [bool]$Ai   # default OFF; -Ai opts in (Docker only)
+$AiModel     = if ($env:CORVEX_AI_MODEL) { $env:CORVEX_AI_MODEL } elseif ($env:PENTESTIQ_AI_MODEL) { $env:PENTESTIQ_AI_MODEL } else { "qwen2.5:7b-instruct" }
+$script:AiOn = $false      # decided by Select-Ai (flags, an existing AI install, or the question)
+$script:AiStatus = ""
+$AiPrompt = "Install the local AI model? About 5 GB download, needs 8 GB free memory. [y/N]"
+$AiMinMemMB = 8192
 $PortSet       = ($Port -gt 0)
 $ListenSet     = ($Listen -ne "")
 $MobilePortSet = ($MobilePort -gt 0)
@@ -228,6 +232,18 @@ function Invoke-Preflight {
   Ok "Preflight passed."
 }
 
+function Invoke-ComposeOutput([string[]]$Rest) {
+  $dc = Get-Compose
+  if (-not $dc) { $global:LASTEXITCODE = 1; return @() }
+  $a = @()
+  if ($dc.Count -gt 1) { $a += $dc[1] }
+  $a += @("--env-file", $EnvFile, "-f", $ComposeFile)
+  if ($PublishMobile) { $a += @("-f", $MobileFile) }
+  if ($script:AiOn) { $a += @("--profile", "ai") }
+  $a += $Rest
+  return @(& $dc[0] @a 2>&1 | ForEach-Object { "$_" })
+}
+
 function Write-Env {
   $dir = Split-Path -Parent $EnvFile
   if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
@@ -241,7 +257,8 @@ function Write-Env {
   Set-EnvValue "PENTESTIQ_PORT" "$Port"
   Set-EnvValue "PENTESTIQ_LISTEN" (Get-ComposeListen)
   if ($TrustedProxy.Count -gt 0 -or -not (Get-EnvValue "CORVEX_TRUSTED_PROXIES")) { Set-EnvValue "CORVEX_TRUSTED_PROXIES" (Get-TrustedList) }
-  Set-EnvValue "PENTESTIQ_AI" $(if ($script:AiOn) {"1"} else {"0"})
+  # switched on only once the model is proven (Install-Ai); switched off right away
+  if (-not $script:AiOn -or -not (Get-EnvValue "PENTESTIQ_AI")) { Set-EnvValue "PENTESTIQ_AI" "0" }
   if (-not (Get-EnvValue "OLLAMA_URL")) { Set-EnvValue "OLLAMA_URL" "http://ollama:11434" }
   if (-not (Get-EnvValue "PENTESTIQ_AI_MODEL")) { Set-EnvValue "PENTESTIQ_AI_MODEL" $AiModel }
 }
@@ -267,6 +284,9 @@ function Show-Summary([string]$Engine) {
   else { Write-Host "  Web console : http://$(Get-HealthHost):$Port   (listening on $Listen)" }
   if ($PublishMobile -and $Engine -eq "docker") { Write-Host "  Mobile engine: http://127.0.0.1:$MobilePort   (-PublishMobile)" }
   if ($Engine -eq "native") { Write-Host "  Data        : $NativeData   (log: $NativeLog)" }
+  if ($script:AiStatus -eq "ready") { Write-Host "  AI          : ready - local model $AiModel" -ForegroundColor Green }
+  elseif ($script:AiStatus) { Write-Host "  AI          : $script:AiStatus" -ForegroundColor Yellow }
+  else { Write-Host "  AI          : off (.\install.ps1 -Ai adds the local model)" -ForegroundColor DarkGray }
   if ($script:ListenChangedFrom) {
     Write-Host "  Note: the console now listens on 127.0.0.1 only (it was on $script:ListenChangedFrom); re-run with -Listen 0.0.0.0 to keep network access." -ForegroundColor Yellow
   }
@@ -330,6 +350,65 @@ function Deploy-Docker {
     Undo-Docker; return $false
   }
   return $true
+}
+
+# --------------------------------------------------------------- local AI model (Docker only)
+function Test-Interactive {
+  try { return ([Environment]::UserInteractive -and -not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected) } catch { return $false }
+}
+# -Ai / -NoAi win; an install that already runs the model keeps it; otherwise ask - only interactively.
+function Select-Ai {
+  if ($Ai) { $script:AiOn = $true; return }
+  if ($NoAi) { $script:AiOn = $false; return }
+  if ((Get-EnvValue "PENTESTIQ_AI") -eq "1") { $script:AiOn = $true; Info "Keeping the local AI model this install already runs (-NoAi turns it off)."; return }
+  if (Test-Interactive) {
+    $ans = Read-Host $AiPrompt
+    $script:AiOn = ($ans -match '^(y|yes)$')
+  } else { $script:AiOn = $false }   # CI, piped: no AI unless -Ai
+}
+function Disable-Ai([string]$why) {
+  $script:AiStatus = "not enabled - $why. Reports still work without AI."
+  Warn "AI: not enabled - $why. Reports still work without AI. Re-run with -Ai to try again."
+  Set-EnvValue "PENTESTIQ_AI" "0"
+  Invoke-Compose @("stop", "ollama")
+  $script:AiOn = $false
+  Invoke-Compose @("up", "-d", "--no-deps", "pentestiq"); Wait-Healthy | Out-Null
+}
+# Start the runtime, download the model (visible progress; skipped when present), switch AI on,
+# restart the console, then prove it: the /ai/status check plus a real narrative (corvex ai-check).
+function Install-Ai {
+  if (-not $script:AiOn) { return }
+  $mem = Get-FreeMemMB
+  if ($mem -gt 0 -and $mem -lt $AiMinMemMB) { $script:AiStatus = "skipped - only $mem MB of memory is free; the local model needs $AiMinMemMB MB"; Warn "AI: $script:AiStatus."; Set-EnvValue "PENTESTIQ_AI" "0"; $script:AiOn = $false; return }
+  $disk = Get-FreeDiskMB $env:ProgramData
+  if ($disk -gt 0 -and $disk -lt 10240) { $script:AiStatus = "skipped - only $disk MB of disk is free; the local model needs 10240 MB"; Warn "AI: $script:AiStatus."; Set-EnvValue "PENTESTIQ_AI" "0"; $script:AiOn = $false; return }
+  Info "Starting the local AI runtime..."
+  Invoke-Compose @("up", "-d", "ollama")
+  if ($LASTEXITCODE -ne 0) { Disable-Ai "the AI runtime container didn't start"; return }
+  $want = if ($AiModel -like "*:*") { $AiModel } else { "${AiModel}:latest" }
+  $present = $false
+  for ($i = 0; $i -lt 30; $i++) {
+    $list = Invoke-ComposeOutput @("exec", "-T", "ollama", "ollama", "list")
+    if ($LASTEXITCODE -eq 0) { $present = [bool]($list | Where-Object { ($_ -split '\s+')[0] -eq $want }); break }
+    Start-Sleep -Seconds 2
+  }
+  if ($present) { Ok "The model $AiModel is already downloaded - skipping the download." }
+  else {
+    Info "Downloading the model $AiModel (about 5 GB for the default model)..."
+    Invoke-Compose @("exec", "-T", "ollama", "ollama", "pull", $AiModel)
+    if ($LASTEXITCODE -ne 0) { Disable-Ai "the model $AiModel could not be downloaded"; return }
+  }
+  Set-EnvValue "PENTESTIQ_AI" "1"
+  Set-EnvValue "PENTESTIQ_AI_MODEL" $AiModel
+  Info "Switching AI on and restarting the console..."
+  Invoke-Compose @("up", "-d", "--no-deps", "pentestiq")
+  if ($LASTEXITCODE -ne 0 -or -not (Wait-Healthy)) { Disable-Ai "the console didn't come back after switching AI on"; return }
+  Info "Checking the AI end to end (status + a test narrative from the model)..."
+  $out = Invoke-ComposeOutput @("exec", "-T", "pentestiq", "corvex", "ai-check")
+  if ($LASTEXITCODE -eq 0) { $script:AiStatus = "ready"; Ok "AI: ready"; return }
+  $why = ($out | Where-Object { $_ -like "AI check failed:*" } | Select-Object -First 1)
+  if ($why) { $why = $why.Substring("AI check failed: ".Length) } else { $why = "the end-to-end check failed" }
+  Disable-Ai $why
 }
 
 # --------------------------------------------------------------- native engine (no Docker)
@@ -464,14 +543,22 @@ Invoke-Preflight
 $Port = $script:Port
 if ($PublishMobile) { $MobilePort = $script:MobilePort }
 
-if ($Native -or $script:ForceNative) { if (Deploy-Native) { Show-Summary "native" }; exit 0 }
+$NativeAiNote = "The local AI model needs Docker. To add it later: install Docker Desktop, then run .\install.ps1 -Docker -Ai"
+if ($Native -or $script:ForceNative) {
+  if ($Ai) { $script:AiStatus = "skipped - $NativeAiNote" }
+  if (Deploy-Native) { Show-Summary "native"; if (-not $Ai) { Info $NativeAiNote } }
+  exit 0
+}
 
+Select-Ai
 if ($Docker) {
-  if (Deploy-Docker) { Show-Summary "docker"; exit 0 }
+  if (Deploy-Docker) { Install-Ai; Show-Summary "docker"; exit 0 }
   Die "The Docker install failed and -Docker was forced (no fallback). Nothing was left running."
 }
 
 # default: auto - try Docker, fall back to native automatically
-if (Deploy-Docker) { Show-Summary "docker"; exit 0 }
+if (Deploy-Docker) { Install-Ai; Show-Summary "docker"; exit 0 }
 Warn "Docker path unavailable - installing natively instead (no Docker needed)."
+if ($script:AiOn) { $script:AiStatus = "skipped - $NativeAiNote" }
+$script:AiOn = $false
 if (Deploy-Native) { Show-Summary "native" }

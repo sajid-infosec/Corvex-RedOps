@@ -166,10 +166,17 @@ database, `pentestiq.db`, in the data directory: the `pentestiq-data` Docker vol
   `pentestiq.db-wal` and `pentestiq.db-shm` left beside it (an old WAL file would be replayed
   onto the restored database), then start the console.
 
-The install is **non-interactive** — no questions. The optional local AI model
-(~5 GB; needs 8+ cores / 16 GB+ RAM and Docker) is **off by default**; add
-`--ai` (sh) / `-Ai` (ps1) to deploy it. The lightweight self-learning model is
-installed either way.
+**The local AI model is on request.** In a terminal, with neither `--ai` nor `--no-ai`, the
+installer asks one question: *Install the local AI model? About 5 GB download, needs 8 GB
+free memory. [y/N]* — **y** installs it, Enter or anything else skips it. Without a terminal
+(CI, `curl … | sudo bash`) there's no question and no AI unless you pass `--ai` (`-Ai` in
+install.ps1). On yes it checks free memory and disk first (and explains if they're short),
+starts the AI runtime, downloads the model with visible progress (skipped when it's already
+there), switches AI on, restarts the console and verifies it end to end — `/ai/status`
+available and a real test narrative from the model — before printing **AI: ready**. If any
+step fails it says which, switches AI off again, and reports work as before. The local model
+needs Docker; a native install says how to add it later (`--docker --ai`). The lightweight
+self-learning model is installed either way. `corvex ai-check` re-runs the end-to-end check.
 
 ## Troubleshooting
 

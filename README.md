@@ -497,14 +497,19 @@ behaves exactly as its deterministic engine.
   that feedback and scores how likely future findings are real. Genuine
   self-improvement, no GPU required.
 
-**Enable it — the installer asks during setup:**
+**Enable it — the installer asks during setup (in a terminal):**
 
 ```
-Do you want to install / integrate AI? [y/N]
+Install the local AI model? About 5 GB download, needs 8 GB free memory. [y/N]
 ```
 
-Answer **y** and the installer starts the bundled local AI runtime, pulls the model
-(~5 GB, one-time) and turns the AI layer on; answer **n** for a lean install. You
+Answer **y** and the installer checks memory and disk, starts the bundled local AI runtime,
+downloads the model (with progress; skipped if it's already there), turns the AI layer on,
+restarts the console and proves it: `/ai/status` must report the model available **and** the
+model must write a test narrative for a sample finding. Only then does it print **AI: ready**;
+otherwise it says exactly what failed, leaves AI off, and reports keep working without it.
+Enter (or anything but y) skips it. Without a terminal (CI, a piped install) there is no
+question and no AI unless you pass `--ai`. Check it any time with `corvex ai-check`. You
 can also skip the prompt:
 
 ```bash
