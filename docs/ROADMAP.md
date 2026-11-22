@@ -14,7 +14,7 @@ over breadth: a few asset modules that work *well* beat nine that half-work.
 
 ## Success Criteria (end of Week 8)
 
-- [ ] `pentestiq run --scope scope.yaml` executes a full workflow against a lab
+- [ ] `corvex run --scope scope.yaml` executes a full workflow against a lab
       target and produces a report.
 - [ ] Findings from ≥3 tools are normalized, deduped, and risk-scored into one
       model.

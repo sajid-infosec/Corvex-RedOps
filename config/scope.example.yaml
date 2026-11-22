@@ -1,5 +1,5 @@
 # Example engagement scope file (template)
-# Copy, fill in, and pass with: pentestiq run --scope scope.yaml
+# Copy, fill in, and pass with: corvex run --scope scope.yaml
 engagement:
   name: "Example Engagement"
   authorized_by: "REQUIRED - name/email of authorizing party"

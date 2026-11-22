@@ -43,7 +43,7 @@ AFTER:   risk 95  validated       SQL Injection   ← boolean-inference evidence
 ## 3. Client-ready report
 
 ```bash
-pentestiq run -s myscope.yaml -o out/
+corvex run -s myscope.yaml -o out/
 ```
 
 Produces `out/report.html` (self-contained, styled), `out/report.md`, and

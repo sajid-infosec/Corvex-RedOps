@@ -81,8 +81,8 @@ def test_docs_say_local_disk_and_how_to_back_up():
     for name in ("README.md", "INSTALL.md"):
         t = (ROOT / name).read_text(encoding="utf-8")
         assert "**Keep the data directory on a local disk, not NFS or SMB/CIFS.**" in t, name
-        assert ".backup 'pentestiq-backup.db'" in t and ".backup(d)" in t, name
-        assert "Never copy `pentestiq.db` alone" in t and "pentestiq.db-wal" in t, name
+        assert ".backup 'corvex-redops-backup.db'" in t and ".backup(d)" in t, name
+        assert "Never copy `corvex-redops.db` alone" in t and "corvex-redops.db-wal" in t, name
     assert "local disk, not NFS or SMB/CIFS" in (ROOT / "docs/DEPLOYMENT.md").read_text(encoding="utf-8")
 
 

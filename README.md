@@ -617,7 +617,7 @@ download against `SHA256SUMS` and how to allow it.
 ### Option B — pipx / pip (cross-platform, recommended for CLI users)
 ```bash
 # isolated global CLI (Linux/macOS/Windows)
-pipx install "git+https://github.com/sajid-infosec/Corvex-RedOps.git#egg=pentestiq[all]"
+pipx install "git+https://github.com/sajid-infosec/Corvex-RedOps.git#egg=corvex-redops[all]"
 corvex --help
 ```
 Or into a virtualenv:
@@ -703,7 +703,7 @@ corvex run -s myscope.yaml -o out/
 
 ```bash
 pip install -e ".[api,reports,desktop]"
-export PENTESTIQ_SECRET_KEY=$(openssl rand -hex 32)   # so logins survive restarts
+export CORVEX_SECRET_KEY=$(openssl rand -hex 32)   # so logins survive restarts
 corvex serve                                        # http://127.0.0.1:8000
 ```
 
@@ -735,7 +735,7 @@ cd Corvex-RedOps
 sudo ./install.sh
 ```
 
-That's it — the installer's last lines are the console address and a **one-time setup code**. Open the address, enter the code on the **Set up Corvex-RedOps** page, choose the admin username and password, and sign in. Need a new code? `sudo docker exec -it pentestiq-api corvex setup-code`. For a headless install, export `CORVEX_ADMIN_PASSWORD` (12+ characters; `CORVEX_ADMIN_USER` optional) before running the installer: the admin is created directly and there is no setup page.
+That's it — the installer's last lines are the console address and a **one-time setup code**. Open the address, enter the code on the **Set up Corvex-RedOps** page, choose the admin username and password, and sign in. Need a new code? `sudo docker exec -it corvex-redops-console corvex setup-code`. For a headless install, export `CORVEX_ADMIN_PASSWORD` (12+ characters; `CORVEX_ADMIN_USER` optional) before running the installer: the admin is created directly and there is no setup page.
 
 > Works on Debian / Ubuntu / Kali / Parrot / Mint, RHEL / CentOS / Fedora / Rocky /
 > AlmaLinux, Arch / Manjaro, and openSUSE / SLES. Idempotent — safe to re-run.
@@ -765,7 +765,7 @@ peer's forwarded header is ignored and the peer address is used. To put a TLS pr
 
 - **Proxy on the host, console in Docker:** the proxy reaches the container through the
   compose network's gateway. Find it with
-  `docker network inspect deploy_default --format '{{(index .IPAM.Config 0).Gateway}}'`
+  `docker network inspect corvex-redops --format '{{(index .IPAM.Config 0).Gateway}}'`
   (e.g. `172.18.0.1`), then `sudo ./install.sh --listen 127.0.0.1 --trusted-proxy 172.18.0.1`.
   **Trust the gateway only together with `--listen 127.0.0.1`:** with the console published on
   the network, other clients can arrive through that same gateway address and set their own
@@ -784,33 +784,33 @@ peer's forwarded header is ignored and the peer address is used. To put a TLS pr
 The installer writes `CORVEX_TRUSTED_PROXIES` (loopback plus your entries) to `deploy/.env`.
 
 **Data directory and backups.** Accounts, engagements and settings live in one SQLite
-database, `pentestiq.db`, in the data directory: the `pentestiq-data` Docker volume
+database, `corvex-redops.db`, in the data directory: the `corvex-redops-data` Docker volume
 (`/app/data` in the container), `data/` in the install folder for a native install, or
 `data_dir` in the config file. Uploads and the audit log sit beside it as plain files.
 
 - **Keep the data directory on a local disk, not NFS or SMB/CIFS.** The database runs in
-  WAL mode: it keeps `pentestiq.db-wal` and `pentestiq.db-shm` next to `pentestiq.db` and
+  WAL mode: it keeps `corvex-redops.db-wal` and `corvex-redops.db-shm` next to `corvex-redops.db` and
   relies on shared memory that network filesystems don't provide safely.
 - **Back up with SQLite's backup API**, which is safe while the console runs. Native:
-  `sqlite3 data/pentestiq.db ".backup 'pentestiq-backup.db'"`. Docker:
-  `docker exec pentestiq-api python -c "import sqlite3; d = sqlite3.connect('/app/data/pentestiq-backup.db'); sqlite3.connect('/app/data/pentestiq.db').backup(d); d.close()"`,
-  then `docker cp pentestiq-api:/app/data/pentestiq-backup.db .`
-  Or stop the console and copy all three files together. **Never copy `pentestiq.db` alone
-  while the console runs:** recent changes may still be in `pentestiq.db-wal`.
-- **Restore** with the console stopped: put the backup in place as `pentestiq.db`, delete any
-  `pentestiq.db-wal` and `pentestiq.db-shm` left beside it (an old WAL file would be replayed
+  `sqlite3 data/corvex-redops.db ".backup 'corvex-redops-backup.db'"`. Docker:
+  `docker exec corvex-redops-console python -c "import sqlite3; d = sqlite3.connect('/app/data/corvex-redops-backup.db'); sqlite3.connect('/app/data/corvex-redops.db').backup(d); d.close()"`,
+  then `docker cp corvex-redops-console:/app/data/corvex-redops-backup.db .`
+  Or stop the console and copy all three files together. **Never copy `corvex-redops.db` alone
+  while the console runs:** recent changes may still be in `corvex-redops.db-wal`.
+- **Restore** with the console stopped: put the backup in place as `corvex-redops.db`, delete any
+  `corvex-redops.db-wal` and `corvex-redops.db-shm` left beside it (an old WAL file would be replayed
   onto the restored database), then start the console.
 
 | Service | Port | Purpose |
 |---|---|---|
-| `pentestiq` | 8080 | REST API + web console |
+| `console` | 8080 | REST API + web console |
 | `mobile-analysis` | 8000 | Mobile static-analysis service (managed by Corvex-RedOps) |
 
 ### Manual (if you already run Docker)
 
 ```bash
 export MOBSF_API_KEY=$(openssl rand -hex 32)
-export PENTESTIQ_SECRET_KEY=$(openssl rand -hex 32)
+export CORVEX_SECRET_KEY=$(openssl rand -hex 32)
 docker compose -f deploy/docker-compose.yml up -d --build
 ```
 
@@ -919,7 +919,7 @@ Without a prefix, the type is inferred (URLs/hosts → web, IPs/CIDRs → infra,
 | `corvex reset-password [USER] [--password P]` | Recover a console login (no USER lists users) |
 
 ```bash
-corvex run --scope engagement.yaml --config pentestiq.yaml --out reports/
+corvex run --scope engagement.yaml --config corvex.yaml --out reports/
 corvex serve --host 0.0.0.0 --port 8080
 ```
 
@@ -1120,13 +1120,13 @@ Permissions are keyed like `engagements:write`, `scan:run`, `reports:export`, `d
 | `CORVEX_TRUSTED_PROXIES` | `127.0.0.1,::1` | Reverse proxies (IPs/CIDRs, comma-separated) whose `X-Forwarded-For` sets the client address used for sign-in throttling. Set by `install.sh --trusted-proxy`. `*` is refused at start-up |
 | `CORVEX_ALLOW_REGISTRATION` | `0` | `1` opens self-service registration (`POST /auth/register` and the console's **Create workspace**). Closed by default so a reachable console can't be used to create workspaces; add them with `corvex init-tenant` |
 | `CORVEX_ADMIN_FORCE_CHANGE` | `1` | Set `0` only for automated provisioning where a secrets manager owns the first-run admin password: the admin is then not forced to change it. The old public default `corvex` is always forced |
-| `PENTESTIQ_SECRET_KEY` | *(random per run)* | Signs session tokens — **set in production** so logins survive restarts |
+| `CORVEX_SECRET_KEY` | *(random per run)* | Signs session tokens — **set in production** so logins survive restarts |
 | `MOBSF_URL` | `http://localhost:8000` | Mobile-analysis service base URL |
 | `MOBSF_API_KEY` | *(empty)* | Mobile-analysis service API key |
-| `PENTESTIQ_SCAN_TIMEOUT_S` | `14400` (4h) | Wall-clock **time budget per scan**. On reaching it, the scan finishes with the results gathered so far (a graceful partial completion, not a failure). Raise it for very large targets; override per-engagement via asset metadata `scan_timeout_s`. |
-| `PENTESTIQ_INTEL_OFFLINE` | *(unset)* | Force offline threat-intel (no EPSS/KEV network lookups) |
+| `CORVEX_SCAN_TIMEOUT_S` | `14400` (4h) | Wall-clock **time budget per scan**. On reaching it, the scan finishes with the results gathered so far (a graceful partial completion, not a failure). Raise it for very large targets; override per-engagement via asset metadata `scan_timeout_s`. |
+| `CORVEX_INTEL_OFFLINE` | *(unset)* | Force offline threat-intel (no EPSS/KEV network lookups) |
 
-**Engine config file** (optional, pass with `-c`): [`config/pentestiq.example.yaml`](config/pentestiq.example.yaml)
+**Engine config file** (optional, pass with `-c`): [`config/corvex.example.yaml`](config/corvex.example.yaml)
 
 ```yaml
 log_level: INFO             # DEBUG | INFO | WARNING | ERROR

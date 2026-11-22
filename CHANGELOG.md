@@ -19,6 +19,13 @@ All notable changes to Corvex-RedOps are documented here. This project adheres t
 - The installer runs a read-only preflight (platform, free memory and disk, Docker, every host port) before changing anything. A busy port is named with the program holding it; the next free port is used when you didn't choose one. A stack that doesn't come up healthy, or an interrupted install, is taken down again.
 - Docker DNS repair is a single `docker.service` drop-in, added only when image pulls fail because Docker's built-in resolver rejects the network's DNS replies. The installer no longer changes systemd-resolved, `/etc/resolv.conf` or Docker's `daemon.json`.
 
+- Everything you see carries the Corvex-RedOps / `corvex` name: the containers (`corvex-redops-console`, `corvex-redops-mobile`, `corvex-redops-ai`), the image `corvex-redops`, the compose project, network and volumes (`corvex-redops-data`, `corvex-redops-ai-models`), the database file (`corvex-redops.db`), the Python distribution and wheel (`corvex-redops`), and every setting (`CORVEX_*`). SARIF exports use a `corvex/` namespace (older exports still import), schedule webhooks carry their details under `corvex`, and tickets are labelled `corvex-redops`.
+
+### Upgrading
+- `install.sh --update` (and `install.ps1 -Update`) keeps your data and settings: it rewrites `deploy/.env` to the new setting names, replaces the old containers, and copies the old data and model volumes into the new ones — the old volumes are kept, and the summary says how to remove them once you've checked. The console renames the database file (with its `-wal` / `-shm`) on its first start, only if the new one doesn't exist yet. Settings under their old names are still read.
+- pip users: run `pip uninstall pentestiq` before installing `corvex-redops` (both install the same package).
+- The old command name still works for now; it says it was renamed and runs `corvex`.
+
 ### Fixes
 - The headless crawl works in the arm64 image.
 - The AI status no longer counts a different size of the same model as the configured one.

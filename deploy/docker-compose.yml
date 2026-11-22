@@ -1,66 +1,82 @@
-# Corvex-RedOps + MobSF, co-located. The Corvex-RedOps server orchestrates MobSF, which
-# performs the actual APK/IPA analysis. Users upload apps through the console —
-# no file paths, no direct MobSF access needed.
+# Corvex-RedOps console + mobile-analysis engine, co-located. The console orchestrates the
+# mobile engine, which performs the actual APK/IPA analysis. Users upload apps through the
+# console — no file paths, no direct engine access needed.
 #
 #   1. export MOBSF_API_KEY=$(openssl rand -hex 32)
-#   2. export PENTESTIQ_SECRET_KEY=$(openssl rand -hex 32)
+#   2. export CORVEX_SECRET_KEY=$(openssl rand -hex 32)
 #   3. docker compose -f deploy/docker-compose.yml up -d --build
-#   4. docker compose -f deploy/docker-compose.yml exec pentestiq corvex setup-code
+#   4. docker compose -f deploy/docker-compose.yml exec console corvex setup-code
 #      open http://localhost:8080 (console), enter that one-time code and create the admin, then
 #      Upload & scan an APK. (Headless: set CORVEX_ADMIN_PASSWORD to create the admin directly.)
 #      Self-service registration is OFF unless CORVEX_ALLOW_REGISTRATION=1; add workspaces
 #      with `corvex init-tenant`.
 #
-# Network exposure: only the console publishes a host port, on PENTESTIQ_LISTEN (default
+# Network exposure: only the console publishes a host port, on CORVEX_LISTEN (default
 # 127.0.0.1, this host only). The mobile-analysis engine and the local AI runtime have no host
 # port — the console reaches them on the compose network. To reach the mobile engine from the
 # host, add deploy/docker-compose.publish-mobile.yml (install.sh --publish-mobile). Listening on
 # 0.0.0.0 is plain HTTP on your network: put TLS in front of it.
+name: corvex-redops
+
 services:
-  mobsf:
+  mobile:
     image: opensecurity/mobile-security-framework-mobsf:latest
-    container_name: pentestiq-mobsf
+    container_name: corvex-redops-mobile
     environment:
       - MOBSF_API_KEY=${MOBSF_API_KEY:?set MOBSF_API_KEY}
-    # no host port: the console reaches it as http://mobsf:8000 (see docker-compose.publish-mobile.yml)
+    # no host port: the console reaches it as http://mobile:8000 (see docker-compose.publish-mobile.yml)
+    networks:
+      default:
+        aliases: [mobsf]          # the pre-0.3 service name
     restart: unless-stopped
 
-  pentestiq:
+  console:
     build:
       context: ..
       dockerfile: Dockerfile
-    container_name: pentestiq-api
+    image: corvex-redops:latest
+    container_name: corvex-redops-console
     depends_on:
-      - mobsf
+      - mobile
     environment:
-      - MOBSF_URL=http://mobsf:8000
+      - MOBSF_URL=http://mobile:8000
       - MOBSF_API_KEY=${MOBSF_API_KEY:?set MOBSF_API_KEY}
-      - PENTESTIQ_SECRET_KEY=${PENTESTIQ_SECRET_KEY:?set PENTESTIQ_SECRET_KEY}
-      - PENTESTIQ_AI=${PENTESTIQ_AI:-}
-      - OLLAMA_URL=${OLLAMA_URL:-http://ollama:11434}
-      - PENTESTIQ_AI_MODEL=${PENTESTIQ_AI_MODEL:-qwen2.5:7b-instruct}
+      - CORVEX_SECRET_KEY=${CORVEX_SECRET_KEY:?set CORVEX_SECRET_KEY}
+      - CORVEX_AI=${CORVEX_AI:-}
+      - OLLAMA_URL=${OLLAMA_URL:-http://ai:11434}
+      - CORVEX_AI_MODEL=${CORVEX_AI_MODEL:-qwen2.5:7b-instruct}
       - CORVEX_ADMIN_USER=${CORVEX_ADMIN_USER:-admin}
       - CORVEX_ADMIN_PASSWORD=${CORVEX_ADMIN_PASSWORD:-}
       # Reverse proxies whose X-Forwarded-For is honoured (IPs/CIDRs). Never "*" (refused at start-up).
       - CORVEX_TRUSTED_PROXIES=${CORVEX_TRUSTED_PROXIES:-127.0.0.1,::1}
     ports:
-      - "${PENTESTIQ_LISTEN:-127.0.0.1}:${PENTESTIQ_PORT:-8080}:8080"   # Corvex-RedOps API + console (install.sh --listen)
+      - "${CORVEX_LISTEN:-127.0.0.1}:${CORVEX_PORT:-8080}:8080"   # Corvex-RedOps API + console (install.sh --listen)
     volumes:
-      - pentestiq-data:/app/data
+      - data:/app/data
     restart: unless-stopped
 
-  # Optional local LLM for the AI layer. Start with:  docker compose --profile ai up -d
-  # then pull a model:  docker exec -it pentestiq-ollama ollama pull qwen2.5:7b-instruct
-  # and set PENTESTIQ_AI=1 in deploy/.env. Everything works without it.
-  ollama:
+  # Optional local AI model. install.sh asks (or --ai) and proves it works; by hand:
+  #   docker compose --profile ai up -d && docker compose exec ai ollama pull qwen2.5:7b-instruct
+  # then set CORVEX_AI=1 in deploy/.env and run `corvex ai-check` in the console. Everything
+  # works without it.
+  ai:
     image: ollama/ollama:latest
-    container_name: pentestiq-ollama
+    container_name: corvex-redops-ai
     profiles: ["ai"]
-    # no host port: the console reaches it as http://ollama:11434
+    # no host port: the console reaches it as http://ai:11434
+    networks:
+      default:
+        aliases: [ollama]         # the pre-0.3 service name (older deploy/.env files point at it)
     volumes:
-      - ollama-models:/root/.ollama
+      - ai-models:/root/.ollama
     restart: unless-stopped
+
+networks:
+  default:
+    name: corvex-redops
 
 volumes:
-  pentestiq-data:
-  ollama-models:
+  data:
+    name: corvex-redops-data
+  ai-models:
+    name: corvex-redops-ai-models

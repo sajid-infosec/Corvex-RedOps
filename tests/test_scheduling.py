@@ -90,4 +90,4 @@ def test_webhook_payload_is_slack_compatible(tmp_path):
     payload = build_payload(sch, eng, d)
     assert "text" in payload                      # Slack incoming-webhook field
     assert "SQL Injection" in payload["text"]
-    assert payload["pentestiq"]["counts"]["new"] == 1
+    assert payload["corvex"]["counts"]["new"] == 1

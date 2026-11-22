@@ -1,0 +1,172 @@
+name: installer
+
+# The installers end to end on clean runners: Docker without and with the local AI model, the
+# native install, Windows, and an upgrade from a 0.2.1-style install.
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: installer-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CHECK: python3 .github/scripts/installer-check.py
+  # the 0.2.1 release commit of this repository (the upgrade job starts from it)
+  OLD_REF: 87711a5f9c817e03bade3ee809818fc9d249908f
+
+jobs:
+  docker:
+    name: docker (no AI)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install
+        run: sudo bash install.sh --docker --listen 127.0.0.1 --no-ai 2>&1 | tee install.log; test "${PIPESTATUS[0]}" = 0
+      - name: Healthy, setup page works with the printed code, nothing on 0.0.0.0
+        run: |
+          curl -fsS http://127.0.0.1:8080/health
+          code="$($CHECK setup install.log)"
+          if sudo docker logs corvex-redops-console 2>&1 | grep -qF "$code"; then echo "setup code found in the logs"; exit 1; fi
+          $CHECK listeners 8080 8000 11434
+          sudo test -r deploy/.env && ! sudo grep -E '^PENTESTIQ_|CORVEX_ADMIN_PASSWORD=.+' deploy/.env
+      - name: Down
+        if: always()
+        run: sudo bash install.sh --down
+
+  docker-ai:
+    name: docker (--ai, tiny model)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      CORVEX_AI_MODEL: qwen2.5:0.5b
+    steps:
+      - uses: actions/checkout@v5
+      - name: Free disk space for the images and the model
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL && df -h /
+      - name: Install with AI
+        run: sudo --preserve-env=CORVEX_AI_MODEL bash install.sh --docker --listen 127.0.0.1 --ai 2>&1 | tee install.log; test "${PIPESTATUS[0]}" = 0
+      - name: AI proven end to end
+        run: |
+          grep -q "AI: ready" install.log
+          $CHECK setup install.log >/dev/null
+          tok="$($CHECK login admin ci-admin-password-123)"
+          status="$($CHECK get "$tok" /ai/status)"; echo "$status"
+          echo "$status" | python3 -c "import json,sys; s=json.load(sys.stdin); assert s['available'] and s['model_present'] and s['model']=='qwen2.5:0.5b', s"
+          sudo docker exec corvex-redops-console corvex ai-check
+      - name: A re-run skips the download
+        run: |
+          sudo --preserve-env=CORVEX_AI_MODEL bash install.sh --docker --listen 127.0.0.1 --ai 2>&1 | tee rerun.log
+          grep -q "already downloaded — skipping the download" rerun.log && grep -q "AI: ready" rerun.log
+      - name: Down
+        if: always()
+        run: sudo bash install.sh --down
+
+  native:
+    name: native (unprivileged service, data outside the checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install
+        run: sudo bash install.sh --native --listen 127.0.0.1 --no-ai 2>&1 | tee install.log; test "${PIPESTATUS[0]}" = 0
+      - name: Not root, data and venv outside the checkout
+        run: |
+          pid="$(systemctl show -p MainPID --value corvex-redops.service)"; test "$pid" -gt 0
+          user="$(ps -o user= -p "$pid" | tr -d ' ')"; echo "console runs as $user"; test "$user" != root
+          sudo cat /proc/"$pid"/cmdline | tr '\0' ' '; echo
+          ! sudo cat /proc/"$pid"/cmdline | tr '\0' ' ' | grep -qF "$GITHUB_WORKSPACE"
+          data="$(sudo grep '^CORVEX_DATA_DIR=' /etc/corvex-redops/corvex.env | cut -d= -f2-)"; echo "data: $data"
+          case "$data" in "$GITHUB_WORKSPACE"*) echo "data is in the checkout"; exit 1;; esac
+          $CHECK setup install.log >/dev/null
+          sudo test -f "$data/corvex-redops.db"
+          test -z "$(git status --porcelain --ignored -- . ':!install.log')" || { git status --porcelain --ignored; exit 1; }
+          $CHECK listeners 8080
+      - name: Down
+        if: always()
+        run: sudo bash install.sh --down
+
+  windows:
+    name: windows (install.ps1, native)
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install
+        shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File .\install.ps1 -Native -NoAi
+      - name: Console healthy, setup page shown
+        shell: pwsh
+        run: |
+          $h = Invoke-RestMethod http://127.0.0.1:8080/health; $h
+          if ($h.status -ne "ok") { exit 1 }
+          $s = Invoke-RestMethod http://127.0.0.1:8080/setup/status; if (-not $s.setup_required) { exit 1 }
+      - name: Down
+        if: always()
+        shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File .\install.ps1 -Down
+
+  upgrade:
+    name: upgrade from 0.2.1 (data and settings carry over)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Free disk space for two image builds
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc && df -h /
+      - name: A 0.2.1 install with an account, an engagement and old-style settings
+        run: |
+          new="$(git rev-parse HEAD)"; echo "NEW_REF=$new" >> "$GITHUB_ENV"
+          git checkout -q "$OLD_REF"
+          mkdir -p deploy
+          printf '%s\n' "MOBSF_API_KEY=ci-mobile-key" "PENTESTIQ_SECRET_KEY=ci-secret-0123456789abcdef" \
+            "PENTESTIQ_PORT=8080" "PENTESTIQ_LISTEN=127.0.0.1" "CORVEX_TRUSTED_PROXIES=127.0.0.1,::1" \
+            "PENTESTIQ_AI=0" "OLLAMA_URL=http://ollama:11434" "PENTESTIQ_AI_MODEL=qwen2.5:7b-instruct" \
+            "CORVEX_ADMIN_USER=corvex" "CORVEX_ADMIN_PASSWORD=ci-first-pass-123" > deploy/.env
+          sudo bash install.sh --docker --listen 127.0.0.1 --no-ai
+          python3 - <<'EOF'
+          import json, urllib.request
+          def call(path, body=None, tok=None):
+              req = urllib.request.Request("http://127.0.0.1:8080" + path, data=json.dumps(body).encode() if body is not None else None,
+                                           headers={"Content-Type": "application/json", **({"Authorization": "Bearer " + tok} if tok else {})})
+              return json.loads(urllib.request.urlopen(req, timeout=30).read())
+          tok = call("/auth/login", {"username": "corvex", "password": "ci-first-pass-123"})["token"]
+          tok = call("/auth/change-password", {"current_password": "ci-first-pass-123", "new_password": "ci-kept-pass-456"}, tok)["token"]
+          call("/engagements", {"engagement": {"name": "kept-across-upgrade"}, "scope": {"in_scope": ["web=http://127.0.0.1:9"]}}, tok)
+          print("0.2.1 install ready")
+          EOF
+          sudo sed -i 's/^CORVEX_ADMIN_PASSWORD=.*/CORVEX_ADMIN_PASSWORD=/' deploy/.env
+          sudo docker volume ls
+      - name: Update to this commit
+        run: |
+          git checkout -q "$NEW_REF"
+          sudo bash install.sh --update --docker --no-ai 2>&1 | tee update.log; test "${PIPESTATUS[0]}" = 0
+      - name: Data and settings carried over; the old volume is kept
+        run: |
+          tok="$($CHECK login corvex ci-kept-pass-456)"
+          $CHECK get "$tok" /engagements | grep -q kept-across-upgrade
+          curl -fsS http://127.0.0.1:8080/setup/status | grep -q '"setup_required":false'
+          sudo grep -q '^CORVEX_SECRET_KEY=ci-secret-0123456789abcdef$' deploy/.env
+          sudo grep -q '^CORVEX_PORT=8080$' deploy/.env && sudo grep -q '^OLLAMA_URL=http://ai:11434$' deploy/.env
+          ! sudo grep -q '^PENTESTIQ_' deploy/.env
+          sudo docker volume inspect deploy_pentestiq-data corvex-redops-data >/dev/null
+          sudo docker exec corvex-redops-console sh -c 'test -f /app/data/corvex-redops.db && ! test -e /app/data/pentestiq.db'
+          grep -q "sudo docker volume rm deploy_pentestiq-data" update.log
+          ! sudo docker container inspect pentestiq-api >/dev/null 2>&1
+          $CHECK listeners 8080
+      - name: Down
+        if: always()
+        run: sudo bash install.sh --down

@@ -1,7 +1,7 @@
 # Installing Corvex-RedOps
 
 Runs on **Linux, macOS, and Windows**. Every path gives you the same CLI
-(`pentestiq`) and web console (`pentestiq serve` → http://127.0.0.1:8000).
+(`corvex`) and web console (`corvex serve` → http://127.0.0.1:8000).
 Pick one.
 
 | Path | Needs | Best for |
@@ -62,8 +62,8 @@ Requires **Python 3.10+**.
 
 **Global CLI (isolated, all OSes)**
 ```bash
-pipx install "git+https://github.com/sajid-infosec/Corvex-RedOps.git#egg=pentestiq[all]"
-pentestiq --help
+pipx install "git+https://github.com/sajid-infosec/Corvex-RedOps.git#egg=corvex-redops[all]"
+corvex --help
 ```
 
 **Virtualenv from source**
@@ -73,7 +73,7 @@ cd Corvex-RedOps
 python3 -m venv .venv
 source .venv/bin/activate            # Windows: .venv\Scripts\Activate.ps1
 pip install ".[api,reports,desktop]" # or ".[all]" for everything (incl. SPA)
-pentestiq serve
+corvex serve
 ```
 
 Extras: `api` (REST + console), `reports` (PDF/DOCX), `desktop` (binary hardening),
@@ -130,7 +130,7 @@ peer's forwarded header is ignored and the peer address is used. To put a TLS pr
 
 - **Proxy on the host, console in Docker:** the proxy reaches the container through the
   compose network's gateway. Find it with
-  `docker network inspect deploy_default --format '{{(index .IPAM.Config 0).Gateway}}'`
+  `docker network inspect corvex-redops --format '{{(index .IPAM.Config 0).Gateway}}'`
   (e.g. `172.18.0.1`), then `sudo ./install.sh --listen 127.0.0.1 --trusted-proxy 172.18.0.1`.
   **Trust the gateway only together with `--listen 127.0.0.1`:** with the console published on
   the network, other clients can arrive through that same gateway address and set their own
@@ -149,21 +149,21 @@ peer's forwarded header is ignored and the peer address is used. To put a TLS pr
 The installer writes `CORVEX_TRUSTED_PROXIES` (loopback plus your entries) to `deploy/.env`.
 
 **Data directory and backups.** Accounts, engagements and settings live in one SQLite
-database, `pentestiq.db`, in the data directory: the `pentestiq-data` Docker volume
+database, `corvex-redops.db`, in the data directory: the `corvex-redops-data` Docker volume
 (`/app/data` in the container), `/var/lib/corvex-redops/data` for a native install (or
 `CORVEX_DATA_DIR`), or `data_dir` in the config file. Uploads and the audit log sit beside it as plain files.
 
 - **Keep the data directory on a local disk, not NFS or SMB/CIFS.** The database runs in
-  WAL mode: it keeps `pentestiq.db-wal` and `pentestiq.db-shm` next to `pentestiq.db` and
+  WAL mode: it keeps `corvex-redops.db-wal` and `corvex-redops.db-shm` next to `corvex-redops.db` and
   relies on shared memory that network filesystems don't provide safely.
 - **Back up with SQLite's backup API**, which is safe while the console runs. Native:
-  `sqlite3 data/pentestiq.db ".backup 'pentestiq-backup.db'"`. Docker:
-  `docker exec pentestiq-api python -c "import sqlite3; d = sqlite3.connect('/app/data/pentestiq-backup.db'); sqlite3.connect('/app/data/pentestiq.db').backup(d); d.close()"`,
-  then `docker cp pentestiq-api:/app/data/pentestiq-backup.db .`
-  Or stop the console and copy all three files together. **Never copy `pentestiq.db` alone
-  while the console runs:** recent changes may still be in `pentestiq.db-wal`.
-- **Restore** with the console stopped: put the backup in place as `pentestiq.db`, delete any
-  `pentestiq.db-wal` and `pentestiq.db-shm` left beside it (an old WAL file would be replayed
+  `sqlite3 data/corvex-redops.db ".backup 'corvex-redops-backup.db'"`. Docker:
+  `docker exec corvex-redops-console python -c "import sqlite3; d = sqlite3.connect('/app/data/corvex-redops-backup.db'); sqlite3.connect('/app/data/corvex-redops.db').backup(d); d.close()"`,
+  then `docker cp corvex-redops-console:/app/data/corvex-redops-backup.db .`
+  Or stop the console and copy all three files together. **Never copy `corvex-redops.db` alone
+  while the console runs:** recent changes may still be in `corvex-redops.db-wal`.
+- **Restore** with the console stopped: put the backup in place as `corvex-redops.db`, delete any
+  `corvex-redops.db-wal` and `corvex-redops.db-shm` left beside it (an old WAL file would be replayed
   onto the restored database), then start the console.
 
 **The local AI model is on request.** In a terminal, with neither `--ai` nor `--no-ai`, the
@@ -177,6 +177,25 @@ available and a real test narrative from the model — before printing **AI: rea
 step fails it says which, switches AI off again, and reports work as before. The local model
 needs Docker; a native install says how to add it later (`--docker --ai`). The lightweight
 self-learning model is installed either way. `corvex ai-check` re-runs the end-to-end check.
+
+## Upgrading from 0.2.x
+
+0.3 renamed everything to Corvex-RedOps / `corvex`. Run the installer with `--update`
+(`-Update` on Windows); your data and settings carry over:
+
+- `deploy/.env` is rewritten to the new setting names (`CORVEX_*`; a value already set under a
+  new name wins).
+- The old containers are replaced by `corvex-redops-console`, `-mobile` and `-ai`. The old data
+  and model volumes are **copied** into `corvex-redops-data` and `corvex-redops-ai-models` (only
+  when those are empty) and **kept**; once you've checked everything is there, remove them with
+  the `sudo docker volume rm …` line the summary prints. The old image can go too
+  (`sudo docker image ls` shows it).
+- The console renames the database file to `corvex-redops.db`, with its `-wal` and `-shm`, on its
+  first start — only if `corvex-redops.db` doesn't exist yet.
+- An old native install's data in the checkout's `data/` is copied to `/var/lib/corvex-redops`.
+- pip / pipx: `pip uninstall pentestiq`, then install `corvex-redops`.
+- The console now listens on 127.0.0.1 unless you pass `--listen`; the summary tells you if it
+  moved from 0.0.0.0.
 
 ## Troubleshooting
 
@@ -217,14 +236,14 @@ docker compose up -d --build         # console on 127.0.0.1:8080 (mobile-analysi
    one-time setup code (8 characters, valid until used), the admin username (default `admin`)
    and the password twice (12+ characters), then sign in normally. Where the code comes from:
    the installer's last lines; `corvex serve` (and the single-file binary) in a terminal; or a
-   new one at any time with `sudo docker exec -it pentestiq-api corvex setup-code` (native:
+   new one at any time with `sudo docker exec -it corvex-redops-console corvex setup-code` (native:
    `corvex setup-code`). Until setup is done every API route except setup and `/health` refuses.
    Headless: set `CORVEX_ADMIN_PASSWORD` (and optionally `CORVEX_ADMIN_USER`) before the first
    start and the admin is created directly, without the setup page. An install that already has
    an admin never sees the page. Community includes one workspace, this one; with Premium, add separate workspaces with
    `corvex init-tenant` on the server (self-service **Create workspace** is off unless
    `CORVEX_ALLOW_REGISTRATION=1`).
-   Locked out? `sudo docker exec -it pentestiq-api corvex reset-password <user>` prints a new
+   Locked out? `sudo docker exec -it corvex-redops-console corvex reset-password <user>` prints a new
    one-time password (changed again at the next sign-in).
 3. Add a target (New scan) or upload an app / OpenAPI spec, then **Run scan**.
 
@@ -235,8 +254,8 @@ the full deep-scan backend and mobile-analysis service** — nothing else to ins
 
 ## Verify
 ```bash
-pentestiq version
-pentestiq modules                    # lists the 9 asset modules
+corvex version
+corvex modules                    # lists the 9 asset modules
 curl http://127.0.0.1:8000/health    # {"status":"ok",...} once `serve` runs
 curl http://localhost:8080/health    # the same, for a Docker / installer deployment
 ```

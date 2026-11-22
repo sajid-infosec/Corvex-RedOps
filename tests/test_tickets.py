@@ -31,7 +31,7 @@ def test_jira_payload():
     fields = req["body"]["fields"]
     assert fields["project"]["key"] == "SEC" and fields["issuetype"]["name"] == "Bug"
     assert fields["summary"].startswith("[CRITICAL] SQL injection")
-    assert "pentestiq" in fields["labels"] and "critical" in fields["labels"]
+    assert "corvex-redops" in fields["labels"] and "critical" in fields["labels"]
     assert "Use params" in fields["description"]
 
 

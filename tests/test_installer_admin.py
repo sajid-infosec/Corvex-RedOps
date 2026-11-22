@@ -11,6 +11,9 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
+# Never reach this machine's Docker, services or sudo from a test, whatever installer function runs.
+_GUARD = ('docker(){ echo "docker $*" >> "${CORVEX_TEST_DOCKER_LOG:-/dev/null}"; return 1; }; '
+          'systemctl(){ return 1; }; sudo(){ return 1; }; runuser(){ return 1; }; ')
 SH = (ROOT / "install.sh").read_text(encoding="utf-8")
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32",
@@ -20,7 +23,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32",
 def _run(tmp_path, script, extra_env=None):
     env = {**os.environ, "CORVEX_INSTALL_SOURCE_ONLY": "1", "NO_COLOR": "1", **(extra_env or {})}
     env.pop("CORVEX_ADMIN_PASSWORD", None) if not extra_env or "CORVEX_ADMIN_PASSWORD" not in extra_env else None
-    cmd = (f'source "{ROOT}/install.sh"; SUDO=""; ENV_FILE="{tmp_path}/deploy/.env"; detect_distro; '
+    cmd = (f'source "{ROOT}/install.sh"; {_GUARD}SUDO=""; ENV_FILE="{tmp_path}/deploy/.env"; detect_distro; '
            f'native_layout; {script}')
     return subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, env=env, timeout=60,
                           encoding="utf-8", errors="replace")
@@ -49,12 +52,12 @@ def _summary_tail(tmp_path, code, extra="", engine="docker"):
 def test_the_last_lines_are_the_address_and_the_setup_code(tmp_path):
     last = _summary_tail(tmp_path, "7KQ2MHX4")
     assert "Open http://127.0.0.1:8080 and set up the admin account" in last[0]
-    assert "Setup code : 7KQ2MHX4" in last[1] and "sudo docker exec -it pentestiq-api corvex setup-code" in last[1]
+    assert "Setup code : 7KQ2MHX4" in last[1] and "sudo docker exec -it corvex-redops-console corvex setup-code" in last[1]
 
 
 def test_the_setup_code_comes_from_the_console_and_only_when_setup_is_pending(tmp_path):
     stub = ('curl(){ printf \'{"setup_required": %s}\' "$PENDING"; }; '
-            'compose(){ [ "$*" = "exec -T pentestiq corvex setup-code --quiet" ] && printf "7KQ2MHX4\\r\\n"; }; '
+            'compose(){ [ "$*" = "exec -T console corvex setup-code --quiet" ] && printf "7KQ2MHX4\\r\\n"; }; '
             'ENGINE_USED=docker; ')
     r = _run(tmp_path, stub + 'PENDING=true; fetch_setup_code && echo "CODE=$SETUP_CODE"')
     assert "CODE=7KQ2MHX4" in r.stdout
@@ -83,7 +86,7 @@ def test_headless_password_creates_the_admin_and_is_then_blanked(tmp_path):
 def test_an_existing_install_gets_the_reset_command_for_its_engine(tmp_path):
     docker = _summary_tail(tmp_path, "")
     assert "with your admin account" in docker[0]
-    assert "sudo docker exec -it pentestiq-api corvex reset-password <user>" in docker[1]
+    assert "sudo docker exec -it corvex-redops-console corvex reset-password <user>" in docker[1]
     native = _run(tmp_path, 'privileged(){ return 0; }; native_layout; ENGINE_USED=native; PORT=8080; SETUP_CODE=""; '
                             'summary | sed "/^$/d" | tail -n 1').stdout
     assert "sudo runuser -u corvex-redops -- env CORVEX_DATA_DIR=" in native and "corvex reset-password <user>" in native
@@ -106,5 +109,5 @@ def test_install_ps1_shows_the_setup_code_last_and_writes_no_password():
     ps1 = (ROOT / "install.ps1").read_text(encoding="utf-8")
     assert "function Get-SetupCode" in ps1 and '"corvex", "setup-code", "--quiet"' in ps1
     assert "Setup code : $script:SetupCode" in ps1
-    assert "docker exec -it pentestiq-api corvex reset-password <user>" in ps1
+    assert "docker exec -it $ConsoleContainer corvex reset-password <user>" in ps1 and '$ConsoleContainer = "corvex-redops-console"' in ps1
     assert "first-run admin" not in ps1 and "one-time password in" not in ps1

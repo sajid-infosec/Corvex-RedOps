@@ -116,7 +116,7 @@ def test_api_secret_scan_upload(ctx, tmp_path):
     eid = r.json()["id"]
     det = c.get(f"/engagements/{eid}", headers=H).json()
     a0 = det["engagement"]["assets"][0]
-    assert a0["type"] == "codebase" and a0["metadata"]["tool"] == "pentestiq-secrets"
+    assert a0["type"] == "codebase" and a0["metadata"]["tool"] == "corvex-secrets"
     fs = det["engagement"]["findings"]
     assert fs and all(f["category"] == "A07:2021" for f in fs)
     # secret redacted end-to-end through the API

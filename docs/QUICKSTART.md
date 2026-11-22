@@ -21,8 +21,8 @@ pytest -q          # 66 tests should pass
 ## 3. Meet the CLI
 
 ```bash
-pentestiq version
-pentestiq modules   # infra, web, wordpress, api
+corvex version
+corvex modules   # infra, web, wordpress, api
 ```
 
 ## 4. Stand up the lab (needs Docker)
@@ -53,7 +53,7 @@ enforcement: warn                       # 'block' to hard-enforce scope
 ## 6. Run an engagement + generate a report
 
 ```bash
-pentestiq run -s myscope.yaml -o out/
+corvex run -s myscope.yaml -o out/
 #  -> out/report.html   (open in a browser)
 #  -> out/report.md
 #  -> out/engagement.json

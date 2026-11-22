@@ -26,7 +26,7 @@ Then open **http://localhost:8080**, sign in with the one-time admin password, c
 **What it does:** installs base tools → installs & starts Docker (via the official
 convenience script, falling back to distribution packages) → ensures Docker Compose
 v2 (installs the plugin if missing) → writes `deploy/.env` with generated
-`MOBSF_API_KEY` and `PENTESTIQ_SECRET_KEY` → `docker compose up -d --build` → waits
+`MOBSF_API_KEY` and `CORVEX_SECRET_KEY` → `docker compose up -d --build` → waits
 for the API health check. It is **idempotent** — safe to re-run.
 
 **Options:**
@@ -40,13 +40,13 @@ sudo ./install.sh --down        # stop the stack
 ```
 
 > Secrets live in `deploy/.env` (git-ignored, mode 600). Back them up — losing
-> `PENTESTIQ_SECRET_KEY` invalidates existing login sessions.
+> `CORVEX_SECRET_KEY` invalidates existing login sessions.
 
 ## Manual deploy (if Docker is already installed)
 
 ```bash
 export MOBSF_API_KEY=$(openssl rand -hex 32)
-export PENTESTIQ_SECRET_KEY=$(openssl rand -hex 32)
+export CORVEX_SECRET_KEY=$(openssl rand -hex 32)
 docker compose -f deploy/docker-compose.yml up -d --build
 
 # open http://localhost:8080  -> sign in (one-time admin password) -> "Upload & scan" an .apk/.ipa
@@ -66,7 +66,7 @@ docker compose -f deploy/docker-compose.yml up -d --build
 
 | Variable | Purpose |
 |---|---|
-| `PENTESTIQ_SECRET_KEY` | Signs session tokens — **set in production** so logins survive restarts |
+| `CORVEX_SECRET_KEY` | Signs session tokens — **set in production** so logins survive restarts |
 | `MOBSF_URL` | Mobile-analysis engine base URL (default `http://localhost:8000`; compose sets `http://mobsf:8000`) |
 | `MOBSF_API_KEY` | Mobile-analysis engine REST API key (same value on both services) |
 
@@ -81,7 +81,7 @@ dedicated scanning host. Missing engines are skipped gracefully — the engine s
 
 - Persistence is SQLite under `/app/data` (a Docker volume), in WAL mode: keep it on a
   local disk, not NFS or SMB/CIFS, and back it up with SQLite's backup API (or copy
-  `pentestiq.db`, `-wal` and `-shm` together with the console stopped); see INSTALL.md,
+  `corvex-redops.db`, `-wal` and `-shm` together with the console stopped); see INSTALL.md,
   "Data directory and backups". For production/scale,
   swap in PostgreSQL behind the `EngagementStore` interface.
 - The scheduler runs in-process; for horizontal scale, move to a distributed

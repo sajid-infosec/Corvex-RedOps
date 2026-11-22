@@ -2,6 +2,6 @@
 # Not used by default: the console reaches the engine on the compose network.
 #   docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.publish-mobile.yml up -d
 services:
-  mobsf:
+  mobile:
     ports:
       - "127.0.0.1:${CORVEX_MOBILE_PORT:-8000}:8000"

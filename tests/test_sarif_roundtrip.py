@@ -50,11 +50,11 @@ def test_export_is_valid_sarif_shape():
     assert crit["level"] == "error"
     rule = next(x for x in run["tool"]["driver"]["rules"] if x["id"] == crit["ruleId"])
     assert "A08:2021" in rule["properties"]["tags"]
-    assert rule["properties"]["pentestiq/category"] == "A08:2021"
+    assert rule["properties"]["corvex/category"] == "A08:2021"
     # a finding carrying a CWE surfaces a CWE tag too
     xss_rule = next(x for x in run["tool"]["driver"]["rules"]
                     if "XSS" in x["name"])
-    assert xss_rule["properties"]["pentestiq/category"] == "A03:2021"
+    assert xss_rule["properties"]["corvex/category"] == "A03:2021"
 
 
 # ---- round-trip fidelity ------------------------------------------------
@@ -112,3 +112,16 @@ def test_api_report_sarif_export(ctx):
                            intel=INTEL, prioritize=False)
     assert back.imported_count == 3
     assert any(f.category == "A08:2021" for f in back.findings)
+
+
+def test_sarif_exported_before_0_3_still_imports():
+    """Exports from before 0.3 used the pentestiq/ property namespace; they import the same."""
+    from pentestiq.ingest import import_findings
+    doc = {"version": "2.1.0", "runs": [{"tool": {"driver": {"name": "Corvex-RedOps", "rules": [
+        {"id": "pentestiq/abc", "name": "Old export", "properties": {"pentestiq/category": "A03:2021"}}]}},
+        "results": [{"ruleId": "pentestiq/abc", "message": {"text": "x"},
+                     "properties": {"pentestiq/severity": "high", "pentestiq/location": "/q"}}]}]}
+    import json
+    res = import_findings(json.dumps(doc).encode(), filename="old.sarif", prioritize=False)
+    f = res.findings[0]
+    assert f.category == "A03:2021" and f.severity.value == "high" and f.location == "/q"

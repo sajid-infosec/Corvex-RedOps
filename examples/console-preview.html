@@ -458,7 +458,7 @@ const _REC={id:"demo-1",name:"Corvex-RedOps — External Web & API Assessment",s
    {title:"Page is framable (clickjacking)",severity:"low",risk_score:22,category:"A05:2021",correlation_id:"c5",status:"detected",asset:{type:"web",identifier:"https://app.example.com"}}]}};
 const _COV={owasp_coverage:{"web-2021":[{id:"A01:2021",findings:0,max_severity:null},{id:"A02:2021",findings:0,max_severity:null},{id:"A03:2021",findings:1,max_severity:"critical"},{id:"A04:2021",findings:0,max_severity:null},{id:"A05:2021",findings:2,max_severity:"medium"},{id:"A06:2021",findings:0,max_severity:null},{id:"A07:2021",findings:0,max_severity:null},{id:"A08:2021",findings:0,max_severity:null},{id:"A09:2021",findings:0,max_severity:null},{id:"A10:2021",findings:1,max_severity:"high"}],"api-2023":[{id:"API1:2023",findings:1,max_severity:"critical"},{id:"API2:2023",findings:0,max_severity:null},{id:"API3:2023",findings:0,max_severity:null},{id:"API4:2023",findings:0,max_severity:null},{id:"API5:2023",findings:0,max_severity:null},{id:"API6:2023",findings:0,max_severity:null},{id:"API7:2023",findings:0,max_severity:null},{id:"API8:2023",findings:0,max_severity:null},{id:"API9:2023",findings:0,max_severity:null},{id:"API10:2023",findings:0,max_severity:null}]}};
 api=async function(path){const w=o=>({json:async()=>o,text:async()=>o,status:200,ok:true});
-  if(path==="/me")return w({tenant_id:"pentestiq01",role:"owner"});
+  if(path==="/me")return w({tenant_id:"corvex01",role:"owner"});
   if(path==="/engagements")return w(_LIST);
   if(path==="/kit/frida")return w([]);
   if(path.indexOf("/compliance")>-1)return w(_COV);

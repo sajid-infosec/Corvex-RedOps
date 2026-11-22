@@ -34,5 +34,5 @@ def test_first_visit_setup_page():
 
 
 def test_sign_in_hint_has_the_docker_reset_command_and_no_installer_password():
-    assert "sudo docker exec -it pentestiq-api corvex reset-password &lt;user&gt;" in HTML
+    assert "sudo docker exec -it corvex-redops-console corvex reset-password &lt;user&gt;" in HTML
     assert "one-time password from the installer" not in HTML and "one-time admin password to the server log" not in HTML

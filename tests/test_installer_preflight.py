@@ -13,6 +13,9 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
+# Never reach this machine's Docker, services or sudo from a test, whatever installer function runs.
+_GUARD = ('docker(){ echo "docker $*" >> "${CORVEX_TEST_DOCKER_LOG:-/dev/null}"; return 1; }; '
+          'systemctl(){ return 1; }; sudo(){ return 1; }; runuser(){ return 1; }; ')
 SH = (ROOT / "install.sh").read_text(encoding="utf-8")
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32",
@@ -25,7 +28,7 @@ def _sh(tmp_path, script, args="", extra_env=None):
            "CORVEX_NATIVE_ETC": str(tmp_path / "etc"), "CORVEX_UNIT_DIR": str(tmp_path / "units"),
            "CORVEX_DOCKER_DROPIN_DIR": str(tmp_path / "docker.service.d"), **(extra_env or {})}
     # SUDO="" and a Docker that looks absent: nothing here may touch this machine's services
-    cmd = (f'source "{ROOT}/install.sh"; SUDO=""; ENV_FILE="{tmp_path}/deploy/.env"; '
+    cmd = (f'source "{ROOT}/install.sh"; {_GUARD}SUDO=""; ENV_FILE="{tmp_path}/deploy/.env"; '
            f'docker_state(){{ echo missing; }}; detect_distro; parse_args {args}; {script}')
     return subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, env=env, timeout=120,
                           encoding="utf-8", errors="replace")
@@ -68,7 +71,7 @@ def test_a_busy_default_port_moves_to_the_next_free_one(tmp_path, listener):
 
 
 def test_a_port_held_by_our_own_previous_console_is_not_a_conflict(tmp_path):
-    assert _sh(tmp_path, 'is_ours "Docker container x|123|pentestiq-api" && echo OURS').stdout.strip() == "OURS"
+    assert _sh(tmp_path, 'is_ours "Docker container x|123|corvex-redops-console" && echo OURS').stdout.strip() == "OURS"
     assert _sh(tmp_path, 'is_ours "Docker container x|123|someone-elses-app" || echo THEIRS').stdout.strip() == "THEIRS"
 
 
@@ -186,7 +189,7 @@ def test_native_defaults_are_system_paths_outside_the_checkout():
 def test_native_settings_file_holds_the_data_dir_and_is_private(tmp_path):
     r = _sh(tmp_path, 'privileged(){ return 1; }; native_layout; write_native_env && cat "$NATIVE_ENV"; stat -c %a "$NATIVE_ENV"')
     assert f"CORVEX_DATA_DIR={tmp_path}/var-lib/data" in r.stdout and "CORVEX_LISTEN=127.0.0.1" in r.stdout
-    assert re.search(r"PENTESTIQ_SECRET_KEY=[0-9a-f]{64}", r.stdout) and r.stdout.strip().endswith("600")
+    assert re.search(r"CORVEX_SECRET_KEY=[0-9a-f]{64}", r.stdout) and r.stdout.strip().endswith("600")
 
 
 def test_the_console_is_never_started_as_root_without_a_service_user(tmp_path):

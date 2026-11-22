@@ -116,7 +116,7 @@ def test_cli_setup_code_prints_a_fresh_code_and_refuses_after_setup(tmp_path, mo
     first = re.search(r"One-time setup code: ([A-Z0-9]{8})", r1.output).group(1)
     second = CliRunner().invoke(cli_app, ["setup-code", "--quiet"]).output.strip()
     assert re.fullmatch(r"[A-Z0-9]{8}", second) and second != first
-    auth = AuthService(SqliteAuthStore(str(tmp_path / "pentestiq.db")), secret_key="s", session_ttl=3600)
+    auth = AuthService(SqliteAuthStore(str(tmp_path / "corvex-redops.db")), secret_key="s", session_ttl=3600)
     assert not setup_mod.check_code(auth.store, first) and setup_mod.check_code(auth.store, second)
     auth.complete_setup(second, "admin", PW)
     r3 = CliRunner().invoke(cli_app, ["setup-code"])

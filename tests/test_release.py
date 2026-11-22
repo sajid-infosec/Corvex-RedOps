@@ -139,7 +139,7 @@ def test_assets_checksums_and_the_dry_run_guard():
 @pytest.mark.skipif(sys.platform == "win32", reason="runs the release job's bash step (ubuntu in CI)")
 def test_checksum_step_covers_the_five_files_and_refuses_a_missing_one(tmp_path):
     script = _step("release", "SHA256SUMS").get("run").replace("${{ needs.version.outputs.version }}", "0.2.1")
-    files = ["pentestiq-0.2.1-py3-none-any.whl", "pentestiq-0.2.1.tar.gz", *ASSETS]
+    files = ["corvex_redops-0.2.1-py3-none-any.whl", "corvex_redops-0.2.1.tar.gz", *ASSETS]
     for f in files:
         (tmp_path / f).write_bytes(f.encode())
     (tmp_path / "release-notes.md").write_text("notes\n")

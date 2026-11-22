@@ -15,7 +15,7 @@ Command(s) run, scope file (redact real targets), and what happened.
 **Environment**
 - OS / distro:
 - Python version:
-- Corvex-RedOps version (`pentestiq version`):
+- Corvex-RedOps version (`corvex version`):
 - Tools installed (nmap/nuclei/zap/wpscan versions):
 
 **Logs / output**
