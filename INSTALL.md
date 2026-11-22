@@ -83,11 +83,25 @@ Extras: `api` (REST + console), `reports` (PDF/DOCX), `desktop` (binary hardenin
 
 ## C. Installer script
 
-**One command. It installs everything, resolves its own dependencies, and brings
-up the console.** It prefers a Docker deployment and **automatically falls back to
-a native install** (Python venv + pip — needs only PyPI) if Docker is missing, not
-running, or can't reach the image registry. It even tries to repair Docker's DNS
-first. No prompts, no second command, nothing for you to fix.
+**One command that never fails halfway.** It installs everything and brings up the console.
+It prefers a Docker deployment and **falls back to a native install** if Docker is missing,
+not running, or can't reach the image registry.
+
+- **Preflight first, read-only:** platform, free memory and disk, Docker's state and every
+  host port the deployment will use are checked before anything changes. A port that's taken
+  is named with the program holding it. If it's the default port, the installer moves to the
+  next free one; if you chose it with `--port`, it stops and tells you.
+- **Never half-started:** if the stack doesn't come up healthy (or you press Ctrl-C), it's
+  taken down again before the installer exits. Data is kept.
+- **Docker DNS:** on networks whose DNS replies Docker's built-in resolver rejects (pulls fail
+  with `lookup … on …:53: no such host` while the host resolves fine), the installer adds one
+  file, `/etc/systemd/system/docker.service.d/corvex-dns.conf`
+  (`Environment=GODEBUG=netdns=cgo`), restarts Docker and says so. Nothing else on the system
+  is changed.
+- **Native install:** its own venv (`/opt/corvex-redops/venv`) and data
+  (`/var/lib/corvex-redops`), outside the checkout, run as the unprivileged user
+  `corvex-redops` by the systemd unit `corvex-redops.service` — never as root. Without root it
+  installs under `~/.local/share/corvex-redops` for your user instead.
 
 **Linux** — `sudo ./install.sh` (Docker stack + mobile-analysis engine, or native fallback):
 ```bash
@@ -106,9 +120,9 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 
 Flags — same actions on every OS:
 - Force an engine: `--native` / `--docker` (sh), `-Native` / `-Docker` (ps1)
-- `--port 9090`, `--listen 127.0.0.1`, `--trusted-proxy <ip|cidr>`, `--update`, `--down` (sh); `-Port 9090`, `-Listen 127.0.0.1`, `-TrustedProxy <ip|cidr>`, `-Update`, `-Down` (ps1)
+- `--port 9090`, `--listen 0.0.0.0`, `--trusted-proxy <ip|cidr>`, `--publish-mobile [port]`, `--update`, `--down` (sh); `-Port 9090`, `-Listen 0.0.0.0`, `-TrustedProxy <ip|cidr>`, `-PublishMobile [-MobilePort n]`, `-Update`, `-Down` (ps1)
 
-**Network exposure.** The console serves plain HTTP on every interface by default (`--listen 0.0.0.0`). Put TLS in front of it (a reverse proxy with a certificate), or bind it to this host only with `--listen 127.0.0.1`; the installer's summary warns when it is reachable from the network. The mobile-analysis service and the local AI runtime are published on 127.0.0.1 only.
+**Network exposure.** The console listens on **127.0.0.1** (this host only) by default. To reach it from other machines, opt in with `--listen 0.0.0.0` (or a specific address); it's plain HTTP, so the installer prints a one-line warning — put TLS in front of it (a reverse proxy with a certificate). An install from an older version that listened on 0.0.0.0 moves to 127.0.0.1 on `--update`, and the summary says so. The mobile-analysis engine and the local AI runtime have **no host port**: the console reaches them on the compose network. `--publish-mobile [port]` publishes the mobile engine on 127.0.0.1 (default port 8000) if you want to reach it from the host.
 
 **Behind a reverse proxy.** Sign-in throttling uses the client's address. By default only a
 proxy on the same host (127.0.0.1 / ::1) may supply it through `X-Forwarded-For`; any other
@@ -136,8 +150,8 @@ The installer writes `CORVEX_TRUSTED_PROXIES` (loopback plus your entries) to `d
 
 **Data directory and backups.** Accounts, engagements and settings live in one SQLite
 database, `pentestiq.db`, in the data directory: the `pentestiq-data` Docker volume
-(`/app/data` in the container), `data/` in the install folder for a native install, or
-`data_dir` in the config file. Uploads and the audit log sit beside it as plain files.
+(`/app/data` in the container), `/var/lib/corvex-redops/data` for a native install (or
+`CORVEX_DATA_DIR`), or `data_dir` in the config file. Uploads and the audit log sit beside it as plain files.
 
 - **Keep the data directory on a local disk, not NFS or SMB/CIFS.** The database runs in
   WAL mode: it keeps `pentestiq.db-wal` and `pentestiq.db-shm` next to `pentestiq.db` and
@@ -184,7 +198,7 @@ your user if you run it with `sudo`, but `./install.sh` (no sudo) is cleanest.
 Any OS with Docker or Docker Desktop:
 ```bash
 cd deploy
-docker compose up -d --build         # console :8080, mobile-analysis :8000
+docker compose up -d --build         # console on 127.0.0.1:8080 (mobile-analysis: compose network only)
 ```
 
 ---

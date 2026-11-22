@@ -45,7 +45,7 @@ def test_env_file_gets_a_random_one_time_password(tmp_path):
 
 
 def test_password_is_shown_once_then_removed_from_the_env_file(tmp_path):
-    r = _run(tmp_path, 'write_env >/dev/null; wait_healthy(){ return 0; }; after_start "x"; admin_password_hint; echo "PW=$FIRST_ADMIN_PW"')
+    r = _run(tmp_path, 'write_env >/dev/null; consume_admin_password; admin_password_hint; echo "PW=$FIRST_ADMIN_PW"')
     pw = re.search(r"PW=(\S+)", r.stdout).group(1)
     assert pw in r.stdout.split("PW=")[0]                         # shown in the summary
     assert "shown only this once" in r.stdout and "removed from" in r.stdout
@@ -54,16 +54,16 @@ def test_password_is_shown_once_then_removed_from_the_env_file(tmp_path):
 
 
 def test_password_kept_until_the_console_has_started(tmp_path):
-    r = _run(tmp_path, 'write_env >/dev/null; wait_healthy(){ return 1; }; after_start "timed out" 2>&1; admin_password_hint; echo "PW=$FIRST_ADMIN_PW"')
+    r = _run(tmp_path, 'write_env >/dev/null; admin_password_hint; echo "PW=$FIRST_ADMIN_PW"')
     pw = re.search(r"PW=(\S+)", r.stdout).group(1)
     assert pw in (tmp_path / "deploy/.env").read_text(encoding="utf-8")           # first boot still needs it
     assert "until the console first starts" in r.stdout
 
 
 def test_rerun_reuses_env_and_never_reveals_a_password(tmp_path):
-    first = _run(tmp_path, 'write_env >/dev/null; wait_healthy(){ return 0; }; after_start x; echo "PW=$FIRST_ADMIN_PW"')
+    first = _run(tmp_path, 'write_env >/dev/null; consume_admin_password; echo "PW=$FIRST_ADMIN_PW"')
     pw = re.search(r"PW=(\S+)", first.stdout).group(1)
-    r = _run(tmp_path, 'write_env; wait_healthy(){ return 0; }; after_start x; admin_password_hint')
+    r = _run(tmp_path, 'write_env; consume_admin_password; admin_password_hint')
     assert "Reusing existing secrets" in r.stdout                 # the env file is kept
     assert pw not in r.stdout and "shown only this once" not in r.stdout
     assert "your existing password" in r.stdout

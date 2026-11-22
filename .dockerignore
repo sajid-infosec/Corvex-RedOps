@@ -1,0 +1,20 @@
+# Keep secrets, local data and build leftovers out of the image.
+deploy/.env
+deploy/*.env
+data/
+**/data/*.db*
+.venv/
+venv/
+.git/
+.github/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.corvex.pid
+corvex.log
+*.log
+lab/
+website/

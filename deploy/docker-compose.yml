@@ -9,17 +9,18 @@
 #      printed once to the log), then Upload & scan an APK. Self-service registration is OFF
 #      unless CORVEX_ALLOW_REGISTRATION=1; add workspaces with `corvex init-tenant`.
 #
-# Network exposure: the mobile-analysis service and the local AI runtime are published on
-# 127.0.0.1 only. The console listens on PENTESTIQ_LISTEN (default 0.0.0.0, every interface)
-# over plain HTTP — put TLS in front of it, or set PENTESTIQ_LISTEN=127.0.0.1.
+# Network exposure: only the console publishes a host port, on PENTESTIQ_LISTEN (default
+# 127.0.0.1, this host only). The mobile-analysis engine and the local AI runtime have no host
+# port — the console reaches them on the compose network. To reach the mobile engine from the
+# host, add deploy/docker-compose.publish-mobile.yml (install.sh --publish-mobile). Listening on
+# 0.0.0.0 is plain HTTP on your network: put TLS in front of it.
 services:
   mobsf:
     image: opensecurity/mobile-security-framework-mobsf:latest
     container_name: pentestiq-mobsf
     environment:
       - MOBSF_API_KEY=${MOBSF_API_KEY:?set MOBSF_API_KEY}
-    ports:
-      - "127.0.0.1:8000:8000"   # mobile-analysis UI/API: this host only (the console reaches it as http://mobsf:8000)
+    # no host port: the console reaches it as http://mobsf:8000 (see docker-compose.publish-mobile.yml)
     restart: unless-stopped
 
   pentestiq:
@@ -41,7 +42,7 @@ services:
       # Reverse proxies whose X-Forwarded-For is honoured (IPs/CIDRs). Never "*" (refused at start-up).
       - CORVEX_TRUSTED_PROXIES=${CORVEX_TRUSTED_PROXIES:-127.0.0.1,::1}
     ports:
-      - "${PENTESTIQ_LISTEN:-0.0.0.0}:${PENTESTIQ_PORT:-8080}:8080"   # Corvex-RedOps API + console (install.sh --listen)
+      - "${PENTESTIQ_LISTEN:-127.0.0.1}:${PENTESTIQ_PORT:-8080}:8080"   # Corvex-RedOps API + console (install.sh --listen)
     volumes:
       - pentestiq-data:/app/data
     restart: unless-stopped
@@ -53,8 +54,7 @@ services:
     image: ollama/ollama:latest
     container_name: pentestiq-ollama
     profiles: ["ai"]
-    ports:
-      - "127.0.0.1:11434:11434"   # local AI runtime: this host only (the console reaches it as http://ollama:11434)
+    # no host port: the console reaches it as http://ollama:11434
     volumes:
       - ollama-models:/root/.ollama
     restart: unless-stopped

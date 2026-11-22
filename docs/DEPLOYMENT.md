@@ -33,7 +33,7 @@ for the API health check. It is **idempotent** — safe to re-run.
 
 ```bash
 sudo ./install.sh --port 9090   # custom console port
-sudo ./install.sh --listen 127.0.0.1   # console on this host only (default 0.0.0.0)
+sudo ./install.sh --listen 0.0.0.0     # reachable from the network (default 127.0.0.1, this host only)
 sudo ./install.sh --update      # rebuild & redeploy (after a git pull)
 sudo ./install.sh --down        # stop the stack
 ./install.sh --help

@@ -56,9 +56,13 @@ def test_changelog_has_a_dated_0_2_0_section_with_the_groups():
         assert must in body, must
 
 
-def test_unreleased_is_empty_and_sits_above_0_2_1():
+def test_unreleased_lists_changes_without_tool_names_and_sits_above_0_2_1():
     unreleased = re.search(r"^## \[Unreleased\]\n(.*?)(?=^## \[)", CHANGELOG, re.S | re.M).group(1)
-    assert unreleased.strip() == "Nothing yet."
+    groups = re.findall(r"^### (\w+)", unreleased, re.M)
+    assert groups and set(groups) <= {"Added", "Security", "Changed", "Fixes", "Upgrading"}
+    assert "127.0.0.1 by default" in unreleased
+    hits = [n for n in NAMES if re.search(rf"(?<![\w-]){re.escape(n)}(?![\w-])", unreleased, re.I)]
+    assert hits == []
     assert re.findall(r"^## \[([^\]]+)\]", CHANGELOG, re.M)[:3] == ["Unreleased", "0.2.1", "0.2.0"]
     assert "[0.2.1]: https://github.com/sajid-infosec/corvex-redops/releases/tag/v0.2.1" in CHANGELOG
 

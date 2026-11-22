@@ -5,7 +5,17 @@ All notable changes to Corvex-RedOps are documented here. This project adheres t
 
 ## [Unreleased]
 
-Nothing yet.
+### Security
+- The installer's console listens on 127.0.0.1 by default; `--listen 0.0.0.0` is opt-in, with a one-line warning. The mobile-analysis engine and the local AI runtime no longer publish host ports (`--publish-mobile` publishes the mobile engine on 127.0.0.1).
+- The native install runs the console as the unprivileged `corvex-redops` user under a systemd unit, with its own venv and its data in `/var/lib/corvex-redops` — never as root and never from the checkout.
+- The Docker image runs the console as a non-root user, pins its template engine and subdomain finder by version and SHA-256 (amd64 and arm64), and no longer copies `deploy/.env`, `data/` or a local venv into the image.
+
+### Changed
+- The installer runs a read-only preflight (platform, free memory and disk, Docker, every host port) before changing anything. A busy port is named with the program holding it; the next free port is used when you didn't choose one. A stack that doesn't come up healthy, or an interrupted install, is taken down again.
+- Docker DNS repair is a single `docker.service` drop-in, added only when image pulls fail because Docker's built-in resolver rejects the network's DNS replies. The installer no longer changes systemd-resolved, `/etc/resolv.conf` or Docker's `daemon.json`.
+
+### Fixes
+- The headless crawl works in the arm64 image.
 
 ## [0.2.1] — 2026-11-19
 

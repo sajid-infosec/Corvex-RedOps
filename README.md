@@ -739,7 +739,7 @@ That's it — open **http://localhost:8080** and sign in as **`corvex`** with th
 ```bash
 # macOS / Linux
 sudo ./install.sh --port 9090   # custom console port
-sudo ./install.sh --listen 127.0.0.1   # console on this host only (default 0.0.0.0)
+sudo ./install.sh --listen 0.0.0.0     # reachable from the network (default 127.0.0.1, this host only)
 sudo ./install.sh --trusted-proxy 172.18.0.1   # a TLS reverse proxy's address (see below)
 sudo ./install.sh --update      # rebuild & redeploy after a `git pull`
 sudo ./install.sh --down        # stop the stack
@@ -751,7 +751,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker -Update   # rebui
 powershell -ExecutionPolicy Bypass -File .\install.ps1 -Docker -Down     # stop the stack
 ```
 
-**Network exposure.** The console serves plain HTTP on every interface by default (`--listen 0.0.0.0`). Put TLS in front of it (a reverse proxy with a certificate), or bind it to this host only with `--listen 127.0.0.1`; the installer's summary warns when it is reachable from the network. The mobile-analysis service and the local AI runtime are published on 127.0.0.1 only.
+**Network exposure.** The console listens on **127.0.0.1** (this host only) by default. Opt in to network access with `--listen 0.0.0.0`; it's plain HTTP, so the installer prints a one-line warning — put TLS in front of it (a reverse proxy with a certificate). The mobile-analysis engine and the local AI runtime have no host port (`--publish-mobile` publishes the mobile engine on 127.0.0.1).
 
 **Behind a reverse proxy.** Sign-in throttling uses the client's address. By default only a
 proxy on the same host (127.0.0.1 / ::1) may supply it through `X-Forwarded-For`; any other
