@@ -73,7 +73,7 @@ AI_MODEL="${CORVEX_AI_MODEL:-${PENTESTIQ_AI_MODEL:-qwen2.5:7b-instruct}}"   # en
 MIN_MEM_MB=1024;  REC_MEM_MB=2048
 MIN_DISK_DOCKER_MB=8192; MIN_DISK_NATIVE_MB=2048
 HEALTH_TRIES="${CORVEX_HEALTH_TRIES:-60}"   # x 3 s
-LISTEN_CHANGED_FROM=""; LEGACY_DATA_COPIED=0; ADMIN_PW_CONSUMED=0; STACK_STARTED=""; ENGINE_USED=""
+LISTEN_CHANGED_FROM=""; LEGACY_DATA_COPIED=0; DOCKER_DATA_COPIED=""; EXISTING_ENGINE=""; ADMIN_PW_CONSUMED=0; STACK_STARTED=""; ENGINE_USED=""
 NATIVE_MODE=""; DC_BIN=""; PY=""
 
 usage() {
@@ -356,8 +356,22 @@ resolve_port() { # resolve_port PORT WAS_SET FLAG_NAME
   die "port $p is in use by ${h%%|*}, and no free port was found up to $((p + 50)). Choose one with $flag N."
 }
 
+# The engine an existing deployment runs on: docker when its containers exist (current or 0.2.x
+# names), native when its settings file or service does; empty on a fresh machine.
+existing_engine() {
+  local c
+  if command -v docker >/dev/null 2>&1 && [ "$(docker_state)" = running ]; then
+    for c in $OUR_CONTAINERS; do
+      $SUDO docker container inspect "$c" >/dev/null 2>&1 && { printf docker; return 0; }
+    done
+  fi
+  if [ -f "${NATIVE_ENV:-}" ] || [ -f "$UNIT_DIR/$UNIT_NAME" ]; then printf native; fi
+  return 0
+}
+
 preflight() {
   log "Preflight — checking this machine before changing anything…"
+  EXISTING_ENGINE="$(existing_engine)"
   # platform
   case "$OSKIND/$ARCH" in
     linux/x86_64|linux/aarch64|linux/arm64|macos/x86_64|macos/arm64) ok "Platform: $DISTRO_NAME, $ARCH." ;;
@@ -387,6 +401,9 @@ preflight() {
     if [ "${dfree:-0}" -lt "$MIN_DISK_DOCKER_MB" ]; then
       if [ "$ENGINE" = docker ]; then
         die "only ${dfree} MB free for Docker ($(docker_root_dir)); the images need at least ${MIN_DISK_DOCKER_MB} MB. Free some space, or use --native."
+      fi
+      if [ "$EXISTING_ENGINE" = docker ]; then
+        die "only ${dfree} MB free for Docker ($(docker_root_dir)); updating this Docker deployment needs ${MIN_DISK_DOCKER_MB} MB. Nothing was changed. Free some space (images no container uses: sudo docker image prune -a), or move it to the native install with --native (its data comes along)."
       fi
       warn "Disk: ${dfree} MB free for Docker (needs ${MIN_DISK_DOCKER_MB} MB) — using the native install instead."
       ENGINE="native"
@@ -887,10 +904,45 @@ stop_native_instances() { # before the Docker stack takes the port
   [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && { $SUDO kill "$pid" 2>/dev/null || kill "$pid" 2>/dev/null || true; }
   return 0
 }
-stop_docker_stack() { # before the native console takes the port
-  command -v docker >/dev/null 2>&1 && [ -f "$ENV_FILE" ] && [ "$(docker_state)" = running ] || return 0
-  ensure_compose >/dev/null 2>&1 || return 0
-  compose down --remove-orphans >/dev/null 2>&1 || true
+# Before the native console takes the port: every running container of this deployment, current or
+# 0.2.x names (another compose project), is stopped — not removed: its data is copied from it next,
+# and a later Docker install reuses it. "unless-stopped" keeps a stopped container down after a reboot.
+STOPPED_CONTAINERS=""
+stop_docker_stack() {
+  command -v docker >/dev/null 2>&1 && [ "$(docker_state)" = running ] || return 0
+  local c
+  for c in $OUR_CONTAINERS; do
+    [ "$($SUDO docker container inspect -f '{{.State.Running}}' "$c" 2>/dev/null)" = true ] || continue
+    log "Stopping the Docker container $c (kept, with its data volume)…"
+    if $SUDO docker stop "$c" >/dev/null 2>&1; then STOPPED_CONTAINERS="$STOPPED_CONTAINERS $c"
+    else warn "could not stop the container $c"; fi
+  done
+  return 0
+}
+restart_stopped_containers() { # a failed native install gives the Docker deployment back
+  local c
+  for c in $STOPPED_CONTAINERS; do $SUDO docker start "$c" >/dev/null 2>&1 || warn "could not restart the container $c"; done
+  [ -z "$STOPPED_CONTAINERS" ] || log "Restarted the Docker deployment's containers:$STOPPED_CONTAINERS."
+  STOPPED_CONTAINERS=""
+}
+
+# A Docker deployment moving to the native install brings its data: copied from its (stopped)
+# console container once, only into an empty native data directory. The volume is kept.
+migrate_docker_data_to_native() {
+  command -v docker >/dev/null 2>&1 && [ "$(docker_state)" = running ] || return 0
+  [ -z "$(ls -A "$NATIVE_DATA" 2>/dev/null)" ] || return 0
+  local c src=""
+  for c in corvex-redops-console pentestiq-api; do   # old-name
+    $SUDO docker container inspect "$c" >/dev/null 2>&1 && { src="$c"; break; }
+  done
+  [ -n "$src" ] || return 0
+  log "Copying the data of the Docker deployment ($src) to ${NATIVE_DATA}…"
+  as_root mkdir -p "$NATIVE_DATA"
+  if ! $SUDO docker cp "$src:/app/data/." "$NATIVE_DATA/" >/dev/null; then
+    warn "could not copy the Docker deployment's data (its volume is untouched)"; return 1
+  fi
+  [ "$NATIVE_MODE" = system ] && $SUDO chown -R "$NATIVE_USER:$NATIVE_USER" "$NATIVE_DATA"
+  DOCKER_DATA_COPIED="$src"
 }
 
 start_native() {
@@ -918,6 +970,7 @@ stop_native() {
 rollback_native() {
   warn "Stopping the native console again — nothing is left half-started (data is kept)."
   stop_native; STACK_STARTED=""
+  restart_stopped_containers
 }
 show_native_logs() {
   warn "Last console log lines:"
@@ -951,9 +1004,11 @@ deploy_native() { # returns 0 on a healthy console
   fi
   rm -f "$blog"; ok "Dependencies installed."
   write_native_env || { warn "could not write $NATIVE_ENV"; return 1; }
-  migrate_legacy_native_data
+  # stop what holds the data first, so the copies are consistent
   stop_legacy_native
   stop_docker_stack
+  migrate_docker_data_to_native || { restart_stopped_containers; return 1; }
+  migrate_legacy_native_data
   log "Starting the console on $(health_host):$PORT (as user $NATIVE_USER)…"
   STACK_STARTED="native"
   if ! start_native; then warn "The native console didn't start."; show_native_logs; rollback_native; return 1; fi
@@ -1059,11 +1114,12 @@ ai_fail() {
 }
 
 # ----------------------------------------------------------------------------- health + summary
-wait_healthy() { # polls /health; 0 if up, 1 on timeout
+wait_healthy() { # polls /setup/status (this version only); 0 if up, 1 on timeout
   log "Waiting for the console to become healthy…"
   local i
   for i in $(seq 1 "$HEALTH_TRIES"); do
-    if curl -fsS -m 3 "http://$(health_host):${PORT}/health" >/dev/null 2>&1; then ok "Corvex-RedOps is up."; return 0; fi
+    # /setup/status exists only from 0.3 on: an older console still holding the port doesn't count
+    if curl -fsS -m 3 "http://$(health_host):${PORT}/setup/status" >/dev/null 2>&1; then ok "Corvex-RedOps is up."; return 0; fi
     sleep 3
   done
   return 1
@@ -1151,6 +1207,7 @@ summary() {
     printf "  Upgraded    : your data was copied from %s (left in place). Once you've checked it's all there:\n" "$MIGRATED_VOLUMES"
     printf "                ${c_dim}sudo docker volume rm %s${c_off}\n" "$MIGRATED_VOLUMES"
   fi
+  [ -n "${DOCKER_DATA_COPIED:-}" ] && printf "  Data of the Docker deployment copied from %s (its container and volume are kept; remove them once you've checked).\n" "$DOCKER_DATA_COPIED"
   [ "${LEGACY_DATA_COPIED:-0}" = 1 ] && printf "  Previous native data copied from %s (left in place; remove it once you've checked).\n" "$LEGACY_DATA"
   listen_warning
   proxy_trust_warning
@@ -1225,6 +1282,7 @@ BANNER
       ;;
     auto|*)
       if ! try_docker; then
+        [ "$EXISTING_ENGINE" = docker ] && die "updating the Docker deployment failed (see above); its data volumes are untouched. Fix the cause and re-run, or move it to the native install with --native."
         log "Docker isn't usable here — installing natively instead (own venv, unprivileged service)."
         deploy_native || die "both the Docker and the native install failed; nothing was left running. Make Docker, or Python 3.10+ with PyPI access, available and re-run."
       fi

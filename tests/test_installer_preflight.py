@@ -109,6 +109,81 @@ def test_short_disk_for_docker_falls_back_to_native_on_auto_and_stops_on_docker(
     assert r.returncode != 0 and "the images need at least 8192 MB" in r.stderr
 
 
+# A Docker deployment from 0.2.x: only its console container exists (running), under the old name.
+_OLD_DOCKER_DEPLOYMENT = (
+    'docker_state(){ echo running; }; '
+    'docker(){ echo "docker $*" >> "${CORVEX_TEST_DOCKER_LOG:-/dev/null}"; local last="${@: -1}"; '
+    'case "$1 $2" in "container inspect") [ "$last" = pentestiq-api ] || return 1; '
+    '[ "$3" = -f ] && echo true; return 0;; "info -f") echo /var/lib/docker; return 0;; esac; '
+    '[ "$1" = --version ] && echo "Docker version 28.5.2, build x"; return 0; }; ')
+
+
+def test_an_existing_docker_deployment_is_never_moved_to_native_for_lack_of_disk(tmp_path):
+    # 2026-11-23: an update with 4.7 GB free switched a Docker install to native, leaving its data
+    env = {"CORVEX_TEST_MEM_MB": "4096", "CORVEX_TEST_DISK_MB": "4735"}
+    r = _sh(tmp_path, _OLD_DOCKER_DEPLOYMENT + 'native_layout; preflight; echo "ENGINE=$ENGINE"',
+            args=f"--update --port {_free_port()}", extra_env=env)
+    assert r.returncode != 0 and "ENGINE=" not in r.stdout, r.stdout
+    assert "updating this Docker deployment needs 8192 MB. Nothing was changed" in r.stderr
+    assert "docker image prune" in r.stderr and "--native" in r.stderr
+    assert "using the native install instead" not in r.stdout
+    # asked for explicitly, the move to native goes ahead
+    r = _sh(tmp_path, _OLD_DOCKER_DEPLOYMENT + 'native_layout; preflight; echo "ENGINE=$ENGINE"',
+            args=f"--update --native --port {_free_port()}", extra_env=env)
+    assert r.returncode == 0 and "ENGINE=native" in r.stdout, r.stderr
+
+
+def test_the_existing_engine_is_recognised(tmp_path):
+    r = _sh(tmp_path, 'native_layout; echo "[$(existing_engine)]"')
+    assert "[]" in r.stdout                                   # a fresh machine
+    r = _sh(tmp_path, _OLD_DOCKER_DEPLOYMENT + 'native_layout; echo "[$(existing_engine)]"')
+    assert "[docker]" in r.stdout
+    r = _sh(tmp_path, 'native_layout; mkdir -p "$(dirname "$NATIVE_ENV")"; : > "$NATIVE_ENV"; echo "[$(existing_engine)]"')
+    assert "[native]" in r.stdout
+
+
+def test_a_failed_docker_update_never_falls_back_to_native():
+    main = SH[SH.index("main() {"):]
+    auto = main[main.index("auto|*)"):]
+    assert auto.index('[ "$EXISTING_ENGINE" = docker ] && die') < auto.index("deploy_native")
+
+
+def test_moving_to_native_stops_the_old_containers_and_brings_their_data(tmp_path):
+    log = tmp_path / "docker.log"
+    script = (_OLD_DOCKER_DEPLOYMENT + 'privileged(){ return 1; }; native_layout; '
+              'stop_docker_stack; migrate_docker_data_to_native; echo "COPIED=$DOCKER_DATA_COPIED"')
+    r = _sh(tmp_path, script, extra_env={"CORVEX_TEST_DOCKER_LOG": str(log)})
+    calls = log.read_text().splitlines()
+    data = tmp_path / "var-lib" / "data"
+    assert not any("rm" in c.split()[:2] or "down" in c for c in calls)        # stopped, never removed
+    stop, cp = calls.index("docker stop pentestiq-api"), calls.index(f"docker cp pentestiq-api:/app/data/. {data}/")
+    assert stop < cp and "COPIED=pentestiq-api" in r.stdout               # copied once it has stopped
+    assert not any(c.startswith("docker stop") and "pentestiq-api" not in c for c in calls)   # only running ones
+    # data already there is never overwritten
+    log.write_text(""); (data / "corvex-redops.db").write_text("kept")
+    r = _sh(tmp_path, script, extra_env={"CORVEX_TEST_DOCKER_LOG": str(log)})
+    assert "COPIED=" in r.stdout and "COPIED=pentestiq-api" not in r.stdout
+    assert not any(c.startswith("docker cp") for c in log.read_text().splitlines())
+
+
+def test_a_failed_native_install_starts_the_docker_deployment_again(tmp_path):
+    log = tmp_path / "docker.log"
+    r = _sh(tmp_path, _OLD_DOCKER_DEPLOYMENT + 'privileged(){ return 1; }; native_layout; stop_native(){ :; }; '
+                      'stop_docker_stack; rollback_native', extra_env={"CORVEX_TEST_DOCKER_LOG": str(log)})
+    calls = log.read_text().splitlines()
+    assert calls.index("docker stop pentestiq-api") < calls.index("docker start pentestiq-api"), calls
+    assert "Restarted the Docker deployment's containers: pentestiq-api" in r.stdout
+
+
+def test_an_older_console_on_the_port_is_not_taken_for_this_one(tmp_path):
+    # 0.2.x answers /health but has no /setup/status
+    r = _sh(tmp_path, 'curl(){ case "$*" in */setup/status*) return 22;; */health*) return 0;; esac; return 1; }; '
+                      'sleep(){ :; }; HEALTH_TRIES=2; PORT=8080; wait_healthy && echo UP || echo NOT-UP')
+    assert "NOT-UP" in r.stdout
+    r = _sh(tmp_path, 'curl(){ return 0; }; sleep(){ :; }; HEALTH_TRIES=2; PORT=8080; wait_healthy && echo UP || echo NOT-UP')
+    assert "UP" in r.stdout and "NOT-UP" not in r.stdout
+
+
 def test_preflight_reports_platform_memory_disk_docker_and_port(tmp_path):
     r = _sh(tmp_path, "native_layout; preflight", args=f"--port {_free_port()}",
             extra_env={"CORVEX_TEST_MEM_MB": "4096", "CORVEX_TEST_DISK_MB": "50000"})

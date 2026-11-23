@@ -194,6 +194,59 @@ function Get-DockerState {
   try { docker info *> $null; if ($LASTEXITCODE -eq 0) { return "running" } } catch {}
   return "stopped"
 }
+# The engine an existing deployment runs on: docker when its containers exist (current or 0.2.x
+# names), native when its files do; "" on a fresh machine.
+function Get-ExistingEngine {
+  if ($script:DockerState -eq "running") {
+    foreach ($c in $OurContainers) {
+      docker container inspect $c *> $null
+      if ($LASTEXITCODE -eq 0) { return "docker" }
+    }
+  }
+  if (Test-Path (Join-Path $NativeHome "secret-key")) { return "native" }
+  return ""
+}
+# Before the native console takes the port: every running container of this deployment (current or
+# 0.2.x names) is stopped, not removed - its data is copied from it next, and a later Docker install
+# reuses it. "unless-stopped" keeps a stopped container down after a restart.
+$script:StoppedContainers = @()
+function Stop-DockerDeployment {
+  if ($script:DockerState -ne "running") { return }
+  foreach ($c in $OurContainers) {
+    $running = (docker container inspect -f "{{.State.Running}}" $c 2>$null | Out-String).Trim()
+    if ($running -ne "true") { continue }
+    Info "Stopping the Docker container $c (kept, with its data volume)..."
+    docker stop $c *> $null
+    if ($LASTEXITCODE -eq 0) { $script:StoppedContainers += $c } else { Warn "could not stop the container $c" }
+  }
+}
+function Start-StoppedContainers {  # a failed native install gives the Docker deployment back
+  foreach ($c in $script:StoppedContainers) {
+    docker start $c *> $null
+    if ($LASTEXITCODE -ne 0) { Warn "could not restart the container $c" }
+  }
+  if ($script:StoppedContainers.Count -gt 0) { Info "Restarted the Docker deployment's containers: $($script:StoppedContainers -join ', ')." }
+  $script:StoppedContainers = @()
+}
+# A Docker deployment moving to the native install brings its data: copied from its (stopped) console
+# container once, only into an empty native data directory. The volume is kept.
+$script:DockerDataCopied = ""
+function Copy-DockerDataToNative {
+  if ($script:DockerState -ne "running") { return $true }
+  if (Get-ChildItem -Force $NativeData -ErrorAction SilentlyContinue | Select-Object -First 1) { return $true }
+  $src = $null
+  foreach ($c in @("corvex-redops-console", "pentestiq-api")) {   # old-name
+    docker container inspect $c *> $null
+    if ($LASTEXITCODE -eq 0) { $src = $c; break }
+  }
+  if (-not $src) { return $true }
+  Info "Copying the data of the Docker deployment ($src) to $NativeData..."
+  New-Item -ItemType Directory -Force -Path $NativeData | Out-Null
+  docker cp "$($src):/app/data/." "$NativeData" *> $null
+  if ($LASTEXITCODE -ne 0) { Warn "could not copy the Docker deployment's data (its volume is untouched)"; return $false }
+  $script:DockerDataCopied = $src
+  return $true
+}
 # Who listens on TCP $p: @{ Desc; Pid; Container } or $null when free.
 function Get-PortHolder([int]$p) {
   $c = $null
@@ -246,11 +299,15 @@ function Invoke-Preflight {
   elseif ($mem -gt 0 -and $mem -lt $RecMemMB) { Warn "Memory: $mem MB free ($RecMemMB MB recommended) - large scans may be slow." }
   else { Ok "Memory: $mem MB free." }
   $script:DockerState = Get-DockerState
+  $script:ExistingEngine = Get-ExistingEngine
   Info "Docker: $script:DockerState."
   if (-not $Native) {
     $free = Get-FreeDiskMB $env:ProgramData
     if ($free -gt 0 -and $free -lt $MinDiskDockerMB) {
       if ($Docker) { Die "only $free MB free for Docker; the images need at least $MinDiskDockerMB MB. Free some space, or use -Native." }
+      if ($script:ExistingEngine -eq "docker") {
+        Die "only $free MB free for Docker; updating this Docker deployment needs $MinDiskDockerMB MB. Nothing was changed. Free some space (images no container uses: docker image prune -a), or move it to the native install with -Native (its data comes along)."
+      }
       Warn "Disk: $free MB free (Docker needs $MinDiskDockerMB MB) - using the native install instead."
       $script:ForceNative = $true
     } else { Ok "Disk: $free MB free." }
@@ -309,7 +366,8 @@ function Wait-Healthy {
   Info "Waiting for the console to become healthy..."
   for ($i = 0; $i -lt 60; $i++) {
     try {
-      $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 4 "http://$(Get-HealthHost):$Port/health"
+      # /setup/status exists only from 0.3 on: an older console still holding the port doesn't count
+      $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 4 "http://$(Get-HealthHost):$Port/setup/status"
       if ($r.StatusCode -eq 200) { Ok "Corvex-RedOps is up."; return $true }
     } catch {}
     Start-Sleep -Seconds 3
@@ -326,6 +384,7 @@ function Show-Summary([string]$Engine) {
   else { Write-Host "  Web console : http://$(Get-HealthHost):$Port   (listening on $Listen)" }
   if ($PublishMobile -and $Engine -eq "docker") { Write-Host "  Mobile engine: http://127.0.0.1:$MobilePort   (-PublishMobile)" }
   if ($Engine -eq "native") { Write-Host "  Data        : $NativeData   (log: $NativeLog)" }
+  if ($script:DockerDataCopied) { Write-Host "  Moved       : data copied from the Docker deployment ($script:DockerDataCopied); its container and volume are kept - remove them once you've checked." }
   if ($script:AiStatus -eq "ready") { Write-Host "  AI          : ready - local model $AiModel" -ForegroundColor Green }
   elseif ($script:AiStatus) { Write-Host "  AI          : $script:AiStatus" -ForegroundColor Yellow }
   else { Write-Host "  AI          : off (.\install.ps1 -Ai adds the local model)" -ForegroundColor DarkGray }
@@ -623,6 +682,11 @@ function Deploy-Native {
     $sk = Get-EnvAny "SECRET_KEY"; if (-not $sk) { $sk = New-Secret 48 }
     Set-Content -Path $secretFile -Value $sk -Encoding ASCII
   }
+  Stop-DockerDeployment
+  if (-not (Copy-DockerDataToNative)) {
+    Start-StoppedContainers
+    Die "The Docker deployment's data couldn't be copied; nothing was changed (its containers run again)."
+  }
   Stop-NativeConsole
   $env:CORVEX_DATA_DIR = $NativeData
   $env:CORVEX_SECRET_KEY = (Get-Content $secretFile -Raw).Trim()
@@ -638,6 +702,7 @@ function Deploy-Native {
     Get-Content $NativeLog -Tail 30 -ErrorAction SilentlyContinue | Out-Host
     Get-Content (Join-Path $NativeHome "console.err.log") -Tail 30 -ErrorAction SilentlyContinue | Out-Host
     Stop-NativeConsole; $script:Started = ""
+    Start-StoppedContainers
     Die "The native console didn't start (nothing was left running)."
   }
   return $true
@@ -679,6 +744,9 @@ if ($Docker) {
 
 # default: auto - try Docker, fall back to native automatically
 if (Deploy-Docker) { Install-Ai; Complete-Docker; Show-Summary "docker"; exit 0 }
+if ($script:ExistingEngine -eq "docker") {
+  Die "Updating the Docker deployment failed (see above); its data volumes are untouched. Fix the cause and re-run, or move it to the native install with -Native."
+}
 Warn "Docker path unavailable - installing natively instead (no Docker needed)."
 if ($script:AiOn) { $script:AiStatus = "skipped - $NativeAiNote" }
 $script:AiOn = $false
