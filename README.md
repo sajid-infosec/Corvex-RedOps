@@ -735,7 +735,7 @@ cd Corvex-RedOps
 sudo ./install.sh
 ```
 
-That's it — the installer's last lines are the console address and a **one-time setup code**. Open the address, enter the code on the **Set up Corvex-RedOps** page, choose the admin username and password, and sign in. Need a new code? `sudo docker exec -it corvex-redops-console corvex setup-code`. For a headless install, export `CORVEX_ADMIN_PASSWORD` (12+ characters; `CORVEX_ADMIN_USER` optional) before running the installer: the admin is created directly and there is no setup page.
+That's it — the installer's last lines are the console address. Open it and create your account: a username, your email and a password; confirm the email with the 6-digit code we send (your password stays on the machine). Without internet access the console asks for the **one-time setup code** the installer prints instead. Need a new code? `sudo docker exec -it corvex-redops-console corvex setup-code`. For a headless install, export `CORVEX_ADMIN_PASSWORD` (12+ characters; `CORVEX_ADMIN_USER` optional) before running the installer: the admin is created directly and there is no setup page.
 
 > Works on Debian / Ubuntu / Kali / Parrot / Mint, RHEL / CentOS / Fedora / Rocky /
 > AlmaLinux, Arch / Manjaro, and openSUSE / SLES. Idempotent — safe to re-run.
@@ -824,9 +824,12 @@ Full deployment guide, environment variables, and production notes (Postgres, sc
 
 The console is the fastest way to run a full assessment — no CLI needed.
 
-**1 · Set up and sign in.** Open `http://localhost:8080`. On a fresh install the console shows
-**Set up Corvex-RedOps**: enter the one-time setup code the installer printed (or
-`corvex setup-code` prints), choose the admin username and password, then sign in. Community includes one
+**1 · Create your account and sign in.** Open `http://localhost:8080`. On a fresh install the console shows
+**Create your Corvex-RedOps account**: a username, your email and a password (twice); type the 6-digit code
+we email you, then sign in. Without internet access it shows **Set up Corvex-RedOps** instead: enter the
+one-time setup code the installer printed (or `corvex setup-code` prints). **Forgot password?** on the
+sign-in page emails a reset code; offline, run `corvex reset-password <user>` on the server. Accounts from
+before email sign-up confirm an email at their next sign-in (only while the install is online). Community includes one
 workspace, this one. With Premium, add separate, isolated workspaces by running `corvex init-tenant` on
 the server. Self-service **Create workspace** on the sign-in screen is off by default and appears only
 when `CORVEX_ALLOW_REGISTRATION=1` and the plan allows another workspace.
@@ -1117,6 +1120,9 @@ Permissions are keyed like `engagements:write`, `scan:run`, `reports:export`, `d
 |---|---|---|
 | `CORVEX_ADMIN_USER` | `admin` | Username for the first-run admin account |
 | `CORVEX_ADMIN_PASSWORD` | *(unset)* | Headless installs: creates the first admin directly at the first boot, with no setup page (the admin must change it at the first sign-in unless `CORVEX_ADMIN_FORCE_CHANGE=0`). Must be at least 12 characters, or the console refuses to start. Unset (the default): no admin is created and the first visitor sets one up with a one-time setup code. No password ships with Corvex-RedOps, and none is generated |
+| `CORVEX_REGISTRY` | `on` | `off`: never contact the account registry at corvex-redops.com. The first account is then created with the one-time setup code, password resets are done with `corvex reset-password`, and nobody is asked to verify an email. Also used automatically while the registry can't be reached |
+| `CORVEX_REGISTRY_URL` | `https://corvex-redops.com/registry` | The account registry that emails sign-up, verification, password-reset and invite codes. It receives the username, email and role being verified, a random install ID, and the version and edition; once registered, its reachability check (at most once a minute while the console is in use) carries the install ID, version and edition. Never passwords, targets or findings |
+| `CORVEX_SETUP_CODE_REQUIRED` | `0` | `1`: the sign-up form also asks for the one-time setup code. The installer sets it when the console listens beyond 127.0.0.1, so nobody else on the network can claim a fresh install |
 | `CORVEX_TRUSTED_PROXIES` | `127.0.0.1,::1` | Reverse proxies (IPs/CIDRs, comma-separated) whose `X-Forwarded-For` sets the client address used for sign-in throttling. Set by `install.sh --trusted-proxy`. `*` is refused at start-up |
 | `CORVEX_ALLOW_REGISTRATION` | `0` | `1` opens self-service registration (`POST /auth/register` and the console's **Create workspace**). Closed by default so a reachable console can't be used to create workspaces; add them with `corvex init-tenant` |
 | `CORVEX_ADMIN_FORCE_CHANGE` | `1` | Set `0` only for automated provisioning where a secrets manager owns the first-run admin password: the admin is then not forced to change it. The old public default `corvex` is always forced |
@@ -1146,7 +1152,12 @@ Base URL: `http://<host>:<port>` · Auth: `Authorization: Bearer <token>` **or**
 
 | Method | Endpoint | Role | Description |
 |---|---|---|---|
-| `GET` | `/auth/options` | — | What the sign-in screen may offer: `{"registration_open": bool}` |
+| `GET` | `/auth/options` | — | What the sign-in screen may offer: `{"registration_open", "password_reset", "invites"}` (all bool) |
+| `GET` | `/setup/status` | — | `setup_required`, and `signup`: `"email"` (sign-up by emailed code) or `"code"` (one-time setup code) |
+| `POST` | `/setup/signup` · `/setup/signup/verify` · `/setup/signup/resend` | — | First visit: username, email, password → 6-digit code → owner account with a verified email |
+| `POST` | `/auth/password-reset/start` · `/auth/password-reset/finish` | — | Emailed reset code (same reply for unknown users) → new password; earlier sessions end |
+| `POST` | `/auth/email/start` · `/auth/email/verify` · `/auth/email/resend` | any | Confirm or change the signed-in user's email. Until it's verified (and the registry answers), other routes return 403 `email_verification_required` |
+| `POST` | `/auth/invite/accept` | — | A user added by email sets their password with the invite code (Premium team management) |
 | `POST` | `/auth/register` | — | Create a tenant + owner, return a session token. **403 `registration_disabled` unless `CORVEX_ALLOW_REGISTRATION=1`** |
 | `POST` | `/auth/login` | — | Log in, return a session token |
 | `GET` | `/me` | any | Current principal (tenant, role) |

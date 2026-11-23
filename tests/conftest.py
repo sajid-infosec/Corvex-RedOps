@@ -19,6 +19,8 @@ os.environ.setdefault("CORVEX_ADMIN_FORCE_CHANGE", "0")
 os.environ.setdefault("CORVEX_ALLOW_REGISTRATION", "1")
 # Never touch the network during tests (EPSS/KEV lookups, etc.).
 os.environ.setdefault("PENTESTIQ_INTEL_OFFLINE", "1")
+# Never contact the account registry from tests; tests that need it inject a fake.
+os.environ.setdefault("CORVEX_REGISTRY", "off")
 # Never launch a headless browser in the test/CI environment (would hang or need
 # a full browser stack); the native BFS crawler still runs.
 os.environ.setdefault("CORVEX_SPA_CRAWL", "0")

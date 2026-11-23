@@ -20,7 +20,7 @@ def test_the_five_jobs():
 
 def test_docker_job_checks_health_setup_page_logs_and_listeners():
     r = _run("docker")
-    assert "sudo bash install.sh --docker --listen 127.0.0.1 --no-ai" in r
+    assert "sudo --preserve-env=CORVEX_REGISTRY bash install.sh --docker --listen 127.0.0.1 --no-ai" in r
     assert "/health" in r and "$CHECK setup install.log" in r and "$CHECK listeners 8080" in r
     assert "docker logs corvex-redops-console" in r and "install.sh --down" in r
 
@@ -34,7 +34,7 @@ def test_ai_job_uses_a_tiny_model_and_proves_it():
 
 def test_native_job_asserts_not_root_and_data_outside_the_checkout():
     r = _run("native")
-    assert "sudo bash install.sh --native" in r and 'test "$user" != root' in r
+    assert "sudo --preserve-env=CORVEX_REGISTRY bash install.sh --native" in r and 'test "$user" != root' in r
     assert "CORVEX_DATA_DIR" in r and "$GITHUB_WORKSPACE" in r
 
 
@@ -50,3 +50,12 @@ def test_upgrade_job_starts_from_0_2_1_and_checks_data_and_settings():
                  "kept-across-upgrade", "CORVEX_SECRET_KEY=ci-secret", "deploy_pentestiq-data corvex-redops-data",
                  "corvex-redops.db", "docker volume rm deploy_pentestiq-data"):
         assert part in r, part
+
+
+def test_ci_never_contacts_the_account_registry():
+    """CI installs must not create accounts in the real registry, and they test the
+    setup-code path: the workflow turns the registry off and passes it through sudo."""
+    import yaml
+    wf = (ROOT / ".github/workflows/installer.yml").read_text(encoding="utf-8")
+    assert yaml.safe_load(wf)["env"]["CORVEX_REGISTRY"] == "off"
+    assert "sudo bash install.sh" not in wf                     # every sudo run keeps the setting

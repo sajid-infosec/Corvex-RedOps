@@ -25,7 +25,7 @@ def test_registration_closed_by_default(tmp_path, monkeypatch):
     c = _client(tmp_path)
     r = c.post("/auth/register", json=BODY)
     assert r.status_code == 403 and r.json()["detail"]["error"] == "registration_disabled"
-    assert c.get("/auth/options").json() == {"registration_open": False}
+    assert c.get("/auth/options").json()["registration_open"] is False
     assert c.post("/auth/login", json={"username": "eve", "password": BODY["password"]}).status_code == 401
 
 
@@ -38,7 +38,7 @@ def test_only_exactly_1_opens_it(tmp_path, monkeypatch):
 def test_registration_open_when_enabled(tmp_path, monkeypatch):
     monkeypatch.setenv("CORVEX_ALLOW_REGISTRATION", "1")
     c = _client(tmp_path)
-    assert c.get("/auth/options").json() == {"registration_open": True}
+    assert c.get("/auth/options").json()["registration_open"] is True
     r = c.post("/auth/register", json=BODY)
     assert r.status_code == 201 and r.json()["role"] == "owner"
 
@@ -46,7 +46,8 @@ def test_registration_open_when_enabled(tmp_path, monkeypatch):
 def test_options_endpoint_needs_no_auth_and_leaks_nothing(tmp_path, monkeypatch):
     monkeypatch.delenv("CORVEX_ALLOW_REGISTRATION", raising=False)
     r = _client(tmp_path).get("/auth/options")
-    assert r.status_code == 200 and set(r.json()) == {"registration_open"}
+    assert r.status_code == 200 and set(r.json()) == {"registration_open", "password_reset", "invites"}
+    assert all(isinstance(v, bool) for v in r.json().values())       # flags only, no data
 
 
 def test_console_hides_create_workspace_unless_open():

@@ -42,7 +42,8 @@ def _setup(c, code, user="admin", pw=PW, pw2=None):
 def test_a_fresh_install_has_no_admin_and_only_setup_and_health_answer(tmp_path, monkeypatch):
     c, auth = _app(tmp_path, monkeypatch)
     assert auth.store.count_users() == 0
-    assert c.get("/setup/status").json() == {"setup_required": True, "default_username": "admin"}
+    assert c.get("/setup/status").json() == {"setup_required": True, "default_username": "admin",
+                                             "signup": "code", "setup_code_required": False}   # registry off
     assert c.get("/health").status_code == 200 and c.get("/").status_code == 200
     for method, path in (("GET", "/engagements"), ("GET", "/me"), ("POST", "/auth/login"),
                          ("POST", "/auth/register"), ("GET", "/edition"), ("GET", "/settings"),

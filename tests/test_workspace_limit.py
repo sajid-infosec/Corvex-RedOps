@@ -39,7 +39,7 @@ def test_community_refuses_a_second_workspace_via_the_api(tmp_path, monkeypatch)
     assert r.status_code == 403
     assert r.json()["detail"] == {"error": "workspace_limit", "message": MSG}
     assert auth.store.count_tenants() == 1 and auth.store.get_user_auth("bob") is None
-    assert c.get("/auth/options").json() == {"registration_open": False}   # no button that can't work
+    assert c.get("/auth/options").json()["registration_open"] is False   # no button that can't work
 
 
 def test_community_closed_registration_doesnt_suggest_adding_a_workspace(tmp_path, monkeypatch):
@@ -56,7 +56,7 @@ def test_premium_allows_more_workspaces(tmp_path, monkeypatch):
     assert _register(c, "second", "bob").status_code == 201
     assert _register(c, "third", "carol").status_code == 201
     assert auth.store.count_tenants() == 3
-    assert c.get("/auth/options").json() == {"registration_open": True}
+    assert c.get("/auth/options").json()["registration_open"] is True
 
 
 def test_cli_refuses_a_second_workspace_on_community(tmp_path, monkeypatch):

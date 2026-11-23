@@ -49,6 +49,15 @@ services:
       - CORVEX_ADMIN_PASSWORD=${CORVEX_ADMIN_PASSWORD:-}
       # Reverse proxies whose X-Forwarded-For is honoured (IPs/CIDRs). Never "*" (refused at start-up).
       - CORVEX_TRUSTED_PROXIES=${CORVEX_TRUSTED_PROXIES:-127.0.0.1,::1}
+      # Email sign-up and password reset go through the account registry at corvex-redops.com.
+      # CORVEX_REGISTRY=off: never contact it (isolated networks use the one-time setup code).
+      - CORVEX_REGISTRY=${CORVEX_REGISTRY:-on}
+      - CORVEX_REGISTRY_URL=${CORVEX_REGISTRY_URL:-https://corvex-redops.com/registry}
+      # 1 when the console listens beyond 127.0.0.1 (install.sh --listen): sign-up also asks for the setup code
+      - CORVEX_SETUP_CODE_REQUIRED=${CORVEX_SETUP_CODE_REQUIRED:-0}
+      # threat-intel lookups: 1 = never fetch (isolated networks); refresh every N days (0 = only when asked)
+      - CORVEX_INTEL_OFFLINE=${CORVEX_INTEL_OFFLINE:-0}
+      - CORVEX_INTEL_REFRESH_DAYS=${CORVEX_INTEL_REFRESH_DAYS:-0}
     ports:
       - "${CORVEX_LISTEN:-127.0.0.1}:${CORVEX_PORT:-8080}:8080"   # Corvex-RedOps API + console (install.sh --listen)
     volumes:

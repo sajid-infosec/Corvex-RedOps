@@ -356,6 +356,9 @@ function Write-Env {
   if (-not $script:AiOn -or -not (Get-EnvValue "CORVEX_AI")) { Set-EnvValue "CORVEX_AI" "0" }
   if (-not (Get-EnvValue "OLLAMA_URL")) { Set-EnvValue "OLLAMA_URL" "http://ai:11434" }
   if (-not (Get-EnvValue "CORVEX_AI_MODEL")) { Set-EnvValue "CORVEX_AI_MODEL" $AiModel }
+  # email sign-up: a console reachable from other machines also asks for the setup code
+  Set-EnvValue "CORVEX_SETUP_CODE_REQUIRED" $(if (Test-Loopback $Listen) { "0" } else { "1" })
+  if ($env:CORVEX_REGISTRY) { Set-EnvValue "CORVEX_REGISTRY" $env:CORVEX_REGISTRY }
   if ($env:CORVEX_ADMIN_PASSWORD) {     # headless: the admin is created at the console's first start
     Set-EnvValue "CORVEX_ADMIN_USER" $(if ($env:CORVEX_ADMIN_USER) { $env:CORVEX_ADMIN_USER } else { "admin" })
     Set-EnvValue "CORVEX_ADMIN_PASSWORD" $env:CORVEX_ADMIN_PASSWORD
@@ -413,7 +416,14 @@ function Show-Summary([string]$Engine) {
   $codeCmd  = if ($Engine -eq "docker") { "docker exec -it $ConsoleContainer corvex setup-code" } else { "`$env:CORVEX_DATA_DIR='$NativeData'; & '$(Join-Path $NativeVenv "Scripts\corvex.exe")' setup-code" }
   $resetCmd = if ($Engine -eq "docker") { "docker exec -it $ConsoleContainer corvex reset-password <user>" } else { "`$env:CORVEX_DATA_DIR='$NativeData'; & '$(Join-Path $NativeVenv "Scripts\corvex.exe")' reset-password <user>" }
   Write-Host ""
-  if ($script:SetupCode) {
+  if ($script:SignupMode -eq "email") {
+    Write-Host "  Open $url and create your account: username, email and password."
+    Write-Host "  We'll email you a 6-digit code to confirm the address. Your password stays on this machine."
+    if ($script:SetupCode) {
+      Write-Host "  The console can be reached from other machines, so the form also asks for this one-time setup code:"
+      Write-Host "  Setup code : $script:SetupCode   (valid until used; a new one: $codeCmd)" -ForegroundColor Green
+    }
+  } elseif ($script:SetupCode) {
     Write-Host "  Open $url and set up the admin account with this one-time setup code:"
     Write-Host "  Setup code : $script:SetupCode   (valid until used; a new one: $codeCmd)" -ForegroundColor Green
   } elseif ($env:CORVEX_ADMIN_PASSWORD) {
@@ -426,11 +436,15 @@ function Show-Summary([string]$Engine) {
 
 # A fresh install (no admin yet): a one-time setup code from the console, kept in memory only.
 $script:SetupCode = ""
+$script:SignupMode = ""
 function Get-SetupCode([string]$Engine) {
   try {
     $st = Invoke-RestMethod -TimeoutSec 5 "http://$(Get-HealthHost):$Port/setup/status"
     if (-not $st.setup_required) { return }
   } catch { return }
+  # sign-up by email; the setup code only when the console is reachable from other machines
+  $script:SignupMode = if ($st.signup -eq "email") { "email" } else { "code" }
+  if ($script:SignupMode -eq "email" -and -not $st.setup_code_required) { return }
   if ($Engine -eq "docker") {
     $out = Invoke-ComposeOutput @("exec", "-T", "console", "corvex", "setup-code", "--quiet")
   } else {
@@ -690,6 +704,7 @@ function Deploy-Native {
   Stop-NativeConsole
   $env:CORVEX_DATA_DIR = $NativeData
   $env:CORVEX_SECRET_KEY = (Get-Content $secretFile -Raw).Trim()
+  $env:CORVEX_SETUP_CODE_REQUIRED = $(if (Test-Loopback $Listen) { "0" } else { "1" })
   $env:CORVEX_TRUSTED_PROXIES = Get-TrustedList
   Info "Starting the console on http://$(Get-HealthHost):$Port ..."
   $script:Started = "native"
