@@ -68,7 +68,7 @@ def test_the_setup_code_comes_from_the_console_and_only_when_setup_is_pending(tm
 
 
 def test_native_installs_fetch_the_code_as_the_service_user(tmp_path):
-    r = _run(tmp_path, 'privileged(){ return 0; }; native_layout; NATIVE_MODE=system; SUDO=echo; native_cli setup-code --quiet')
+    r = _run(tmp_path, 'OSKIND=linux; privileged(){ return 0; }; native_layout; NATIVE_MODE=system; SUDO=echo; native_cli setup-code --quiet')
     assert re.search(r"^runuser -u corvex-redops -- bash -c .*setup-code --quiet", r.stdout)
 
 
@@ -87,7 +87,7 @@ def test_an_existing_install_gets_the_reset_command_for_its_engine(tmp_path):
     docker = _summary_tail(tmp_path, "")
     assert "with your admin account" in docker[0]
     assert "sudo docker exec -it corvex-redops-console corvex reset-password <user>" in docker[1]
-    native = _run(tmp_path, 'privileged(){ return 0; }; native_layout; ENGINE_USED=native; PORT=8080; SETUP_CODE=""; '
+    native = _run(tmp_path, 'OSKIND=linux; privileged(){ return 0; }; native_layout; ENGINE_USED=native; PORT=8080; SETUP_CODE=""; '
                             'summary | sed "/^$/d" | tail -n 1').stdout
     assert "sudo runuser -u corvex-redops -- env CORVEX_DATA_DIR=" in native and "corvex reset-password <user>" in native
 

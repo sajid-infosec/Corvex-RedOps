@@ -53,21 +53,31 @@ def _free_port():
 def test_a_busy_port_is_named(tmp_path, listener):
     r = _sh(tmp_path, f'port_holder {listener}; echo; port_holder {_free_port()}; echo "<free>"')
     first, second = r.stdout.split("\n", 1)
-    assert re.search(rf"python[0-9.]* \(pid {os.getpid()}", first), first
+    assert re.search(rf"python[0-9.]* \(pid {os.getpid()}", first, re.I), first
+    assert second.strip() == "<free>"
+
+
+@pytest.mark.skipif(not Path("/proc/net/tcp").exists(), reason="reads /proc/net/tcp (Linux)")
+def test_a_busy_port_is_named_without_ss_or_lsof(tmp_path, listener):
+    # minimal Linux (e.g. an EL9 container) has neither: the installer reads /proc itself
+    hide = 'command(){ case "$1 $2" in "-v ss"|"-v lsof") return 1;; esac; builtin command "$@"; }; '
+    r = _sh(tmp_path, hide + f'port_holder {listener}; echo; port_holder {_free_port()}; echo "<free>"')
+    first, second = r.stdout.split("\n", 1)
+    assert re.search(rf"python[0-9.]* \(pid {os.getpid()}", first, re.I), first
     assert second.strip() == "<free>"
 
 
 def test_a_busy_port_the_user_chose_stops_the_install_naming_the_holder(tmp_path, listener):
     r = _sh(tmp_path, 'resolve_port "$PORT" "$PORT_SET" --port; echo SHOULD-NOT-RUN', args=f"--port {listener}")
     assert r.returncode != 0 and "SHOULD-NOT-RUN" not in r.stdout
-    assert f"port {listener} is in use by python" in r.stderr and f"pid {os.getpid()}" in r.stderr
+    assert f"port {listener} is in use by python" in r.stderr.lower() and f"pid {os.getpid()}" in r.stderr
     assert "choose another port with --port N" in r.stderr
 
 
 def test_a_busy_default_port_moves_to_the_next_free_one(tmp_path, listener):
     r = _sh(tmp_path, f'PORT={listener}; PORT_SET=0; echo "CHOSEN=$(resolve_port "$PORT" "$PORT_SET" --port)"')
     chosen = int(re.search(r"CHOSEN=(\d+)", r.stdout).group(1))
-    assert chosen > listener and f"Port {listener} is in use by python" in r.stderr and f"using {chosen}" in r.stderr
+    assert chosen > listener and f"port {listener} is in use by python" in r.stderr.lower() and f"using {chosen}" in r.stderr
 
 
 def test_a_port_held_by_our_own_previous_console_is_not_a_conflict(tmp_path):
@@ -78,7 +88,7 @@ def test_a_port_held_by_our_own_previous_console_is_not_a_conflict(tmp_path):
 def test_preflight_checks_every_published_port(tmp_path, listener):
     r = _sh(tmp_path, "preflight", args=f"--port {_free_port()} --publish-mobile {listener}",
             extra_env={"CORVEX_TEST_MEM_MB": "4096", "CORVEX_TEST_DISK_MB": "50000"})
-    assert r.returncode != 0 and f"port {listener} is in use by python" in r.stderr
+    assert r.returncode != 0 and f"port {listener} is in use by python" in r.stderr.lower()
     assert "--publish-mobile N" in r.stderr
 
 
@@ -169,7 +179,7 @@ def test_the_dns_fix_is_only_a_docker_service_drop_in_and_says_so(tmp_path):
 
 # ---- native: unprivileged service, own venv, data outside the checkout ------------------
 def test_native_system_service_never_runs_as_root_and_stays_out_of_the_checkout(tmp_path):
-    r = _sh(tmp_path, 'privileged(){ return 0; }; native_layout; unit_file_text; echo "DATA=$NATIVE_DATA VENV=$NATIVE_VENV"')
+    r = _sh(tmp_path, 'OSKIND=linux; privileged(){ return 0; }; native_layout; unit_file_text; echo "DATA=$NATIVE_DATA VENV=$NATIVE_VENV"')
     unit = r.stdout
     assert "User=corvex-redops" in unit and "Group=corvex-redops" in unit and "User=root" not in unit
     data = re.search(r"DATA=(\S+)", unit).group(1); venv = re.search(r"VENV=(\S+)", unit).group(1)
@@ -187,7 +197,7 @@ def test_native_defaults_are_system_paths_outside_the_checkout():
 
 
 def test_native_settings_file_holds_the_data_dir_and_is_private(tmp_path):
-    r = _sh(tmp_path, 'privileged(){ return 1; }; native_layout; write_native_env && cat "$NATIVE_ENV"; stat -c %a "$NATIVE_ENV"')
+    r = _sh(tmp_path, 'privileged(){ return 1; }; native_layout; write_native_env && cat "$NATIVE_ENV"; stat -c %a "$NATIVE_ENV" 2>/dev/null || stat -f %Lp "$NATIVE_ENV"')
     assert f"CORVEX_DATA_DIR={tmp_path}/var-lib/data" in r.stdout and "CORVEX_LISTEN=127.0.0.1" in r.stdout
     assert re.search(r"CORVEX_SECRET_KEY=[0-9a-f]{64}", r.stdout) and r.stdout.strip().endswith("600")
 

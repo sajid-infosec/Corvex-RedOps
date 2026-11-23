@@ -265,6 +265,22 @@ docker_root_dir() {
   printf '%s' "${d:-/var/lib/docker}"
 }
 
+# Linux without ss or lsof: the socket listening on TCP port $1 (/proc/net/tcp and tcp6), then the
+# process holding it, as "name|pid" — name "?" when that process isn't ours to read; empty if free.
+proc_port_holder() {
+  local hex inode fd pid="" name=""
+  hex="$(printf ':%04X' "$1")"
+  inode="$(awk -v h="$hex" 'FNR > 1 && $4 == "0A" && substr($2, length($2) - 4) == h { print $10; exit }' \
+           /proc/net/tcp /proc/net/tcp6 2>/dev/null)"
+  [ -n "$inode" ] || return 0
+  for fd in /proc/[0-9]*/fd/*; do
+    if [ "$(readlink "$fd" 2>/dev/null)" = "socket:[$inode]" ]; then
+      pid="${fd#/proc/}"; pid="${pid%%/*}"; break
+    fi
+  done
+  [ -n "$pid" ] && name="$(cat "/proc/$pid/comm" 2>/dev/null)"
+  printf '%s|%s' "${name:-?}" "$pid"
+}
 # The process (or container) listening on TCP port $1, as "description|pid|container"; empty if free.
 port_holder() {
   local p="$1" line name="" pid="" user="" cname=""
@@ -280,6 +296,10 @@ port_holder() {
     if [ -n "$line" ]; then
       name="$(printf '%s' "$line" | awk '{print $1}')"; pid="$(printf '%s' "$line" | awk '{print $2}')"
     fi
+  elif [ -r /proc/net/tcp ]; then
+    # minimal Linux (no ss, no lsof): what ss reads — the listening socket, then its process
+    line="$(proc_port_holder "$p")"
+    if [ -n "$line" ]; then name="${line%%|*}"; pid="${line#*|}"; fi
   fi
   # a container publishing the port (also catches published ports with no userland proxy)
   if command -v docker >/dev/null 2>&1 && [ "$(docker_state)" = running ]; then
@@ -844,7 +864,7 @@ migrate_legacy_native_data() {
   [ -d "$LEGACY_DATA" ] || return 0
   [ -n "$(ls -A "$LEGACY_DATA" 2>/dev/null)" ] || return 0
   if [ -n "$(ls -A "$NATIVE_DATA" 2>/dev/null)" ]; then return 0; fi
-  log "Copying the data of the previous native install ($LEGACY_DATA) to $NATIVE_DATA…"
+  log "Copying the data of the previous native install ($LEGACY_DATA) to ${NATIVE_DATA}…"
   as_root cp -a "$LEGACY_DATA/." "$NATIVE_DATA/" || { warn "could not copy $LEGACY_DATA"; return 1; }
   [ "$NATIVE_MODE" = system ] && $SUDO chown -R "$NATIVE_USER:$NATIVE_USER" "$NATIVE_DATA"
   LEGACY_DATA_COPIED=1

@@ -4,7 +4,6 @@ skips the download when the model is already there, and prints "AI: ready" only 
 `corvex ai-check` proved the status and a real narrative; on failure it says what failed and
 switches AI off again (reports work without it)."""
 import os
-import pty
 import re
 import select
 import subprocess
@@ -13,6 +12,9 @@ import time
 from pathlib import Path
 
 import pytest
+
+if sys.platform != "win32":
+    import pty
 
 ROOT = Path(__file__).resolve().parents[1]
 # Never reach this machine's Docker, services or sudo from a test, whatever installer function runs.
