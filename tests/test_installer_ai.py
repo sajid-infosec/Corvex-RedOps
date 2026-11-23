@@ -95,8 +95,9 @@ def test_native_installs_skip_the_model_and_say_how_to_add_it(tmp_path):
 
 
 def test_short_memory_or_disk_skips_with_an_explanation(tmp_path):
-    r = _sh(tmp_path, 'ai_resources_ok || echo "SKIP: $AI_STATUS"', extra_env={"CORVEX_TEST_MEM_MB": "4000"})
-    assert "SKIP: skipped: only 4000 MB of memory is free; the local model needs 8192 MB" in r.stdout
+    r = _sh(tmp_path, 'ai_resources_ok || echo "SKIP: $AI_STATUS"',
+            extra_env={"CORVEX_TEST_MEM_MB": "4000", "CORVEX_AI_MODEL": "qwen2.5:7b-instruct"})
+    assert "SKIP: skipped: only 4000 MB of memory is free; the model qwen2.5:7b-instruct needs 8192 MB" in r.stdout
     r = _sh(tmp_path, 'ai_resources_ok || echo "SKIP: $AI_STATUS"',
             extra_env={"CORVEX_TEST_MEM_MB": "16000", "CORVEX_TEST_DISK_MB": "3000"})
     assert "SKIP: skipped: only 3000 MB of disk is free" in r.stdout
@@ -160,3 +161,19 @@ def test_install_ps1_asks_the_same_question_and_explains_native():
     assert PROMPT in ps1 and "[Environment]::UserInteractive" in ps1
     assert "needs Docker" in ps1 and "-Docker -Ai" in ps1
     assert "corvex ai-check" in ps1 and "AI: ready" in ps1
+
+
+def test_the_memory_needed_follows_the_model_size(tmp_path):
+    def need(model, **extra):
+        env = {"CORVEX_AI_MODEL": model, **extra}
+        return _sh(tmp_path, 'echo "NEED=$(ai_need_mem_mb)"', extra_env=env).stdout.split("NEED=")[-1].strip()
+    assert need("qwen2.5:7b-instruct") == "8192"          # the default model
+    assert need("qwen2.5:0.5b") == "2048"                 # the CI model fits a 7 GB runner
+    assert need("qwen2.5:1.5b-instruct-q4_K_M") == "3072"
+    assert need("qwen2.5:14b") == "15360"
+    assert need("mistral") == need("mistral:latest") == "8192"   # no size in the tag
+    assert need("registry.example:5000/team/x:0.5b") == "2048"
+    assert need("qwen2.5:7b", CORVEX_AI_MIN_MEM_MB="3000") == "3000"
+    r = _sh(tmp_path, 'ai_resources_ok && echo RESOURCES-OK',
+            extra_env={"CORVEX_AI_MODEL": "qwen2.5:0.5b", "CORVEX_TEST_MEM_MB": "6711", "CORVEX_TEST_DISK_MB": "50000"})
+    assert "RESOURCES-OK" in r.stdout

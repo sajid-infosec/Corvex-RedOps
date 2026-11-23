@@ -944,7 +944,14 @@ deploy_native() { # returns 0 on a healthy console
 
 # ----------------------------------------------------------------------------- local AI model (B)
 AI_PROMPT="Install the local AI model? About 5 GB download, needs 8 GB free memory. [y/N] "
-AI_MIN_MEM_MB="${CORVEX_AI_MIN_MEM_MB:-8192}"
+# Memory the model needs: (size in billions of parameters, rounded up, + 1) GB — 8 GB for the
+# default 7B, 2 GB for a 0.5B; 8 GB when the tag names no size. CORVEX_AI_MIN_MEM_MB overrides.
+ai_need_mem_mb() {
+  [ -n "${CORVEX_AI_MIN_MEM_MB:-}" ] && { printf '%s' "$CORVEX_AI_MIN_MEM_MB"; return; }
+  local size; size="$(printf '%s' "${AI_MODEL##*/}" | sed -n 's/^[^:]*:\([0-9][0-9]*\(\.[0-9][0-9]*\)\{0,1\}\)b.*/\1/p')"
+  [ -n "$size" ] || { printf 8192; return; }
+  awk -v s="$size" 'BEGIN { n = s + 0; m = int(n); if (m < n) m++; print (m + 1) * 1024 }'
+}
 AI_MIN_DISK_MB=6144          # the model (~5 GB) plus room; +4 GB when the runtime image isn't pulled yet
 AI_STATUS=""                 # the summary's AI line: ready | skipped: … | failed: …
 
@@ -972,9 +979,9 @@ decide_ai() {
 
 ai_resources_ok() { # explains and returns 1 when this machine can't run the model
   local mem dfree need
-  mem="$(mem_available_mb)"
-  if [ "${mem:-0}" -lt "$AI_MIN_MEM_MB" ]; then
-    AI_STATUS="skipped: only ${mem} MB of memory is free; the local model needs ${AI_MIN_MEM_MB} MB"; return 1
+  mem="$(mem_available_mb)"; need="$(ai_need_mem_mb)"
+  if [ "${mem:-0}" -lt "$need" ]; then
+    AI_STATUS="skipped: only ${mem} MB of memory is free; the model $AI_MODEL needs ${need} MB"; return 1
   fi
   need="$AI_MIN_DISK_MB"
   $SUDO docker image inspect ollama/ollama:latest >/dev/null 2>&1 || need=$((need + 4096))

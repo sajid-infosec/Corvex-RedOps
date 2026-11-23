@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 OLD = re.compile(r"pentestiq", re.I)
 # the package path stays `pentestiq`: a directory (pentestiq/...) or a module (pentestiq.cli)
 PACKAGE_PATH = re.compile(r"(?<![\w-])pentestiq(?=/|\.(?!(?:db|yaml|yml|example|log|env|zip)\b)[a-z_]{2,}\b)")
+# Typer forces coloured help when GITHUB_ACTIONS or FORCE_COLOR is set; read the plain text
+ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
 
 def _hits(text: str, where: str, allow_marked: bool = False):
@@ -62,12 +64,12 @@ def test_changelog_unreleased_only_names_the_old_distribution_to_uninstall():
 def test_cli_help_never_shows_the_old_name():
     from pentestiq.cli import app
     runner = CliRunner()
-    out = runner.invoke(app, ["--help"], prog_name="corvex").output
-    commands = re.findall(r"│ ([a-z][a-z-]+) +", out)
+    def help_text(args):
+        return ANSI.sub("", runner.invoke(app, args + ["--help"], prog_name="corvex").output)
+    commands = re.findall(r"│ ([a-z][a-z-]+) +", help_text([]))
     assert "setup-code" in commands and "serve" in commands
     for cmd in [""] + commands:
-        text = runner.invoke(app, ([cmd] if cmd else []) + ["--help"], prog_name="corvex").output
-        assert not OLD.search(text), cmd
+        assert not OLD.search(help_text([cmd] if cmd else [])), cmd
 
 
 def test_reports_never_show_the_old_name_even_for_old_findings():

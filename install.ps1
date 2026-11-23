@@ -54,7 +54,17 @@ $AiModel     = if ($env:CORVEX_AI_MODEL) { $env:CORVEX_AI_MODEL } elseif ($env:P
 $script:AiOn = $false      # decided by Select-Ai (flags, an existing AI install, or the question)
 $script:AiStatus = ""
 $AiPrompt = "Install the local AI model? About 5 GB download, needs 8 GB free memory. [y/N]"
-$AiMinMemMB = 8192
+# Memory the model needs: (size in billions of parameters, rounded up, + 1) GB - 8 GB for the
+# default 7B, 2 GB for a 0.5B; 8 GB when the tag names no size. CORVEX_AI_MIN_MEM_MB overrides.
+function Get-AiNeedMemMB {
+  if ($env:CORVEX_AI_MIN_MEM_MB) { return [int]$env:CORVEX_AI_MIN_MEM_MB }
+  $tag = ($AiModel -split '/')[-1]
+  if ($tag -match '^[^:]*:(\d+(?:\.\d+)?)b') {
+    $n = [double]::Parse($Matches[1], [Globalization.CultureInfo]::InvariantCulture)
+    return [int](([math]::Ceiling($n) + 1) * 1024)
+  }
+  return 8192
+}
 $PortSet       = ($Port -gt 0)
 $ListenSet     = ($Listen -ne "")
 $MobilePortSet = ($MobilePort -gt 0)
@@ -468,8 +478,8 @@ function Disable-Ai([string]$why) {
 # restart the console, then prove it: the /ai/status check plus a real narrative (corvex ai-check).
 function Install-Ai {
   if (-not $script:AiOn) { return }
-  $mem = Get-FreeMemMB
-  if ($mem -gt 0 -and $mem -lt $AiMinMemMB) { $script:AiStatus = "skipped - only $mem MB of memory is free; the local model needs $AiMinMemMB MB"; Warn "AI: $script:AiStatus."; Set-EnvValue "CORVEX_AI" "0"; $script:AiOn = $false; return }
+  $mem = Get-FreeMemMB; $needMem = Get-AiNeedMemMB
+  if ($mem -gt 0 -and $mem -lt $needMem) { $script:AiStatus = "skipped - only $mem MB of memory is free; the model $AiModel needs $needMem MB"; Warn "AI: $script:AiStatus."; Set-EnvValue "CORVEX_AI" "0"; $script:AiOn = $false; return }
   $disk = Get-FreeDiskMB $env:ProgramData
   if ($disk -gt 0 -and $disk -lt 10240) { $script:AiStatus = "skipped - only $disk MB of disk is free; the local model needs 10240 MB"; Warn "AI: $script:AiStatus."; Set-EnvValue "CORVEX_AI" "0"; $script:AiOn = $false; return }
   Info "Starting the local AI runtime..."
@@ -505,10 +515,11 @@ function Install-Ai {
 # Supported for the venv path: Python 3.10 - 3.12 (newer often lacks prebuilt
 # wheels for compiled deps, which would force a slow source build).
 $MaxMinor = 12
-function Get-PyInfo($exe, $pre) {
-  $cmd = Get-Command $exe -ErrorAction SilentlyContinue
-  if (-not $cmd) { return $null }
-  if ($cmd.Source -and $cmd.Source -like "*\WindowsApps\*") { return $null }
+function Get-PyInfo([string]$exe, [string[]]$pre) {
+  $cmd = Get-Command $exe -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+  if (-not $cmd -or -not $cmd.Source) { return $null }
+  if ($cmd.Source -like "*\WindowsApps\*") { return $null }   # the Store placeholder, not a Python
+  if (-not $pre) { $pre = @() }
   try { $out = (& $cmd.Source @pre "--version" 2>&1 | Out-String) } catch { return $null }
   if ($out -match "Python\s+(\d+)\.(\d+)") {
     $maj = [int]$Matches[1]; $min = [int]$Matches[2]
@@ -520,16 +531,28 @@ function Get-PyInfo($exe, $pre) {
 }
 
 function Find-Python {
+  # hashtables, not nested arrays: PowerShell unrolls arrays, which once hid every candidate
   $candidates = @(
-    ,@("py", @("-3.12")), ,@("py", @("-3.11")), ,@("py", @("-3.10")),
-    ,@("py", @("-3")),    ,@("python3", @()),    ,@("python", @())
+    @{ Exe = "py"; Pre = @("-3.12") }, @{ Exe = "py"; Pre = @("-3.11") }, @{ Exe = "py"; Pre = @("-3.10") },
+    @{ Exe = "py"; Pre = @("-3") },    @{ Exe = "python3"; Pre = @() },  @{ Exe = "python"; Pre = @() }
   )
+  # where the python.org / winget installers put 3.12, for a session whose PATH predates them
+  foreach ($root in @((Join-Path $env:LOCALAPPDATA "Programs\Python"), $env:ProgramFiles)) {
+    if ($root) { $candidates += @{ Exe = (Join-Path $root "Python312\python.exe"); Pre = @() } }
+  }
   $tooNew = $null
   foreach ($c in $candidates) {
-    $info = Get-PyInfo $c[0] $c[1]
+    $info = Get-PyInfo $c.Exe $c.Pre
     if ($info) { if ($info.Supported) { return $info } elseif (-not $tooNew) { $tooNew = $info } }
   }
   return $tooNew  # may be $null, or a too-new interpreter we warn about
+}
+
+# A program just installed (winget) changed PATH in the registry, not in this session.
+function Update-SessionPath {
+  $machine = [Environment]::GetEnvironmentVariable("Path", "Machine")
+  $user    = [Environment]::GetEnvironmentVariable("Path", "User")
+  $env:Path = (@($env:Path, $machine, $user) | Where-Object { $_ }) -join ";"
 }
 
 function Stop-NativeConsole {
@@ -556,13 +579,16 @@ function Deploy-Native {
     } else {
       Warn "Python 3.10-3.12 not found (the 'python' Windows offers may be a Store placeholder)."
     }
-    if (Get-Command winget -ErrorAction SilentlyContinue) {
-      Info "Installing Python 3.12 via winget..."
-      winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements
-      Warn "Python 3.12 installed. Open a NEW PowerShell and run .\install.ps1 again."
-      exit 0
+    if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+      Die "Install Python 3.12 from https://python.org (tick 'Add python.exe to PATH') and re-run, or install Docker Desktop and re-run."
     }
-    Die "Install Python 3.12 from https://python.org (tick 'Add python.exe to PATH') and re-run, or install Docker Desktop and re-run."
+    Info "Installing Python 3.12 via winget..."
+    winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements
+    Update-SessionPath
+    $Py = Find-Python
+    if (-not $Py -or -not $Py.Supported) {
+      Die "Python 3.12 was installed, but this PowerShell can't see it yet. Open a NEW PowerShell and run .\install.ps1 again (nothing was started)."
+    }
   }
   Ok "Python $($Py.Ver) detected."
   New-Item -ItemType Directory -Force -Path $NativeData | Out-Null
