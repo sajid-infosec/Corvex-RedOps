@@ -538,13 +538,14 @@ apply_headless_admin() {
   env_set CORVEX_ADMIN_USER "${CORVEX_ADMIN_USER:-admin}"
   env_set CORVEX_ADMIN_PASSWORD "$CORVEX_ADMIN_PASSWORD"
 }
-# Email sign-up: a console reachable beyond this machine also asks for the setup code, so a
-# stranger who reaches a fresh install first can't claim it. CORVEX_REGISTRY=off in the
-# installer's environment keeps the console from contacting corvex-redops.com at all.
+# First visit: a registration form (full name, email, username, password). A console
+# reachable beyond this machine also asks for the setup code, so a stranger who reaches a
+# fresh install first can't claim it. Email verification is off for now: CORVEX_REGISTRY=on
+# in the installer's environment turns it on (codes emailed through corvex-redops.com).
 apply_signup_settings() {
   [ -f "$ENV_FILE" ] || return 0
   if is_loopback "$LISTEN"; then env_set CORVEX_SETUP_CODE_REQUIRED 0; else env_set CORVEX_SETUP_CODE_REQUIRED 1; fi
-  if [ -n "${CORVEX_REGISTRY:-}" ]; then env_set CORVEX_REGISTRY "$CORVEX_REGISTRY"; fi
+  env_set CORVEX_REGISTRY "${CORVEX_REGISTRY:-off}"
 }
 # Once the console is up the admin exists: the password doesn't stay on disk.
 consume_admin_password() {
@@ -845,7 +846,7 @@ CORVEX_TRUSTED_PROXIES=$tp
 CORVEX_AI=0
 PLAYWRIGHT_BROWSERS_PATH=$NATIVE_PREFIX/pw-browsers
 CORVEX_SETUP_CODE_REQUIRED=$(is_loopback "$LISTEN" && echo 0 || echo 1)
-CORVEX_REGISTRY=${CORVEX_REGISTRY:-on}
+CORVEX_REGISTRY=${CORVEX_REGISTRY:-off}
 ENV
   if [ -n "${CORVEX_ADMIN_PASSWORD:-}" ]; then     # headless: the admin is created at the first start
     HEADLESS_ADMIN=1
@@ -1157,14 +1158,16 @@ admin_cmd() { # the command an operator runs for `corvex $1 …` on this install
     printf 'CORVEX_DATA_DIR=%s %s/bin/corvex %s' "$NATIVE_DATA" "$NATIVE_VENV" "$*"
   fi
 }
-# A fresh install (no admin yet): get a one-time setup code from the console, in memory only.
+# A fresh install (no account yet): the registration form waits. The one-time setup code is
+# fetched (in memory only) when the form asks for it: a console reachable from elsewhere, or a
+# console too old to know the form.
 SIGNUP_MODE=""
 fetch_setup_code() {
   local st
   st="$(curl -fsS -m 5 "http://$(health_host):$PORT/setup/status" 2>/dev/null)" || return 1
   printf '%s' "$st" | grep -qE '"setup_required": *true' || return 1
-  if printf '%s' "$st" | grep -qE '"signup": *"email"'; then
-    SIGNUP_MODE=email      # sign-up by email; the setup code only when the console is reachable from elsewhere
+  if printf '%s' "$st" | grep -qE '"signup": *"(form|email)"'; then
+    SIGNUP_MODE=form; printf '%s' "$st" | grep -qE '"signup": *"email"' && SIGNUP_MODE=email
     printf '%s' "$st" | grep -qE '"setup_code_required": *true' || return 0
   else
     SIGNUP_MODE=code
@@ -1178,9 +1181,13 @@ fetch_setup_code() {
 }
 signin_block() { # the installer's last lines
   local url; url="$(console_url)"
-  if [ "$SIGNUP_MODE" = email ]; then
-    printf "\n  Open ${c_blue}%s${c_off} and create your account: username, email and password.\n" "$url"
-    printf "  We'll email you a 6-digit code to confirm the address. Your password stays on this machine.\n"
+  if [ "$SIGNUP_MODE" = form ] || [ "$SIGNUP_MODE" = email ]; then
+    printf "\n  Open ${c_blue}%s${c_off} and create your account: full name, email, username and password.\n" "$url"
+    if [ "$SIGNUP_MODE" = email ]; then
+      printf "  We'll email you a 6-digit code to confirm the address. Your password stays on this machine.\n"
+    else
+      printf "  The first account becomes the administrator. Your password stays on this machine.\n"
+    fi
     if [ -n "$SETUP_CODE" ]; then
       printf "  The console can be reached from other machines, so the form also asks for this one-time setup code:\n"
       printf "  Setup code : ${c_grn}%s${c_off}   ${c_dim}(valid until used; a new one: %s)${c_off}\n" "$SETUP_CODE" "$(admin_cmd setup-code)"

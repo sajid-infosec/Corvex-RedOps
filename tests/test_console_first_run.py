@@ -23,13 +23,19 @@ def test_console_swaps_to_the_fresh_token_after_a_password_change():
     assert HTML.count('if(j&&j.token){TOKEN=j.token;try{localStorage.setItem("ptiq_token",TOKEN)}') == 2
 
 
-def test_first_visit_setup_page():
-    assert 'id="setup"' in HTML and "Set up Corvex-RedOps" in HTML
-    for i in ("su_code", "su_user", "su_pw", "su_pw2"):
+def test_first_visit_registration_form():
+    """The first visit asks for full name, email, username and the password twice; the setup
+    code row only shows when the console says it is needed."""
+    assert 'id="setup"' in HTML and "Create your Corvex-RedOps account" in HTML
+    for i in ("su_name", "su_email", "su_user", "su_pw", "su_pw2", "su_code"):
         assert f'for="{i}"' in HTML and f'id="{i}"' in HTML
-    assert 'id="su_user" value="admin"' in HTML                       # default username
-    for hook in ('fetch("/setup/status")', 'fetch("/setup",', "password_confirm:pw2",
-                 'd.detail.error==="setup_required"){showSetup()', "if(d.setup_required){showSetup(d);return;}"):
+    form = HTML[HTML.index('<div id="su_form">'):HTML.index('<div id="su_verify"')]
+    order = [form.index(f'id="{i}"') for i in ("su_name", "su_email", "su_user", "su_pw", "su_pw2")]
+    assert order == sorted(order)                                       # the order the user asked for
+    assert '<div id="su_coderow" hidden>' in form and 'value="admin"' not in form
+    for hook in ('fetch("/setup/status")', 'fetch("/setup/register",', 'const needCode=!!(d&&d.setup_code_required);',
+                 'd.detail.error==="setup_required"){showSetup()', "if(d.setup_required){showSetup(d);return;}",
+                 'fetch("/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:f.username,password:f.password})})'):
         assert hook in HTML, hook
 
 

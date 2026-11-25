@@ -89,7 +89,7 @@ def test_a_short_pinned_password_refuses_to_start(tmp_path, monkeypatch):
     _app(tmp_path / "ok", monkeypatch, password="twelve-chars", force="0")       # 12 starts
 
 
-def test_existing_install_on_old_password_is_forced_at_next_start(tmp_path, monkeypatch):
+def test_existing_install_on_old_password_gets_the_registration_form(tmp_path, monkeypatch):
     # an install created by the old installer: admin exists with 'corvex', no flag column yet
     db = tmp_path / "pentestiq.db"
     con = sqlite3.connect(db)
@@ -101,9 +101,10 @@ def test_existing_install_on_old_password_is_forced_at_next_start(tmp_path, monk
     con.execute("INSERT INTO memberships VALUES ('u1','t1','owner')")
     con.commit(); con.close()
     c, auth = _app(tmp_path, monkeypatch, password="", force="0")   # column added in place on open
-    body, H = _login(c, "corvex", "corvex")
-    assert body["password_change_required"] is True
-    assert c.get("/engagements", headers=H).status_code == 403
+    # the only account is on the publicly known password: the registration form replaces it
+    st = c.get("/setup/status").json()
+    assert st["setup_required"] is True and st["replaces_admin"] is True
+    assert c.post("/auth/login", json={"username": "corvex", "password": "corvex"}).status_code == 503
 
 
 def test_operator_reset_password_is_one_time(tmp_path, monkeypatch):

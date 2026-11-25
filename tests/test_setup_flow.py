@@ -43,7 +43,8 @@ def test_a_fresh_install_has_no_admin_and_only_setup_and_health_answer(tmp_path,
     c, auth = _app(tmp_path, monkeypatch)
     assert auth.store.count_users() == 0
     assert c.get("/setup/status").json() == {"setup_required": True, "default_username": "admin",
-                                             "signup": "code", "setup_code_required": False}   # registry off
+                                             "signup": "form", "setup_code_required": False,
+                                             "replaces_admin": False}    # email verification off
     assert c.get("/health").status_code == 200 and c.get("/").status_code == 200
     for method, path in (("GET", "/engagements"), ("GET", "/me"), ("POST", "/auth/login"),
                          ("POST", "/auth/register"), ("GET", "/edition"), ("GET", "/settings"),
@@ -101,6 +102,7 @@ def test_an_install_that_already_has_an_admin_never_sees_the_page(tmp_path, monk
 
 def test_the_code_is_never_logged(tmp_path, monkeypatch, caplog):
     caplog.set_level(logging.DEBUG)
+    monkeypatch.setenv("CORVEX_SETUP_CODE_REQUIRED", "1")        # reachable from elsewhere: a code is needed
     c, auth = _app(tmp_path, monkeypatch)
     code = auth.new_setup_code()
     _setup(c, "WRONG234"); _setup(c, code)
@@ -124,8 +126,19 @@ def test_cli_setup_code_prints_a_fresh_code_and_refuses_after_setup(tmp_path, mo
     assert r3.exit_code == 3 and "Setup is already done" in r3.output
 
 
+def test_serve_on_this_machine_only_points_at_the_form(tmp_path, monkeypatch):
+    monkeypatch.delenv("CORVEX_ADMIN_PASSWORD", raising=False)
+    monkeypatch.delenv("CORVEX_SETUP_CODE_REQUIRED", raising=False)
+    auth = AuthService(SqliteAuthStore(str(tmp_path / "a.db")), secret_key="s", session_ttl=3600)
+    for to_terminal in (True, False):
+        out = setup_notice("127.0.0.1", 8000, to_terminal, auth=auth)
+        assert out == "Create your Corvex-RedOps account: open http://127.0.0.1:8000"
+    assert auth.store.get_setup_code() is None                               # no code minted
+
+
 def test_serve_shows_the_address_and_a_code_only_on_a_terminal(tmp_path, monkeypatch):
     monkeypatch.delenv("CORVEX_ADMIN_PASSWORD", raising=False)
+    monkeypatch.setenv("CORVEX_SETUP_CODE_REQUIRED", "1")
     auth = AuthService(SqliteAuthStore(str(tmp_path / "a.db")), secret_key="s", session_ttl=3600)
     tty = setup_notice("127.0.0.1", 8000, True, auth=auth)
     assert "open http://127.0.0.1:8000" in tty

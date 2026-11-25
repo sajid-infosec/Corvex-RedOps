@@ -79,7 +79,7 @@ def _app(tmp_path, monkeypatch, registry=None, admin_password=None):
 
 
 def _signup(c, user="sajid", email="Sajid@Example.org", pw=PW, pw2=None, **extra):
-    return c.post("/setup/signup", json={"username": user, "email": email, "password": pw,
+    return c.post("/setup/signup", json={"username": user, "email": email, "password": pw, "full_name": "Sajid Example",
                                          "password_confirm": pw if pw2 is None else pw2, **extra})
 
 
@@ -146,15 +146,17 @@ def test_signup_resend_and_expired_request(tmp_path, monkeypatch):
     assert c.post("/setup/signup/verify", json={"pending_id": "nope", "code": "1"}).status_code == 409
 
 
-def test_offline_install_falls_back_to_the_setup_code(tmp_path, monkeypatch):
+def test_offline_install_falls_back_to_the_form_without_a_code(tmp_path, monkeypatch):
     reg = FakeRegistry(up=False)
     c, auth = _app(tmp_path, monkeypatch, reg)
     st = c.get("/setup/status").json()
-    assert st["signup"] == "code"
+    assert st["signup"] == "form"
     r = _signup(c)
     assert r.status_code == 503 and r.json()["detail"]["error"] == "registry_unavailable"
-    code = setup_mod.new_code(auth.store)
-    assert c.post("/setup", json={"code": code, "username": "admin", "password": PW, "password_confirm": PW}).status_code == 200
+    ok = c.post("/setup/register", json={"full_name": "Admin Person", "email": "admin@example.org", "username": "admin",
+                                         "password": PW, "password_confirm": PW})
+    assert ok.status_code == 201, ok.text
+    assert reg.sent == []                                   # no email was asked for
     h = _login(c, "admin")
     assert c.get("/engagements", headers=h).status_code == 200        # offline: nobody is held up
     assert c.get("/me", headers=h).json()["email_verification_required"] is False

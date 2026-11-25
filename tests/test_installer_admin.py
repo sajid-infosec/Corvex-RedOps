@@ -111,3 +111,35 @@ def test_install_ps1_shows_the_setup_code_last_and_writes_no_password():
     assert "Setup code : $script:SetupCode" in ps1
     assert "docker exec -it $ConsoleContainer corvex reset-password <user>" in ps1 and '$ConsoleContainer = "corvex-redops-console"' in ps1
     assert "first-run admin" not in ps1 and "one-time password in" not in ps1
+
+
+def test_a_fresh_local_install_points_at_the_registration_form_without_a_code(tmp_path):
+    """Email verification off, console on 127.0.0.1: the form needs no setup code, so none is
+    fetched and the last lines say what the form asks for."""
+    stub = ('curl(){ printf \'{"setup_required": true, "signup": "form", "setup_code_required": false}\'; }; '
+            'compose(){ echo "SHOULD-NOT-RUN"; }; ENGINE_USED=docker; ')
+    r = _run(tmp_path, stub + 'fetch_setup_code && echo "MODE=$SIGNUP_MODE CODE=[$SETUP_CODE]"')
+    assert "MODE=form CODE=[]" in r.stdout and "SHOULD-NOT-RUN" not in r.stdout
+    last = _summary_tail(tmp_path, "", extra="SIGNUP_MODE=form;")
+    assert "Open http://127.0.0.1:8080 and create your account: full name, email, username and password." in last[0]
+    assert "The first account becomes the administrator" in last[1]
+
+
+def test_a_reachable_install_also_shows_the_setup_code_for_the_form(tmp_path):
+    stub = ('curl(){ printf \'{"setup_required": true, "signup": "form", "setup_code_required": true}\'; }; '
+            'compose(){ [ "$*" = "exec -T console corvex setup-code --quiet" ] && printf "7KQ2MHX4\\r\\n"; }; '
+            'ENGINE_USED=docker; ')
+    r = _run(tmp_path, stub + 'fetch_setup_code && echo "MODE=$SIGNUP_MODE CODE=$SETUP_CODE"')
+    assert "MODE=form CODE=7KQ2MHX4" in r.stdout
+    out = _run(tmp_path, 'ENGINE_USED=docker; PORT=8080; SIGNUP_MODE=form; SETUP_CODE=7KQ2MHX4; summary').stdout
+    assert "create your account: full name, email, username and password" in out and "Setup code : 7KQ2MHX4" in out
+
+
+def test_email_verification_is_written_off_unless_asked_for(tmp_path):
+    env = tmp_path / "deploy/.env"
+    env.parent.mkdir(parents=True)
+    env.write_text("CORVEX_REGISTRY=on\n")                           # left by the 23 Nov installer
+    _run(tmp_path, 'LISTEN=127.0.0.1; apply_signup_settings', extra_env={"CORVEX_REGISTRY": ""})
+    assert "CORVEX_REGISTRY=off" in env.read_text() and "CORVEX_SETUP_CODE_REQUIRED=0" in env.read_text()
+    _run(tmp_path, 'LISTEN=0.0.0.0; apply_signup_settings', extra_env={"CORVEX_REGISTRY": "on"})
+    assert "CORVEX_REGISTRY=on" in env.read_text() and "CORVEX_SETUP_CODE_REQUIRED=1" in env.read_text()
