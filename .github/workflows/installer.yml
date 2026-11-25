@@ -20,7 +20,7 @@ concurrency:
 env:
   CHECK: python3 .github/scripts/installer-check.py
   # CI never contacts the account registry at corvex-redops.com: no test accounts in the
-  # real list, and the setup-code path (what these checks read) stays the one under test.
+  # real list, and the registration form without email codes (the default) is what's tested.
   CORVEX_REGISTRY: "off"
   # the 0.2.1 release commit of this repository (the upgrade job starts from it)
   OLD_REF: 87711a5f9c817e03bade3ee809818fc9d249908f
@@ -34,11 +34,11 @@ jobs:
       - uses: actions/checkout@v5
       - name: Install
         run: sudo --preserve-env=CORVEX_REGISTRY bash install.sh --docker --listen 127.0.0.1 --no-ai 2>&1 | tee install.log; test "${PIPESTATUS[0]}" = 0
-      - name: Healthy, setup page works with the printed code, nothing on 0.0.0.0
+      - name: Healthy, the registration form creates the admin, nothing on 0.0.0.0
         run: |
           curl -fsS http://127.0.0.1:8080/health
-          code="$($CHECK setup install.log)"
-          if sudo docker logs corvex-redops-console 2>&1 | grep -qF "$code"; then echo "setup code found in the logs"; exit 1; fi
+          $CHECK setup install.log
+          if sudo docker logs corvex-redops-console 2>&1 | grep -qF ci-admin-password-123; then echo "password found in the logs"; exit 1; fi
           $CHECK listeners 8080 8000 11434
           sudo test -r deploy/.env && ! sudo grep -E '^PENTESTIQ_|CORVEX_ADMIN_PASSWORD=.+' deploy/.env
       - name: Down
