@@ -30,7 +30,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY . /app
-RUN pip install --no-cache-dir -e ".[api,reports,ai]"
+# The console runs as an unprivileged user, so the code must be readable whatever permissions
+# the checkout had (a private copy, a restrictive umask). Only files that need it are touched,
+# so the layer stays small.
+RUN find /app \( ! -perm -0444 -o -type d ! -perm -0111 \) -exec chmod a+rX {} + \
+    && pip install --no-cache-dir -e ".[api,reports,ai]"
 
 # Headless browser for the SPA crawler (best-effort; native crawl still works).
 RUN pip install --no-cache-dir playwright \

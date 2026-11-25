@@ -680,7 +680,9 @@ migrate_legacy_docker() {
     volume_exists "$old" || continue
     if volume_exists "$new" && ! volume_empty "$new"; then continue; fi
     log "Copying your data from the old volume $old to $new (the old volume is kept)…"
-    volume_exists "$new" || $SUDO docker volume create "$new" >/dev/null || { warn "could not create $new"; return 1; }
+    # labelled as Compose's own, so `docker compose up` adopts it without an "already exists" warning
+    volume_exists "$new" || $SUDO docker volume create --label com.docker.compose.project=corvex-redops \
+      --label "com.docker.compose.volume=${new#corvex-redops-}" "$new" >/dev/null || { warn "could not create $new"; return 1; }
     local own=""; case "$new" in *-data) own="10001:10001";; esac
     if copy_volume "$old" "$new" "$own"; then
       MIGRATED_VOLUMES="${MIGRATED_VOLUMES:+$MIGRATED_VOLUMES }$old"
@@ -815,18 +817,22 @@ stage_source() { # a copy of the checkout without its venv, data, secrets or bui
   chmod -R a+rX "$src"
   printf '%s' "$src"
 }
+# pip builds inside the staged copy as root (system mode), so root removes it again; a cleanup
+# hiccup is never reported as a failed install.
+drop_staged_source() { as_root rm -rf "$1" 2>/dev/null || rm -rf "$1" 2>/dev/null || true; }
 native_pip_install() {
   local src blog="$1"
   src="$(stage_source)" || return 1
   as_root "$NATIVE_VENV/bin/python" -m pip install -q --upgrade pip 'setuptools>=77' wheel >>"$blog" 2>&1 || true
   if ! as_root "$NATIVE_VENV/bin/python" -m pip install -q "$src[api,reports]" >>"$blog" 2>&1; then
-    rm -rf "$src"; return 1
+    drop_staged_source "$src"; return 1
   fi
   as_root "$NATIVE_VENV/bin/python" -m pip install -q scikit-learn >>"$blog" 2>&1 || true   # self-learning model
   if as_root "$NATIVE_VENV/bin/python" -m pip install -q playwright >>"$blog" 2>&1; then  # SPA crawl, best-effort
     as_root env PLAYWRIGHT_BROWSERS_PATH="$NATIVE_PREFIX/pw-browsers" "$NATIVE_VENV/bin/playwright" install chromium >>"$blog" 2>&1 || true
   fi
-  rm -rf "$src"
+  drop_staged_source "$src"
+  return 0
 }
 
 write_native_env() { # the service's settings: secrets reused from deploy/.env or the previous install
@@ -1315,7 +1321,7 @@ BANNER
     auto|*)
       if ! try_docker; then
         [ "$EXISTING_ENGINE" = docker ] && die "updating the Docker deployment failed (see above); its data volumes are untouched. Fix the cause and re-run, or move it to the native install with --native."
-        log "Docker isn't usable here — installing natively instead (own venv, unprivileged service)."
+        log "The Docker install didn't come up (see above) — trying the native install instead (own venv, unprivileged service)."
         deploy_native || die "both the Docker and the native install failed; nothing was left running. Make Docker, or Python 3.10+ with PyPI access, available and re-run."
       fi
       ;;

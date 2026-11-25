@@ -31,6 +31,10 @@ All notable changes to Corvex-RedOps are documented here. This project adheres t
 - The old command name still works for now; it says it was renamed and runs `corvex`.
 
 ### Fixes
+- A Docker install from a checkout with private files (mode 600, directories 700) no longer stops with `PermissionError` when the console starts: the image makes its code readable for the console's unprivileged user.
+- The native install no longer reports "Dependency install failed" after its dependencies installed: the staged copy of the code that pip built in (as root) is removed as root, and a cleanup problem never fails the install.
+- Copied data volumes are created with Compose's labels, so `docker compose up` no longer warns that `corvex-redops-ai-models` "already exists but was not created by Docker Compose".
+- When the Docker install doesn't come up, the installer says so ("The Docker install didn't come up") instead of "Docker isn't usable here" before trying the native install.
 - Windows: `install.ps1` finds an installed Python 3.10–3.12 again (it missed every one and installed another). After installing Python with winget it carries on in the same window; when it really can't, it stops with an error instead of reporting success.
 - The AI memory check follows the chosen model: 8 GB for the default 7B model, less for a smaller `CORVEX_AI_MODEL`; `CORVEX_AI_MIN_MEM_MB` overrides it, now on Windows too.
 - The headless crawl works in the arm64 image.
